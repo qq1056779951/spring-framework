@@ -25,6 +25,8 @@ import java.io.Serializable;
  * A {@link Serializer} implementation that writes an object to an output stream
  * using Java serialization.
  *
+ * {@link Serializer}实现，使用Java序列化将对象写入输出流。
+ *
  * @author Gary Russell
  * @author Mark Fisher
  * @since 3.0.5

@@ -50,9 +50,15 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ *
+ * 注释工具
  * General utility methods for working with annotations, handling meta-annotations,
  * bridge methods (which the compiler generates for generic declarations) as well
  * as super methods (for optional <em>annotation inheritance</em>).
+ *
+ * 用于处理注释，处理元注释，桥接方法（编译器为通用声明生成）以及超级方法（用于可选<em>注释继承<em>）的常规实用程序方法。
+ *
+ *
  *
  * <p>Note that most of the features of this class are not provided by the
  * JDK's introspection facilities themselves.
@@ -152,6 +158,8 @@ public abstract class AnnotationUtils {
 
 
 	/**
+	 *
+	 * 从提供的注释中获取{@code annotationType}的单个{@link Annotation}：给定注释本身或其直接元注释。
 	 * Get a single {@link Annotation} of {@code annotationType} from the supplied
 	 * annotation: either the given annotation itself or a direct meta-annotation
 	 * thereof.
@@ -500,6 +508,12 @@ public abstract class AnnotationUtils {
 	 * <em>directly present</em> on the method.
 	 * <p>Annotations on methods are not inherited by default, so we need to handle
 	 * this explicitly.
+	 *
+	 *
+	 * 在提供的{@link方法}上找到{@code annotationType}的单个{@link Annotation}，如果注释不是<em>直接存在于给定的<em>，
+	 * 则遍历其超级方法（即来自超类和接口）方法本身。 <p>正确处理编译器生成的桥{@link Method Methods}。
+	 * <p>如果注释不是<em>直接存在于方法上，则将搜索元注释。 <p>默认情况下，方法的注释不会继承，因此我们需要显式处理。
+	 *
 	 * @param method the method to look for annotations on
 	 * @param annotationType the annotation type to look for
 	 * @return the first matching annotation, or {@code null} if not found

@@ -25,6 +25,10 @@ import org.springframework.lang.Nullable;
  *
  * <p>Implementations may additionally implement {@link ConditionalConverter}.
  *
+ * 转换器将{@code S}类型的源对象转换为{@code T}类型的目标。
+ * <p>此接口的实现是线程安全的，可以共享。
+ * <p>实现可以另外实现{@link ConditionalConverter}。
+ *
  * @author Keith Donald
  * @since 3.0
  * @param <S> the source type

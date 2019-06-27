@@ -28,7 +28,10 @@ import org.springframework.util.ObjectUtils;
 /**
  * Abstract base class for {@link AnnotationAttributeExtractor} implementations
  * that transparently enforce attribute alias semantics for annotation
- * attributes that are annotated with {@link AliasFor @AliasFor}.
+ * attributes that are annotated with {@link AliasFor @AliasFor}.<br/>
+ *
+ * {@link AnnotationAttributeExtractor}实现的抽象基类，
+ * 它透明地为使用{@link AliasFor @AliasFor}注释的注释属性强制执行属性别名语义。
  *
  * @author Sam Brannen
  * @since 4.2

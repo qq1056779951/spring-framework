@@ -19,6 +19,8 @@ package org.springframework.core.task;
 import java.util.concurrent.Executor;
 
 /**
+ *
+ * 简单的任务执行器接口，用于抽象{@link Runnable}的执行。
  * Simple task executor interface that abstracts the execution
  * of a {@link Runnable}.
  *

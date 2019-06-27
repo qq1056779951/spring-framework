@@ -47,12 +47,26 @@ import org.springframework.util.StringUtils;
 /**
  * Parser for the {@code <context:component-scan/>} element.
  *
+ * 组件扫描Bean定义解析器
+ *
  * @author Mark Fisher
  * @author Ramnivas Laddad
  * @author Juergen Hoeller
  * @since 2.5
  */
 public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
+
+	//base-package:为必须配置属性,指定了spring需要扫描的跟目录名称,可以使用”,” “;” “\t\n(回车符)”来分割多个包名
+	//resource-pattern:配置扫描资源格式.默认”**/*.class”
+	//use-default-filters:是否使用默认扫描策略,默认为”true”,会自动扫描指定包下的添加了如下注解的类,@Component, @Repository, @Service,or @Controller
+	//
+	//annotation-config:是否启用默认配置,默认为”true”,该配置会在BeanDefinition注册到容器后自动注册一些BeanPostProcessors对象到容器中.这些处理器用来处理类中Spring’s @Required and
+	//@Autowired, JSR 250’s @PostConstruct, @PreDestroy and @Resource (如果可用),
+	//JAX-WS’s @WebServiceRef (如果可用), EJB 3’s @EJB (如果可用), and JPA’s
+	//@PersistenceContext and @PersistenceUnit (如果可用),但是该属性不会处理Spring’s @Transactional 和 EJB 3中的@TransactionAttribute注解对象,这两个注解是通过<tx:annotation-driven>元素处理过程中对应的BeanPostProcessor来处理的.
+	//include-filter:如果有自定义元素可以在该处配置
+	//exclude-filter:配置哪些类型的类不需要扫描
+	//注意:</context:component-scan>元素中默认配置了annotation-config,所以不需要再单独配置</annotation-config>元素.
 
 	private static final String BASE_PACKAGE_ATTRIBUTE = "base-package";
 
@@ -86,9 +100,9 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 				ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
 
 		// Actually scan for bean definitions and register them.
-		ClassPathBeanDefinitionScanner scanner = configureScanner(parserContext, element);
-		Set<BeanDefinitionHolder> beanDefinitions = scanner.doScan(basePackages);
-		registerComponents(parserContext.getReaderContext(), beanDefinitions, element);
+		ClassPathBeanDefinitionScanner scanner = configureScanner(parserContext, element);  //得到扫描器
+		Set<BeanDefinitionHolder> beanDefinitions = scanner.doScan(basePackages);  //扫描文件，并转化为spring bean，并注册
+		registerComponents(parserContext.getReaderContext(), beanDefinitions, element);  //注册其他相关组件
 
 		return null;
 	}
@@ -100,29 +114,29 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 		}
 
 		// Delegate bean definition registration to scanner class.
-		ClassPathBeanDefinitionScanner scanner = createScanner(parserContext.getReaderContext(), useDefaultFilters);
+		ClassPathBeanDefinitionScanner scanner = createScanner(parserContext.getReaderContext(), useDefaultFilters);  //包含了扫描策略配置
 		scanner.setBeanDefinitionDefaults(parserContext.getDelegate().getBeanDefinitionDefaults());
 		scanner.setAutowireCandidatePatterns(parserContext.getDelegate().getAutowireCandidatePatterns());
 
 		if (element.hasAttribute(RESOURCE_PATTERN_ATTRIBUTE)) {
-			scanner.setResourcePattern(element.getAttribute(RESOURCE_PATTERN_ATTRIBUTE));
+			scanner.setResourcePattern(element.getAttribute(RESOURCE_PATTERN_ATTRIBUTE));  //配置扫描资源格式
 		}
 
 		try {
-			parseBeanNameGenerator(element, scanner);
+			parseBeanNameGenerator(element, scanner);  //配置名称生成器
 		}
 		catch (Exception ex) {
 			parserContext.getReaderContext().error(ex.getMessage(), parserContext.extractSource(element), ex.getCause());
 		}
 
 		try {
-			parseScope(element, scanner);
+			parseScope(element, scanner);   //配置元数据解析器
 		}
 		catch (Exception ex) {
 			parserContext.getReaderContext().error(ex.getMessage(), parserContext.extractSource(element), ex.getCause());
 		}
 
-		parseTypeFilters(element, scanner, parserContext);
+		parseTypeFilters(element, scanner, parserContext);    //配置包含和不包含过滤
 
 		return scanner;
 	}

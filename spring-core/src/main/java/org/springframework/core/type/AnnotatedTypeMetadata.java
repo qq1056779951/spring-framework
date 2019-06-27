@@ -22,6 +22,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
 
 /**
+ *
+ * 定义对特定类型（{@link AnnotationMetadata class}或{@link MethodMetadata method}）的注释的访问，其形式不一定需要类加载。
  * Defines access to the annotations of a specific type ({@link AnnotationMetadata class}
  * or {@link MethodMetadata method}), in a form that does not necessarily require the
  * class-loading.

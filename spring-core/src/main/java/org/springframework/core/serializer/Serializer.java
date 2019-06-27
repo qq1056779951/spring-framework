@@ -21,7 +21,7 @@ import java.io.OutputStream;
 
 /**
  * A strategy interface for streaming an object to an OutputStream.
- *
+ *用于将对象流式传输到OutputStream的策略接口。
  * @author Gary Russell
  * @author Mark Fisher
  * @since 3.0.5

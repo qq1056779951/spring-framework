@@ -22,6 +22,8 @@ import org.springframework.core.NestedRuntimeException;
  * Thrown by {@link AnnotationUtils} and <em>synthesized annotations</em>
  * if an annotation is improperly configured.
  *
+ * 如果注释配置不正确，则由{@link AnnotationUtils}和<em>合成注释<em>引发。
+ *
  * @author Sam Brannen
  * @since 4.2
  * @see AnnotationUtils

@@ -22,6 +22,8 @@ import org.springframework.lang.Nullable;
  * Strategy that encapsulates value String styling algorithms
  * according to Spring conventions.
  *
+ * 根据Spring约定封装值String样式算法的策略
+ *
  * @author Keith Donald
  * @since 1.2.2
  */

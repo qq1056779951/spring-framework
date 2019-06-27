@@ -22,6 +22,10 @@ import java.io.InputStream;
 /**
  * A strategy interface for converting from data in an InputStream to an Object.
  *
+ * 用于将InputStream中的数据转换为Object的策略接口。
+ * 反序列化
+ *
+ *
  * @author Gary Russell
  * @author Mark Fisher
  * @since 3.0.5

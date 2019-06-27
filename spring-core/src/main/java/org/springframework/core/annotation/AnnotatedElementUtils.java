@@ -29,7 +29,9 @@ import java.util.*;
 
 /**
  * General utility methods for finding annotations, meta-annotations, and
- * repeatable annotations on {@link AnnotatedElement AnnotatedElements}.
+ * repeatable annotations on {@link AnnotatedElement AnnotatedElements}.<br/>
+ *
+ * 用于在{@link AnnotatedElement AnnotatedElements}上查找注释，元注释和可重复注释的常规实用程序方法。
  *
  * <p>{@code AnnotatedElementUtils} defines the public API for Spring's
  * meta-annotation programming model with support for <em>annotation attribute

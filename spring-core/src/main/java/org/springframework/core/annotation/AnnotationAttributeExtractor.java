@@ -25,7 +25,12 @@ import org.springframework.lang.Nullable;
  * An {@code AnnotationAttributeExtractor} is responsible for
  * {@linkplain #getAttributeValue extracting} annotation attribute values
  * from an underlying {@linkplain #getSource source} such as an
- * {@code Annotation} or a {@code Map}.
+ * {@code Annotation} or a {@code Map}.<br/>
+ *
+ * 一个{@code AnnotationAttributeExtractor}负责
+ * * {@linkplain #getAttributeValue extracting}注释属性值
+ * *来自底层{@linkplain #getSource source}，如an
+ * * {@code注释}或{@code映射}。
  *
  * @author Sam Brannen
  * @since 4.2

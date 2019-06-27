@@ -20,6 +20,8 @@ package org.springframework.core.task;
  * A callback interface for a decorator to be applied to any {@link Runnable}
  * about to be executed.
  *
+ * 装饰器的回调接口，应用于即将执行的任何{@link Runnable}。
+ *
  * <p>Note that such a decorator is not necessarily being applied to the
  * user-supplied {@code Runnable}/{@code Callable} but rather to the actual
  * execution callback (which may be a wrapper around the user-supplied task).

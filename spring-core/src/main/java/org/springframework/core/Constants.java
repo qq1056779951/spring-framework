@@ -28,6 +28,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
 /**
+ *
+ * 此类可用于解析包含公共静态最终成员中的常量定义的其他类。此类的{@code asXXXX}方法允许通过其字符串名称访问这些常量值。
  * This class can be used to parse other classes containing constant definitions
  * in public static final members. The {@code asXXXX} methods of this class
  * allow these constant values to be accessed via their string names.

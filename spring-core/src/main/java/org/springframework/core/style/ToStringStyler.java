@@ -23,6 +23,9 @@ import org.springframework.lang.Nullable;
  * Encapsulates the print algorithms; some other object such as a builder
  * should provide the workflow.
  *
+ * 用于漂亮打印{@code toString（）}方法的策略界面。
+ * 封装打印算法;其他一些对象（如构建器）应提供工作流程。
+ *
  * @author Keith Donald
  * @since 1.2.2
  */

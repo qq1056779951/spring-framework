@@ -162,6 +162,7 @@ public abstract class ClassUtils {
 	}
 
 	/**
+	 * 获取默认类加载器
 	 * Return the default ClassLoader to use: typically the thread context
 	 * ClassLoader, if available; the ClassLoader that loaded the ClassUtils
 	 * class will be used as fallback.
@@ -179,15 +180,18 @@ public abstract class ClassUtils {
 	public static ClassLoader getDefaultClassLoader() {
 		ClassLoader cl = null;
 		try {
+			//获取当前线程的context class loader
 			cl = Thread.currentThread().getContextClassLoader();
 		}
 		catch (Throwable ex) {
 			// Cannot access thread context ClassLoader - falling back...
 		}
 		if (cl == null) {
+			// 如果没有context loader，使用当前类的类加载器；
 			// No thread context class loader -> use class loader of this class.
 			cl = ClassUtils.class.getClassLoader();
 			if (cl == null) {
+				//如果当前类加载器无法获取，获得bootstrap ClassLoader
 				// getClassLoader() returning null indicates the bootstrap ClassLoader
 				try {
 					cl = ClassLoader.getSystemClassLoader();
@@ -327,6 +331,7 @@ public abstract class ClassUtils {
 	}
 
 	/**
+	 * 判断当前class loader中是否存在对应的类型了
 	 * Determine whether the {@link Class} identified by the supplied name is present
 	 * and can be loaded. Will return {@code false} if either the class or
 	 * one of its dependencies is not present or cannot be loaded.
@@ -379,6 +384,7 @@ public abstract class ClassUtils {
 	}
 
 	/**
+	 * 判断类是否是可以缓存的，原理很简单，就是判断该类型是否在指定classloader或者其parent classloader中；
 	 * Check whether the given class is cache-safe in the given context,
 	 * i.e. whether it is loaded by the given ClassLoader or a parent of it.
 	 * @param clazz the class to analyze
@@ -880,6 +886,7 @@ public abstract class ClassUtils {
 	}
 
 	/**
+	 * 获取用户定义的本来的类型，大部分情况下就是类型本身，主要针对cglib做了额外的判断，获取cglib代理之后的父类；
 	 * Return the user-defined class for the given class: usually simply the given
 	 * class, but the original class in case of a CGLIB-generated subclass.
 	 * @param clazz the class to check
@@ -937,6 +944,7 @@ public abstract class ClassUtils {
 	}
 
 	/**
+	 * 这个方法也较为简单，得到一个全限定类名的简写，可以处理简单类型和内部类的情况
 	 * Get the class name without the qualified package name.
 	 * @param className the className to get the short name for
 	 * @return the class name of the class without the package name
