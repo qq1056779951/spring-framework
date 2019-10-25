@@ -122,7 +122,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	public static final String APPLICATION_EVENT_MULTICASTER_BEAN_NAME = "applicationEventMulticaster";
 
 
+	//静态初始化块，在整个容器创建过程中只执行一次
 	static {
+		//为了避免应用程序在Weblogic8.1关闭时出现类加载异常加载问题，加载IoC容
+		//器关闭事件(ContextClosedEvent)类
 		// Eagerly load the ContextClosedEvent class to avoid weird classloader issues
 		// on application shutdown in WebLogic 8.1. (Reported by Dustin Woods.)
 		ContextClosedEvent.class.getName();
@@ -537,10 +540,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 					logger.warn("Exception encountered during context initialization - " +
 							"cancelling refresh attempt: " + ex);
 				}
-
+				//销毁以创建的单态Bean
 				// Destroy already created singletons to avoid dangling resources.
 				destroyBeans();
-
+				//取消refresh操作，重置容器的同步标识.
 				// Reset 'active' flag.
 				cancelRefresh(ex);
 
@@ -606,6 +609,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+		//这里使用了委派设计模式，父类定义了抽象的refreshBeanFactory()方法，具体实现调用子类容器的refreshBeanFactory()方法
 	    // 刷新( 重建 ) BeanFactory
 		refreshBeanFactory();
 		// 获得 BeanFactory

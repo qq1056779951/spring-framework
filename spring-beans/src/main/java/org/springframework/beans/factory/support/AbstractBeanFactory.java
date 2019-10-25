@@ -154,21 +154,25 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	// Implementation of BeanFactory interface
 	//---------------------------------------------------------------------
 
+	//获取IoC容器中指定名称的Bean
 	@Override
 	public Object getBean(String name) throws BeansException {
 		return doGetBean(name, null, null, false);
 	}
 
+	//获取IoC容器中指定名称和类型的Bean
 	@Override
 	public <T> T getBean(String name, Class<T> requiredType) throws BeansException {
 		return doGetBean(name, requiredType, null, false);
 	}
 
+	//获取IoC容器中指定名称和参数的Bean
 	@Override
 	public Object getBean(String name, Object... args) throws BeansException {
 		return doGetBean(name, null, args, false);
 	}
 
+	//获取IoC容器中指定名称、类型和参数的Bean
 	/**
 	 * Return an instance, which may be shared or independent, of the specified bean.
 	 * @param name the name of the bean to retrieve
@@ -185,7 +189,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 
 	/**
-     * 获取 Bean 对象
+     * 真正实现向IoC容器获取Bean的功能，也是触发依赖注入功能的地方
      *
 	 * Return an instance, which may be shared or independent, of the specified bean.
 	 * @param name the name of the bean to retrieve
@@ -205,16 +209,20 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	@SuppressWarnings("unchecked")
 	protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredType,
 			@Nullable final Object[] args, boolean typeCheckOnly) throws BeansException {
-        // 返回 bean 名称，剥离工厂引用前缀。
-        // 如果 name 是 alias ，则获取对应映射的 beanName 。
+        //根据指定的名称获取被管理Bean的名称，剥离指定名称中对容器的相关依赖
+		//如果指定的是别名，将别名转换为规范的Bean名称
 		final String beanName = transformedBeanName(name);
 		Object bean;
 
-        // 从缓存中或者实例工厂中获取 Bean 对象
+		//先从缓存中取是否已经有被创建过的单态类型的Bean，对于单态模式的Bean整
+		//个IoC容器中只创建一次，不需要重复创建
 		// Eagerly check singleton cache for manually registered singletons.
 		Object sharedInstance = getSingleton(beanName);
+		//IoC容器创建单态模式Bean实例对象
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
+				//如果指定名称的Bean在容器中已有单态模式的Bean被创建，直接返回
+				//已经创建的Bean
 				if (isSingletonCurrentlyInCreation(beanName)) {
 					logger.trace("Returning eagerly cached instance of singleton bean '" + beanName +
 							"' that is not fully initialized yet - a consequence of a circular reference");
@@ -222,12 +230,15 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					logger.trace("Returning cached instance of singleton bean '" + beanName + "'");
 				}
 			}
-			// 完成 FactoryBean 的相关处理，并用来获取 FactoryBean 的处理结果
+			//获取给定Bean的实例对象，主要是完成FactoryBean的相关处理
+			//注意：BeanFactory是管理容器中Bean的工厂，而FactoryBean是
+			//创建创建对象的工厂Bean，两者之间有区别
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
-		} else {
+		} else { //缓存没有正在创建的单态模式Bean
 			// Fail if we're already creating this bean instance:
 			// We're assumably within a circular reference.
-            // 因为 Spring 只解决单例模式下得循环依赖，在原型模式下如果存在循环依赖则会抛出异常。
+			//缓存中已经有已经创建的原型模式Bean，但是由于循环引用的问题导致实
+			//例化对象失败
 			if (isPrototypeCurrentlyInCreation(beanName)) {
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
