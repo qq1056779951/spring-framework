@@ -63,7 +63,6 @@ public class DefaultAdvisorAdapterRegistry implements AdvisorAdapterRegistry, Se
 			throw new UnknownAdviceTypeException(adviceObject);
 		}
 		Advice advice = (Advice) adviceObject;
-        // TODO 芋艿，如下的情况，需要找机会调试下
         // 如果是 MethodInterceptor 类型，则封装成 DefaultPointcutAdvisor 对象
         if (advice instanceof MethodInterceptor) {
 			// So well-known it doesn't even need an adapter.

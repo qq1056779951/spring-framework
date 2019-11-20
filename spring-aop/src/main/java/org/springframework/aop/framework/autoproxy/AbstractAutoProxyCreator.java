@@ -266,8 +266,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		// Create proxy here if we have a custom TargetSource.
 		// Suppresses unnecessary default instantiation of the target bean:
 		// The TargetSource will handle target instances in a custom fashion.
-        // TODO 芋艿，后续详细看看。暂时好像没用到这个特性，可看下 https://my.oschina.net/lixin91/blog/688188 博客。这个特性蛮有意思的。
-        // TODO TargetSource ，可以理解成，Target 的数据源，根据不同参数，返回相同或不同 Target 对象。有趣的紧。
+        // 后续详细看看。暂时好像没用到这个特性，可看下 https://my.oschina.net/lixin91/blog/688188 博客。这个特性蛮有意思的。
+        //  TargetSource ，可以理解成，Target 的数据源，根据不同参数，返回相同或不同 Target 对象。有趣的紧。
 		TargetSource targetSource = getCustomTargetSource(beanClass, beanName);
 		if (targetSource != null) {
 			if (StringUtils.hasLength(beanName)) {
@@ -308,7 +308,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
             // 获得缓存 KEY
 			Object cacheKey = getCacheKey(bean.getClass(), beanName);
 			if (!this.earlyProxyReferences.contains(cacheKey)) {
-			    // TODO 芋艿 如果它适合被打理， 则需要封装指定 Bean
+			    //  如果它适合被打理， 则需要封装指定 Bean
 				return wrapIfNecessary(bean, beanName, cacheKey);
 			}
 		}
@@ -466,7 +466,6 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 */
 	protected Object createProxy(Class<?> beanClass, @Nullable String beanName,
 			@Nullable Object[] specificInterceptors, TargetSource targetSource) {
-	    // TODO 芋艿，稍后在看
 		if (this.beanFactory instanceof ConfigurableListableBeanFactory) {
 			AutoProxyUtils.exposeTargetClass((ConfigurableListableBeanFactory) this.beanFactory, beanName, beanClass);
 		}
@@ -499,7 +498,6 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		// 用来控制代理工厂被配置之后，是否还允许修改通知。
         // 缺省值为 false ，即在代理被配置之后，不允许修改代理的配置
 		proxyFactory.setFrozen(this.freezeProxy);
-		// TODO 芋艿，后续在看
 		if (advisorsPreFiltered()) {
 			proxyFactory.setPreFiltered(true);
 		}
@@ -547,7 +545,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	protected Advisor[] buildAdvisors(@Nullable String beanName, @Nullable Object[] specificInterceptors) {
 		// Handle prototypes correctly...
         // 解析所有注册的 interceptorNames
-		Advisor[] commonInterceptors = resolveInterceptorNames(); // TODO 芋艿，这个情况，暂时没调试。
+		Advisor[] commonInterceptors = resolveInterceptorNames();
 
 		List<Object> allInterceptors = new ArrayList<>(); // 所有集合
 		if (specificInterceptors != null) {

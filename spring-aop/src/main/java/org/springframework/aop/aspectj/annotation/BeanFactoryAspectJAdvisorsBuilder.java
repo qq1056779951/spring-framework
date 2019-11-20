@@ -136,14 +136,14 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 								// 记录到 advisorsCache 或 aspectFactoryCache 缓存中
 								if (this.beanFactory.isSingleton(beanName)) { // Bean 自身是单例
 									this.advisorsCache.put(beanName, classAdvisors);
-								} else { // Bean 是 BeanFactory TODO 芋艿，这个情况，未调试过
+								} else { // Bean 是 BeanFactory
 									this.aspectFactoryCache.put(beanName, factory);
 								}
                                 // 添加结果到 advisors 中
                                 advisors.addAll(classAdvisors);
 							} else {
 								// Per target or per this.
-								if (this.beanFactory.isSingleton(beanName)) { // 要求非单例，即 Prototype 类型 TODO 芋艿，这个情况，未调试过
+								if (this.beanFactory.isSingleton(beanName)) { // 要求非单例，即 Prototype 类型
 									throw new IllegalArgumentException("Bean with name '" + beanName +
 											"' is a singleton, but aspect instantiation model is not singleton");
 								}

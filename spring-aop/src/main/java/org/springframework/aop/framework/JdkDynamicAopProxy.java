@@ -238,7 +238,6 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler /* 重要 
 			// Massage return value if necessary.
             // 处理方法结果
 			Class<?> returnType = method.getReturnType();
-			// TODO 芋艿，没太看明白
 			if (retVal != null && retVal == target &&
 					returnType != Object.class && returnType.isInstance(proxy) &&
 					!RawTargetAccess.class.isAssignableFrom(method.getDeclaringClass())) {
@@ -254,7 +253,6 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler /* 重要 
 			// 正常结果，无需处理，直接返回
 			return retVal;
 		} finally {
-		    // TODO 芋艿，没太看明白
 			if (target != null && !targetSource.isStatic()) {
 				// Must have come from TargetSource.
 				targetSource.releaseTarget(target);

@@ -304,7 +304,7 @@ public abstract class AopUtils {
 			return candidateAdvisors;
 		}
 		List<Advisor> eligibleAdvisors = new ArrayList<>(); // eligible 翻译为符合条件的
-		// 首先，处理 IntroductionAdvisor 增强器 // TODO 芋艿，暂时没用过 IntroductionAdvisor
+		// 首先，处理 IntroductionAdvisor 增强器
 		for (Advisor candidate : candidateAdvisors) {
 			if (candidate instanceof IntroductionAdvisor // 匹配 IntroductionAdvisor 增强器
                     && canApply(candidate, clazz)) { // 判断，是否可以匹配
