@@ -138,7 +138,7 @@ class ConstructorResolver {
 				}
 			}
 
-            // TODO 芋艿 创建 Bean
+            // 创建 Bean
             if (candidates.length == 1 && explicitArgs == null && !mbd.hasConstructorArgumentValues()) {
 				Constructor<?> uniqueCandidate = candidates[0];
 				if (uniqueCandidate.getParameterCount() == 0) {
