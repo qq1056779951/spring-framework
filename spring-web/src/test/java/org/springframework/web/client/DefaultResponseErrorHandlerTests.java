@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -103,18 +103,6 @@ public class DefaultResponseErrorHandlerTests {
 		handler.handleError(response);
 	}
 
-	@Test(expected = UnknownHttpStatusCodeException.class)  // SPR-9406
-	public void unknownStatusCode() throws Exception {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.TEXT_PLAIN);
-
-		given(response.getStatusCode()).willThrow(new IllegalArgumentException("No matching constant for 999"));
-		given(response.getStatusText()).willReturn("Custom status code");
-		given(response.getHeaders()).willReturn(headers);
-
-		handler.handleError(response);
-	}
-
 	@Test  // SPR-16108
 	public void hasErrorForUnknownStatusCode() throws Exception {
 		HttpHeaders headers = new HttpHeaders();
@@ -127,11 +115,71 @@ public class DefaultResponseErrorHandlerTests {
 		assertFalse(handler.hasError(response));
 	}
 
+	@Test(expected = UnknownHttpStatusCodeException.class)  // SPR-9406
+	public void handleErrorUnknownStatusCode() throws Exception {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.TEXT_PLAIN);
+
+		given(response.getStatusCode()).willThrow(new IllegalArgumentException("No matching constant for 999"));
+		given(response.getStatusText()).willReturn("Custom status code");
+		given(response.getHeaders()).willReturn(headers);
+
+		handler.handleError(response);
+	}
+
+	@Test  // SPR-17461
+	public void hasErrorForCustomClientError() throws Exception {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.TEXT_PLAIN);
+
+		given(response.getRawStatusCode()).willReturn(499);
+		given(response.getStatusText()).willReturn("Custom status code");
+		given(response.getHeaders()).willReturn(headers);
+
+		assertTrue(handler.hasError(response));
+	}
+
+	@Test(expected = UnknownHttpStatusCodeException.class)
+	public void handleErrorForCustomClientError() throws Exception {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.TEXT_PLAIN);
+
+		given(response.getStatusCode()).willThrow(new IllegalArgumentException("No matching constant for 499"));
+		given(response.getStatusText()).willReturn("Custom status code");
+		given(response.getHeaders()).willReturn(headers);
+
+		handler.handleError(response);
+	}
+
+	@Test  // SPR-17461
+	public void hasErrorForCustomServerError() throws Exception {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.TEXT_PLAIN);
+
+		given(response.getRawStatusCode()).willReturn(599);
+		given(response.getStatusText()).willReturn("Custom status code");
+		given(response.getHeaders()).willReturn(headers);
+
+		assertTrue(handler.hasError(response));
+	}
+
+	@Test(expected = UnknownHttpStatusCodeException.class)
+	public void handleErrorForCustomServerError() throws Exception {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.TEXT_PLAIN);
+
+		given(response.getStatusCode()).willThrow(new IllegalArgumentException("No matching constant for 599"));
+		given(response.getStatusText()).willReturn("Custom status code");
+		given(response.getHeaders()).willReturn(headers);
+
+		handler.handleError(response);
+	}
+
 	@Test  // SPR-16604
 	public void bodyAvailableAfterHasErrorForUnknownStatusCode() throws Exception {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.TEXT_PLAIN);
-		TestByteArrayInputStream body = new TestByteArrayInputStream("Hello World".getBytes("UTF-8"));
+		TestByteArrayInputStream body = new TestByteArrayInputStream("Hello World".getBytes(UTF8));
 
 		given(response.getRawStatusCode()).willReturn(999);
 		given(response.getStatusText()).willReturn("Custom status code");

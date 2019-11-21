@@ -40,8 +40,8 @@ configure(allprojects) { project ->
 	ext.ejbVersion           = "3.0"
 	ext.fileuploadVersion    = "1.3.3"
 	ext.freemarkerVersion    = "2.3.23"
-	ext.groovyVersion        = "2.4.15"
-	ext.gsonVersion          = "2.8.2"
+	ext.groovyVersion        = "2.4.17"
+	ext.gsonVersion          = "2.8.5"
 	ext.guavaVersion         = "20.0"
 	ext.hamcrestVersion      = "1.3"
 	ext.hibernate3Version    = "3.6.10.Final"
@@ -50,9 +50,9 @@ configure(allprojects) { project ->
 	ext.hibval4Version       = "4.3.2.Final"
 	ext.hibval5Version       = "5.2.5.Final"
 	ext.hsqldbVersion        = "2.3.4"
-	ext.httpasyncVersion     = "4.1.3"
-	ext.httpclientVersion    = "4.5.5"
-	ext.jackson2Version      = "2.8.11.2"
+	ext.httpasyncVersion     = "4.1.4"
+	ext.httpclientVersion    = "4.5.6"
+	ext.jackson2Version      = "2.8.11.3"
 	ext.jasperreportsVersion = "6.2.1"  // our tests fail with JR-internal NPEs against 6.2.2 and higher
 	ext.javamailVersion      = "1.5.6"
 	ext.jettyVersion         = "9.3.14.v20161028"  // as of 9.3.15, Jetty has hard Servlet 3.1 requirement
@@ -62,20 +62,20 @@ configure(allprojects) { project ->
 	ext.jtaVersion           = "1.2"
 	ext.junitVersion         = "4.12"
 	ext.log4jVersion         = "1.2.17"
-	ext.nettyVersion         = "4.1.29.Final"
+	ext.nettyVersion         = "4.1.39.Final"
 	ext.okhttpVersion        = "2.7.5"
 	ext.okhttp3Version       = "3.8.1"
 	ext.openjpaVersion       = "2.4.2"
-	ext.poiVersion           = "3.14"
+	ext.poiVersion           = "3.17"
 	ext.reactorVersion       = "2.0.8.RELEASE"
 	ext.romeVersion          = "1.7.4"
 	ext.slf4jVersion         = "1.7.25"
 	ext.snakeyamlVersion     = "1.17"
-	ext.snifferVersion       = "1.16"
+	ext.snifferVersion       = "1.18"
 	ext.testngVersion        = "6.9.10"
 	ext.tiles2Version        = "2.2.2"
-	ext.tiles3Version        = "3.0.7"
-	ext.tomcatVersion        = "8.5.33"
+	ext.tiles3Version        = "3.0.8"
+	ext.tomcatVersion        = "8.5.45"
 	ext.tyrusVersion         = "1.3.5"  // constrained by WebLogic 12.1.3 support
 	ext.undertowVersion      = "1.3.33.Final"
 	ext.xmlunitVersion       = "1.6"
@@ -186,27 +186,28 @@ configure(allprojects) { project ->
 	}
 
 	ext.javadocLinks = [
-		"http://docs.oracle.com/javase/8/docs/api/",
-		"http://docs.oracle.com/javaee/7/api/",
-		"http://docs.oracle.com/cd/E13222_01/wls/docs90/javadocs/",  // CommonJ
-		"http://pic.dhe.ibm.com/infocenter/wasinfo/v7r0/topic/com.ibm.websphere.javadoc.doc/web/apidocs/",
-		"http://glassfish.java.net/nonav/docs/v3/api/",
-		"http://docs.jboss.org/jbossas/javadoc/4.0.5/connector/",
-		"http://docs.jboss.org/jbossas/javadoc/7.1.2.Final/",
-		"http://commons.apache.org/proper/commons-lang/javadocs/api-2.5/",
-		"http://commons.apache.org/proper/commons-codec/apidocs/",
-		"http://commons.apache.org/proper/commons-dbcp/apidocs/",
-		"http://portals.apache.org/pluto/portlet-2.0-apidocs/",
-		"http://tiles.apache.org/tiles-request/apidocs/",
-		"http://tiles.apache.org/framework/apidocs/",
-		"http://www.eclipse.org/aspectj/doc/released/aspectj5rt-api/",
-		"http://ehcache.org/apidocs/${ehcacheVersion}",
-		"http://ehcache.org/apidocs/${ehcache3Version}",
-		"http://quartz-scheduler.org/api/2.2.1/",
-		"http://fasterxml.github.io/jackson-core/javadoc/2.8/",
-		"http://fasterxml.github.io/jackson-databind/javadoc/2.8/",
-		"http://fasterxml.github.io/jackson-dataformat-xml/javadoc/2.8/",
-		"http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/"
+		"https://docs.oracle.com/javase/8/docs/api/",
+		"https://docs.oracle.com/javaee/7/api/",
+		"https://docs.oracle.com/cd/E13222_01/wls/docs90/javadocs/",  // CommonJ
+		"https://pic.dhe.ibm.com/infocenter/wasinfo/v7r0/topic/com.ibm.websphere.javadoc.doc/web/apidocs/",
+		"https://glassfish.java.net/nonav/docs/v3/api/",
+		"https://docs.jboss.org/jbossas/javadoc/4.0.5/connector/",
+		"https://docs.jboss.org/jbossas/javadoc/7.1.2.Final/",
+		"https://commons.apache.org/proper/commons-lang/javadocs/api-2.5/",
+		"https://commons.apache.org/proper/commons-codec/apidocs/",
+		"https://commons.apache.org/proper/commons-dbcp/apidocs/",
+		"https://portals.apache.org/pluto/portlet-2.0-apidocs/",
+		"https://tiles.apache.org/tiles-request/apidocs/",
+		"https://tiles.apache.org/framework/apidocs/",
+		"https://www.eclipse.org/aspectj/doc/released/aspectj5rt-api/",
+		"https://www.ehcache.org/apidocs/${ehcacheVersion}/",
+		"https://www.ehcache.org/apidocs/${ehcache3Version}/",
+		"https://www.quartz-scheduler.org/api/2.2.3/",
+		"https://fasterxml.github.io/jackson-core/javadoc/2.8/",
+		"https://fasterxml.github.io/jackson-databind/javadoc/2.8/",
+		"https://fasterxml.github.io/jackson-dataformat-xml/javadoc/2.8/",
+		"https://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/",
+		"https://junit.org/junit4/javadoc/${junitVersion}/"
 	] as String[]
 }
 
@@ -289,10 +290,9 @@ project("spring-build-src") {
 project("spring-core") {
 	description = "Spring Core"
 
-	// As of Spring 4.0.3, spring-core includes asm 5.x and repackages cglib 3.2, inlining
-	// both into the spring-core jar. cglib 3.2 itself depends on asm 5.x and is therefore
-	// further transformed by the JarJar task to depend on org.springframework.asm; this
-	// avoids including two different copies of asm unnecessarily.
+	// spring-core includes asm and repackages cglib, inlining both into the spring-core jar.
+	// cglib itself depends on asm and is therefore further transformed by the JarJar task to
+	// depend on org.springframework.asm; this avoids including two different copies of asm.
 	def cglibVersion = "3.2.6"
 	def objenesisVersion = "2.6"
 
@@ -727,6 +727,7 @@ project("spring-web") {
 		testCompile("com.fasterxml.jackson.datatype:jackson-datatype-joda:2.8.11")
 		testCompile("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.8.11")
 		testCompile("com.fasterxml.jackson.module:jackson-module-kotlin:2.8.11.1")
+		testCompile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.11")
     	testCompile("com.squareup.okhttp3:mockwebserver:${okhttp3Version}")
 		testRuntime("com.sun.mail:javax.mail:${javamailVersion}")
 	}
@@ -1246,7 +1247,7 @@ configure(rootProject) {
 		baseName = "spring-framework"
 		classifier = "docs"
 		description = "Builds -${classifier} archive containing api and reference " +
-			"for deployment at http://static.springframework.org/spring-framework/docs."
+			"for deployment at https://docs.spring.io/spring-framework/docs."
 
 		from("src/dist") {
 			include "changelog.txt"
@@ -1266,20 +1267,20 @@ configure(rootProject) {
 		baseName = "spring-framework"
 		classifier = "schema"
 		description = "Builds -${classifier} archive containing all " +
-			"XSDs for deployment at http://springframework.org/schema."
+			"XSDs for deployment at https://springframework.org/schema."
 		duplicatesStrategy 'exclude'
 		moduleProjects.each { subproject ->
 			def Properties schemas = new Properties();
 
 			subproject.sourceSets.main.resources.find {
-				it.path.endsWith("META-INF/spring.schemas")
+				(it.path.endsWith("META-INF/spring.schemas") || it.path.endsWith("META-INF\\spring.schemas"))
 			}?.withInputStream { schemas.load(it) }
 
 			for (def key : schemas.keySet()) {
 				def shortName = key.replaceAll(/http.*schema.(.*).spring-.*/, '$1')
 				assert shortName != key
 				File xsdFile = subproject.sourceSets.main.resources.find {
-					it.path.endsWith(schemas.get(key))
+					(it.path.endsWith(schemas.get(key)) || it.path.endsWith(schemas.get(key).replaceAll('\\/','\\\\')))
 				}
 				assert xsdFile != null
 				into (shortName) {

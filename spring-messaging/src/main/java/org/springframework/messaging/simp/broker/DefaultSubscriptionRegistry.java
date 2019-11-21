@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -65,7 +65,7 @@ public class DefaultSubscriptionRegistry extends AbstractSubscriptionRegistry {
 	public static final int DEFAULT_CACHE_LIMIT = 1024;
 
 	/** Static evaluation context to reuse */
-	private static EvaluationContext messageEvalContext =
+	private static final EvaluationContext messageEvalContext =
 			SimpleEvaluationContext.forPropertyAccessors(new SimpMessageHeaderPropertyAccessor()).build();
 
 
@@ -128,7 +128,7 @@ public class DefaultSubscriptionRegistry extends AbstractSubscriptionRegistry {
 	 * @since 4.2
 	 */
 	public void setSelectorHeaderName(String selectorHeaderName) {
-		this.selectorHeaderName = StringUtils.hasText(selectorHeaderName) ? selectorHeaderName : null;
+		this.selectorHeaderName = (StringUtils.hasText(selectorHeaderName) ? selectorHeaderName : null);
 	}
 
 	/**

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -509,12 +509,21 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					// Generics potentially only match on the target class, not on the proxy...
 					RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
 					Class<?> targetType = mbd.getTargetType();
-					if (targetType != null && targetType != ClassUtils.getUserClass(beanInstance) &&
-							typeToMatch.isAssignableFrom(targetType)) {
+					if (targetType != null && targetType != ClassUtils.getUserClass(beanInstance)) {
 						// Check raw class match as well, making sure it's exposed on the proxy.
 						Class<?> classToMatch = typeToMatch.resolve();
-						return (classToMatch == null || classToMatch.isInstance(beanInstance));
+						if (classToMatch != null && !classToMatch.isInstance(beanInstance)) {
+							return false;
+						}
+						if (typeToMatch.isAssignableFrom(targetType)) {
+							return true;
+						}
 					}
+					ResolvableType resolvableType = mbd.targetType;
+					if (resolvableType == null) {
+						resolvableType = mbd.factoryMethodReturnType;
+					}
+					return (resolvableType != null && typeToMatch.isAssignableFrom(resolvableType));
 				}
 			}
 			return false;
@@ -982,7 +991,6 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	@Override
 	public BeanDefinition getMergedBeanDefinition(String name) throws BeansException {
 		String beanName = transformedBeanName(name);
-
 		// Efficiently check whether bean definition exists in this factory.
 		if (!containsBeanDefinition(beanName) && getParentBeanFactory() instanceof ConfigurableBeanFactory) {
 			return ((ConfigurableBeanFactory) getParentBeanFactory()).getMergedBeanDefinition(beanName);
@@ -994,7 +1002,6 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	@Override
 	public boolean isFactoryBean(String name) throws NoSuchBeanDefinitionException {
 		String beanName = transformedBeanName(name);
-
 		Object beanInstance = getSingleton(beanName, false);
 		if (beanInstance != null) {
 			return (beanInstance instanceof FactoryBean);
@@ -1003,13 +1010,11 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			// null instance registered
 			return false;
 		}
-
 		// No singleton instance found -> check bean definition.
 		if (!containsBeanDefinition(beanName) && getParentBeanFactory() instanceof ConfigurableBeanFactory) {
 			// No bean definition found in this factory -> delegate to parent.
 			return ((ConfigurableBeanFactory) getParentBeanFactory()).isFactoryBean(name);
 		}
-
 		return isFactoryBean(beanName, getMergedLocalBeanDefinition(beanName));
 	}
 
@@ -1367,6 +1372,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 */
 	protected Class<?> resolveBeanClass(final RootBeanDefinition mbd, String beanName, final Class<?>... typesToMatch)
 			throws CannotLoadBeanClassException {
+
 		try {
 			if (mbd.hasBeanClass()) {
 				return mbd.getBeanClass();

@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,7 +35,7 @@ import java.util.TimeZone;
  * Miscellaneous {@link String} utility methods.
  *
  * <p>Mainly for internal use within the framework; consider
- * <a href="http://commons.apache.org/proper/commons-lang/">Apache's Commons Lang</a>
+ * <a href="https://commons.apache.org/proper/commons-lang/">Apache's Commons Lang</a>
  * for a more comprehensive suite of {@code String} utilities.
  *
  * <p>This class delivers some simple functionality that should really be
@@ -399,14 +399,14 @@ public abstract class StringUtils {
 		int pos = 0;  // our position in the old string
 		int patLen = oldPattern.length();
 		while (index >= 0) {
-			sb.append(inString.substring(pos, index));
+			sb.append(inString, pos, index);
 			sb.append(newPattern);
 			pos = index + patLen;
 			index = inString.indexOf(oldPattern, pos);
 		}
 
 		// append any characters to the right of a match
-		sb.append(inString.substring(pos));
+		sb.append(inString, pos, inString.length());
 		return sb.toString();
 	}
 
@@ -766,6 +766,32 @@ public abstract class StringUtils {
 	//---------------------------------------------------------------------
 
 	/**
+	 * Copy the given {@link Collection} into a {@code String} array.
+	 * <p>The {@code Collection} must contain {@code String} elements only.
+	 * @param collection the {@code Collection} to copy
+	 * @return the resulting {@code String} array
+	 */
+	public static String[] toStringArray(Collection<String> collection) {
+		if (collection == null) {
+			return null;
+		}
+		return collection.toArray(new String[collection.size()]);
+	}
+
+	/**
+	 * Copy the given {@link Enumeration} into a {@code String} array.
+	 * <p>The {@code Enumeration} must contain {@code String} elements only.
+	 * @param enumeration the {@code Enumeration} to copy
+	 * @return the resulting {@code String} array
+	 */
+	public static String[] toStringArray(Enumeration<String> enumeration) {
+		if (enumeration == null) {
+			return null;
+		}
+		return toStringArray(Collections.list(enumeration));
+	}
+
+	/**
 	 * Append the given {@code String} to the given {@code String} array,
 	 * returning a new array consisting of the input array contents plus
 	 * the given {@code String}.
@@ -838,8 +864,8 @@ public abstract class StringUtils {
 	}
 
 	/**
-	 * Turn given source {@code String} array into sorted array.
-	 * @param array the source array
+	 * Sort the given {@code String} array if necessary.
+	 * @param array the original array
 	 * @return the sorted array (never {@code null})
 	 */
 	public static String[] sortStringArray(String[] array) {
@@ -849,32 +875,6 @@ public abstract class StringUtils {
 
 		Arrays.sort(array);
 		return array;
-	}
-
-	/**
-	 * Copy the given {@code Collection} into a {@code String} array.
-	 * <p>The {@code Collection} must contain {@code String} elements only.
-	 * @param collection the {@code Collection} to copy
-	 * @return the {@code String} array
-	 */
-	public static String[] toStringArray(Collection<String> collection) {
-		if (collection == null) {
-			return null;
-		}
-		return collection.toArray(new String[collection.size()]);
-	}
-
-	/**
-	 * Copy the given Enumeration into a {@code String} array.
-	 * The Enumeration must contain {@code String} elements only.
-	 * @param enumeration the Enumeration to copy
-	 * @return the {@code String} array
-	 */
-	public static String[] toStringArray(Enumeration<String> enumeration) {
-		if (enumeration == null) {
-			return null;
-		}
-		return toStringArray(Collections.list(enumeration));
 	}
 
 	/**

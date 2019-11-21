@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -73,7 +73,7 @@ public class ServletWebRequestHttpMethodsTests {
 		currentDate = new Date();
 		dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
 		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-		servletRequest = new MockHttpServletRequest(method, "http://example.org");
+		servletRequest = new MockHttpServletRequest(method, "https://example.org");
 		servletResponse = new MockHttpServletResponse();
 		request = new ServletWebRequest(servletRequest, servletResponse);
 	}

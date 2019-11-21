@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Helper class that encapsulates the specification of a method parameter, i.e. a {@link Method}
@@ -71,11 +72,12 @@ public class MethodParameter {
 
 	private final int parameterIndex;
 
-	private int nestingLevel = 1;
+	private int nestingLevel;
 
 	/** Map from Integer level to Integer type index */
 	Map<Integer, Integer> typeIndexesPerLevel;
 
+	/** The containing class. Could also be supplied by overriding {@link #getContainingClass()} */
 	private volatile Class<?> containingClass;
 
 	private volatile Class<?> parameterType;
@@ -344,6 +346,12 @@ public class MethodParameter {
 		this.containingClass = containingClass;
 	}
 
+	/**
+	 * Return the containing class for this method parameter.
+	 * @return a specific containing class (potentially a subclass of the
+	 * declaring class), or otherwise simply the declaring class itself
+	 * @see #getDeclaringClass()
+	 */
 	public Class<?> getContainingClass() {
 		return (this.containingClass != null ? this.containingClass : getDeclaringClass());
 	}
@@ -612,7 +620,11 @@ public class MethodParameter {
 			return false;
 		}
 		MethodParameter otherParam = (MethodParameter) other;
-		return (this.parameterIndex == otherParam.parameterIndex && getMember().equals(otherParam.getMember()));
+		return (getContainingClass() == otherParam.getContainingClass() &&
+				ObjectUtils.nullSafeEquals(this.typeIndexesPerLevel, otherParam.typeIndexesPerLevel) &&
+				this.nestingLevel == otherParam.nestingLevel &&
+				this.parameterIndex == otherParam.parameterIndex &&
+				getMember().equals(otherParam.getMember()));
 	}
 
 	@Override

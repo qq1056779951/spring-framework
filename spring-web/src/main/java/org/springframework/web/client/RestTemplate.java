@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -89,11 +90,11 @@ import org.springframework.web.util.UriTemplateHandler;
  * <p>For each HTTP method there are three variants: two accept a URI template string
  * and URI variables (array or map) while a third accepts a {@link URI}.
  * Note that for URI templates it is assumed encoding is necessary, e.g.
- * {@code restTemplate.getForObject("http://example.com/hotel list")} becomes
- * {@code "http://example.com/hotel%20list"}. This also means if the URI template
+ * {@code restTemplate.getForObject("https://example.com/hotel list")} becomes
+ * {@code "https://example.com/hotel%20list"}. This also means if the URI template
  * or URI variables are already encoded, double encoding will occur, e.g.
- * {@code http://example.com/hotel%20list} becomes
- * {@code http://example.com/hotel%2520list}). To avoid that use a {@code URI} method
+ * {@code https://example.com/hotel%20list} becomes
+ * {@code https://example.com/hotel%2520list}). To avoid that use a {@code URI} method
  * variant to provide (or re-use) a previously encoded URI. To prepare such an URI
  * with full control over encoding, consider using
  * {@link org.springframework.web.util.UriComponentsBuilder}.
@@ -767,7 +768,7 @@ public class RestTemplate extends InterceptingHttpAccessor implements RestOperat
 				if (this.responseType instanceof Class) {
 					responseClass = (Class<?>) this.responseType;
 				}
-				List<MediaType> allSupportedMediaTypes = new ArrayList<MediaType>();
+				Set<MediaType> allSupportedMediaTypes = new LinkedHashSet<MediaType>();
 				for (HttpMessageConverter<?> converter : getMessageConverters()) {
 					if (responseClass != null) {
 						if (converter.canRead(responseClass, null)) {
@@ -782,11 +783,12 @@ public class RestTemplate extends InterceptingHttpAccessor implements RestOperat
 					}
 				}
 				if (!allSupportedMediaTypes.isEmpty()) {
-					MediaType.sortBySpecificity(allSupportedMediaTypes);
+					List<MediaType> result = new ArrayList<MediaType>(allSupportedMediaTypes);
+					MediaType.sortBySpecificity(result);
 					if (logger.isDebugEnabled()) {
 						logger.debug("Setting request Accept header to " + allSupportedMediaTypes);
 					}
-					request.getHeaders().setAccept(allSupportedMediaTypes);
+					request.getHeaders().setAccept(result);
 				}
 			}
 		}
