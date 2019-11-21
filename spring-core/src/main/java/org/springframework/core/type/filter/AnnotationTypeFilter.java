@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import java.lang.annotation.Inherited;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.classreading.MetadataReader;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -78,6 +79,14 @@ public class AnnotationTypeFilter extends AbstractTypeHierarchyTraversingFilter 
 		this.considerMetaAnnotations = considerMetaAnnotations;
 	}
 
+	/**
+	 * Return the {@link Annotation} that this instance is using to filter
+	 * candidates.
+	 * @since 5.0
+	 */
+	public final Class<? extends Annotation> getAnnotationType() {
+		return this.annotationType;
+	}
 
 	@Override
 	protected boolean matchSelf(MetadataReader metadataReader) {
@@ -87,15 +96,18 @@ public class AnnotationTypeFilter extends AbstractTypeHierarchyTraversingFilter 
 	}
 
 	@Override
+	@Nullable
 	protected Boolean matchSuperClass(String superClassName) {
 		return hasAnnotation(superClassName);
 	}
 
 	@Override
+	@Nullable
 	protected Boolean matchInterface(String interfaceName) {
 		return hasAnnotation(interfaceName);
 	}
 
+	@Nullable
 	protected Boolean hasAnnotation(String typeName) {
 		if (Object.class.getName().equals(typeName)) {
 			return false;

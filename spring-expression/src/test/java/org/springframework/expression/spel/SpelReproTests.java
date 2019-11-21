@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -60,13 +60,21 @@ import org.springframework.expression.spel.support.ReflectivePropertyAccessor;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.expression.spel.support.StandardTypeLocator;
 import org.springframework.expression.spel.testresources.le.div.mod.reserved.Reserver;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
- * Reproduction tests cornering various SpEL JIRA issues.
+ * Reproduction tests cornering various reported SpEL issues.
  *
  * @author Andy Clement
  * @author Juergen Hoeller
@@ -244,17 +252,17 @@ public class SpelReproTests extends AbstractExpressionTests {
 
 		try {
 			accessor.read(context, null, "abc");
-			fail("Should have failed with an AccessException");
+			fail("Should have failed with an IllegalStateException");
 		}
-		catch (AccessException ex) {
+		catch (IllegalStateException ex) {
 			// expected
 		}
 
 		try {
 			accessor.write(context, null, "abc", "foo");
-			fail("Should have failed with an AccessException");
+			fail("Should have failed with an IllegalStateException");
 		}
-		catch (AccessException ex) {
+		catch (IllegalStateException ex) {
 			// expected
 		}
 	}
@@ -1213,9 +1221,13 @@ public class SpelReproTests extends AbstractExpressionTests {
 	public void SPR9994_bridgeMethods() throws Exception {
 		ReflectivePropertyAccessor accessor = new ReflectivePropertyAccessor();
 		StandardEvaluationContext context = new StandardEvaluationContext();
-		Object target = new GenericImplementation();
+		GenericImplementation target = new GenericImplementation();
+		accessor.write(context, target, "property", "1");
+		assertEquals(1, target.value);
 		TypedValue value = accessor.read(context, target, "property");
+		assertEquals(1, value.getValue());
 		assertEquals(Integer.class, value.getTypeDescriptor().getType());
+		assertTrue(value.getTypeDescriptor().getAnnotations().length > 0);
 	}
 
 	@Test
@@ -1224,6 +1236,7 @@ public class SpelReproTests extends AbstractExpressionTests {
 		StandardEvaluationContext context = new StandardEvaluationContext();
 		Object target = new OnlyBridgeMethod();
 		TypedValue value = accessor.read(context, target, "property");
+		assertNull(value.getValue());
 		assertEquals(Integer.class, value.getTypeDescriptor().getType());
 	}
 
@@ -1232,7 +1245,7 @@ public class SpelReproTests extends AbstractExpressionTests {
 		ExpressionParser parser = new SpelExpressionParser();
 		StandardEvaluationContext evaluationContext = new StandardEvaluationContext(new BooleanHolder());
 		Class<?> valueType = parser.parseExpression("simpleProperty").getValueType(evaluationContext);
-		assertNotNull(valueType);
+		assertEquals(Boolean.class, valueType);
 	}
 
 	@Test
@@ -1240,7 +1253,7 @@ public class SpelReproTests extends AbstractExpressionTests {
 		ExpressionParser parser = new SpelExpressionParser();
 		StandardEvaluationContext evaluationContext = new StandardEvaluationContext(new BooleanHolder());
 		Object value = parser.parseExpression("simpleProperty").getValue(evaluationContext);
-		assertNotNull(value);
+		assertEquals(Boolean.class, value.getClass());
 	}
 
 	@Test
@@ -1248,7 +1261,7 @@ public class SpelReproTests extends AbstractExpressionTests {
 		ExpressionParser parser = new SpelExpressionParser();
 		StandardEvaluationContext evaluationContext = new StandardEvaluationContext(new BooleanHolder());
 		Class<?> valueType = parser.parseExpression("primitiveProperty").getValueType(evaluationContext);
-		assertNotNull(valueType);
+		assertEquals(Boolean.class, valueType);
 	}
 
 	@Test
@@ -1256,7 +1269,7 @@ public class SpelReproTests extends AbstractExpressionTests {
 		ExpressionParser parser = new SpelExpressionParser();
 		StandardEvaluationContext evaluationContext = new StandardEvaluationContext(new BooleanHolder());
 		Object value = parser.parseExpression("primitiveProperty").getValue(evaluationContext);
-		assertNotNull(value);
+		assertEquals(Boolean.class, value.getClass());
 	}
 
 	@Test
@@ -2220,15 +2233,25 @@ public class SpelReproTests extends AbstractExpressionTests {
 
 	private interface GenericInterface<T extends Number> {
 
+		void setProperty(T value);
+
 		T getProperty();
 	}
 
 
 	private static class GenericImplementation implements GenericInterface<Integer> {
 
+		int value;
+
 		@Override
+		public void setProperty(Integer value) {
+			this.value = value;
+		}
+
+		@Override
+		@Nullable
 		public Integer getProperty() {
-			return null;
+			return this.value;
 		}
 	}
 

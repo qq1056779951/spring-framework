@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,21 +33,6 @@ import static org.mockito.Mockito.*;
  * @author Stephane Nicoll
  */
 public class HttpComponentsHttpInvokerRequestExecutorTests {
-
-	@SuppressWarnings("deprecation")
-	@Test
-	public void assertLegacyCustomConfig() {
-		HttpClient httpClient = new org.apache.http.impl.client.DefaultHttpClient(); // Does not support RequestConfig
-		HttpComponentsHttpInvokerRequestExecutor executor = new HttpComponentsHttpInvokerRequestExecutor(httpClient);
-
-		executor.setConnectTimeout(1234);
-		assertEquals(1234, httpClient.getParams().getIntParameter(
-				org.apache.http.params.CoreConnectionPNames.CONNECTION_TIMEOUT, 0));
-
-		executor.setReadTimeout(4567);
-		assertEquals(4567, httpClient.getParams().getIntParameter(
-				org.apache.http.params.CoreConnectionPNames.SO_TIMEOUT, 0));
-	}
 
 	@Test
 	public void customizeConnectionTimeout() throws IOException {

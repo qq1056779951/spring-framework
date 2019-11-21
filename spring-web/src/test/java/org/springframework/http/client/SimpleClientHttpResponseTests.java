@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
 
@@ -38,8 +38,6 @@ import static org.mockito.BDDMockito.*;
  */
 public class SimpleClientHttpResponseTests {
 
-	private final Charset UTF8 = Charset.forName("UTF-8");
-
 	private final HttpURLConnection connection = mock(HttpURLConnection.class);
 
 	private final SimpleClientHttpResponse response = new SimpleClientHttpResponse(this.connection);
@@ -47,12 +45,12 @@ public class SimpleClientHttpResponseTests {
 
 	@Test  // SPR-14040
 	public void shouldNotCloseConnectionWhenResponseClosed() throws Exception {
-		TestByteArrayInputStream is = new TestByteArrayInputStream("Spring".getBytes(UTF8));
+		TestByteArrayInputStream is = new TestByteArrayInputStream("Spring".getBytes(StandardCharsets.UTF_8));
 		given(this.connection.getErrorStream()).willReturn(null);
 		given(this.connection.getInputStream()).willReturn(is);
 
 		InputStream responseStream = this.response.getBody();
-		assertThat(StreamUtils.copyToString(responseStream, UTF8), is("Spring"));
+		assertThat(StreamUtils.copyToString(responseStream, StandardCharsets.UTF_8), is("Spring"));
 
 		this.response.close();
 		assertTrue(is.isClosed());
@@ -62,13 +60,13 @@ public class SimpleClientHttpResponseTests {
 	@Test  // SPR-14040
 	public void shouldDrainStreamWhenResponseClosed() throws Exception {
 		byte[] buf = new byte[6];
-		TestByteArrayInputStream is = new TestByteArrayInputStream("SpringSpring".getBytes(UTF8));
+		TestByteArrayInputStream is = new TestByteArrayInputStream("SpringSpring".getBytes(StandardCharsets.UTF_8));
 		given(this.connection.getErrorStream()).willReturn(null);
 		given(this.connection.getInputStream()).willReturn(is);
 
 		InputStream responseStream = this.response.getBody();
 		responseStream.read(buf);
-		assertThat(new String(buf, UTF8), is("Spring"));
+		assertThat(new String(buf, StandardCharsets.UTF_8), is("Spring"));
 		assertThat(is.available(), is(6));
 
 		this.response.close();
@@ -80,12 +78,12 @@ public class SimpleClientHttpResponseTests {
 	@Test  // SPR-14040
 	public void shouldDrainErrorStreamWhenResponseClosed() throws Exception {
 		byte[] buf = new byte[6];
-		TestByteArrayInputStream is = new TestByteArrayInputStream("SpringSpring".getBytes(UTF8));
+		TestByteArrayInputStream is = new TestByteArrayInputStream("SpringSpring".getBytes(StandardCharsets.UTF_8));
 		given(this.connection.getErrorStream()).willReturn(is);
 
 		InputStream responseStream = this.response.getBody();
 		responseStream.read(buf);
-		assertThat(new String(buf, UTF8), is("Spring"));
+		assertThat(new String(buf, StandardCharsets.UTF_8), is("Spring"));
 		assertThat(is.available(), is(6));
 
 		this.response.close();
@@ -106,6 +104,18 @@ public class SimpleClientHttpResponseTests {
 		this.response.close();
 
 		verify(is).close();
+	}
+
+	@Test // SPR-17181
+	public void shouldDrainResponseEvenIfResponseNotRead() throws Exception {
+		TestByteArrayInputStream is = new TestByteArrayInputStream("SpringSpring".getBytes(StandardCharsets.UTF_8));
+		given(this.connection.getErrorStream()).willReturn(null);
+		given(this.connection.getInputStream()).willReturn(is);
+
+		this.response.close();
+		assertThat(is.available(), is(0));
+		assertTrue(is.isClosed());
+		verify(this.connection, never()).disconnect();
 	}
 
 

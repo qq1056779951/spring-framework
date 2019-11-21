@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,8 +23,13 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
 import javax.servlet.http.HttpServletResponse;
 
+import freemarker.ext.servlet.AllHttpScopesHashModel;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -42,11 +47,6 @@ import org.springframework.web.servlet.view.AbstractView;
 import org.springframework.web.servlet.view.InternalResourceView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import freemarker.ext.servlet.AllHttpScopesHashModel;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.*;
@@ -61,12 +61,13 @@ public class FreeMarkerViewTests {
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 
+
 	@Test
 	public void noFreeMarkerConfig() throws Exception {
 		FreeMarkerView fv = new FreeMarkerView();
 
 		WebApplicationContext wac = mock(WebApplicationContext.class);
-		given(wac.getBeansOfType(FreeMarkerConfig.class, true, false)).willReturn(new HashMap<String, FreeMarkerConfig>());
+		given(wac.getBeansOfType(FreeMarkerConfig.class, true, false)).willReturn(new HashMap<>());
 		given(wac.getServletContext()).willReturn(new MockServletContext());
 
 		fv.setUrl("anythingButNull");
@@ -92,9 +93,10 @@ public class FreeMarkerViewTests {
 		WebApplicationContext wac = mock(WebApplicationContext.class);
 		MockServletContext sc = new MockServletContext();
 
-		Map<String, FreeMarkerConfig> configs = new HashMap<String, FreeMarkerConfig>();
+		Map<String, FreeMarkerConfig> configs = new HashMap<>();
 		FreeMarkerConfigurer configurer = new FreeMarkerConfigurer();
 		configurer.setConfiguration(new TestConfiguration());
+		configurer.setServletContext(sc);
 		configs.put("configurer", configurer);
 		given(wac.getBeansOfType(FreeMarkerConfig.class, true, false)).willReturn(configs);
 		given(wac.getServletContext()).willReturn(sc);
@@ -108,7 +110,7 @@ public class FreeMarkerViewTests {
 		request.setAttribute(DispatcherServlet.LOCALE_RESOLVER_ATTRIBUTE, new AcceptHeaderLocaleResolver());
 		HttpServletResponse response = new MockHttpServletResponse();
 
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put("myattr", "myvalue");
 		fv.render(model, request, response);
 
@@ -122,9 +124,10 @@ public class FreeMarkerViewTests {
 		WebApplicationContext wac = mock(WebApplicationContext.class);
 		MockServletContext sc = new MockServletContext();
 
-		Map<String, FreeMarkerConfig> configs = new HashMap<String, FreeMarkerConfig>();
+		Map<String, FreeMarkerConfig> configs = new HashMap<>();
 		FreeMarkerConfigurer configurer = new FreeMarkerConfigurer();
 		configurer.setConfiguration(new TestConfiguration());
+		configurer.setServletContext(sc);
 		configs.put("configurer", configurer);
 		given(wac.getBeansOfType(FreeMarkerConfig.class, true, false)).willReturn(configs);
 		given(wac.getServletContext()).willReturn(sc);
@@ -139,7 +142,7 @@ public class FreeMarkerViewTests {
 		HttpServletResponse response = new MockHttpServletResponse();
 		response.setContentType("myContentType");
 
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put("myattr", "myvalue");
 		fv.render(model, request, response);
 
@@ -148,11 +151,14 @@ public class FreeMarkerViewTests {
 
 	@Test
 	public void freeMarkerViewResolver() throws Exception {
+		MockServletContext sc = new MockServletContext();
+
 		FreeMarkerConfigurer configurer = new FreeMarkerConfigurer();
 		configurer.setConfiguration(new TestConfiguration());
+		configurer.setServletContext(sc);
 
 		StaticWebApplicationContext wac = new StaticWebApplicationContext();
-		wac.setServletContext(new MockServletContext());
+		wac.setServletContext(sc);
 		wac.getBeanFactory().registerSingleton("configurer", configurer);
 		wac.refresh();
 

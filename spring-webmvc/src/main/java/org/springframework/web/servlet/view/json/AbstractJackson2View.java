@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -32,6 +33,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 
 import org.springframework.http.converter.json.MappingJacksonValue;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.view.AbstractView;
 
@@ -54,6 +56,7 @@ public abstract class AbstractJackson2View extends AbstractView {
 
 	private JsonEncoding encoding = JsonEncoding.UTF8;
 
+	@Nullable
 	private Boolean prettyPrint;
 
 	private boolean disableCaching = true;
@@ -62,7 +65,8 @@ public abstract class AbstractJackson2View extends AbstractView {
 
 
 	protected AbstractJackson2View(ObjectMapper objectMapper, String contentType) {
-		setObjectMapper(objectMapper);
+		this.objectMapper = objectMapper;
+		configurePrettyPrint();
 		setContentType(contentType);
 		setExposePathVariables(false);
 	}
@@ -75,7 +79,6 @@ public abstract class AbstractJackson2View extends AbstractView {
 	 * on the types to be serialized, in which case a custom-configured ObjectMapper is unnecessary.
 	 */
 	public void setObjectMapper(ObjectMapper objectMapper) {
-		Assert.notNull(objectMapper, "'objectMapper' must not be null");
 		this.objectMapper = objectMapper;
 		configurePrettyPrint();
 	}
@@ -154,12 +157,22 @@ public abstract class AbstractJackson2View extends AbstractView {
 	protected void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
 
-		OutputStream stream = (this.updateContentLength ? createTemporaryOutputStream() : response.getOutputStream());
-		Object value = filterAndWrapModel(model, request);
+		ByteArrayOutputStream temporaryStream = null;
+		OutputStream stream;
 
-		writeContent(stream, value);
 		if (this.updateContentLength) {
-			writeToResponse(response, (ByteArrayOutputStream) stream);
+			temporaryStream = createTemporaryOutputStream();
+			stream = temporaryStream;
+		}
+		else {
+			stream = response.getOutputStream();
+		}
+
+		Object value = filterAndWrapModel(model, request);
+		writeContent(stream, value);
+
+		if (temporaryStream != null) {
+			writeToResponse(response, temporaryStream);
 		}
 	}
 
@@ -175,8 +188,12 @@ public abstract class AbstractJackson2View extends AbstractView {
 		FilterProvider filters = (FilterProvider) model.get(FilterProvider.class.getName());
 		if (serializationView != null || filters != null) {
 			MappingJacksonValue container = new MappingJacksonValue(value);
-			container.setSerializationView(serializationView);
-			container.setFilters(filters);
+			if (serializationView != null) {
+				container.setSerializationView(serializationView);
+			}
+			if (filters != null) {
+				container.setFilters(filters);
+			}
 			value = container;
 		}
 		return value;

@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,7 +46,7 @@ import static org.junit.Assert.*;
  */
 public class DateFormattingTests {
 
-	private final FormattingConversionService conversionService = new FormattingConversionService();
+	private FormattingConversionService conversionService;
 
 	private DataBinder binder;
 
@@ -58,6 +58,7 @@ public class DateFormattingTests {
 	}
 
 	private void setup(DateFormatterRegistrar registrar) {
+		conversionService = new FormattingConversionService();
 		DefaultConversionService.addDefaultConverters(conversionService);
 		registrar.registerFormatters(conversionService);
 
@@ -149,6 +150,20 @@ public class DateFormattingTests {
 	}
 
 	@Test
+	public void testBindDateAnnotatedPatternWithGlobalFormat() {
+		DateFormatterRegistrar registrar = new DateFormatterRegistrar();
+		DateFormatter dateFormatter = new DateFormatter();
+		dateFormatter.setIso(ISO.DATE_TIME);
+		registrar.setFormatter(dateFormatter);
+		setup(registrar);
+		MutablePropertyValues propertyValues = new MutablePropertyValues();
+		propertyValues.add("dateAnnotatedPattern", "10/31/09 1:05");
+		binder.bind(propertyValues);
+		assertEquals(0, binder.getBindingResult().getErrorCount());
+		assertEquals("10/31/09 1:05", binder.getBindingResult().getFieldValue("dateAnnotatedPattern"));
+	}
+
+	@Test
 	public void testBindDateTimeOverflow() {
 		MutablePropertyValues propertyValues = new MutablePropertyValues();
 		propertyValues.add("dateAnnotatedPattern", "02/29/09 12:00 PM");
@@ -168,19 +183,19 @@ public class DateFormattingTests {
 	@Test
 	public void testBindISOTime() {
 		MutablePropertyValues propertyValues = new MutablePropertyValues();
-		propertyValues.add("isoTime", "12:00:00.000-0500");
+		propertyValues.add("isoTime", "12:00:00.000-05:00");
 		binder.bind(propertyValues);
 		assertEquals(0, binder.getBindingResult().getErrorCount());
-		assertEquals("17:00:00.000+0000", binder.getBindingResult().getFieldValue("isoTime"));
+		assertEquals("17:00:00.000Z", binder.getBindingResult().getFieldValue("isoTime"));
 	}
 
 	@Test
 	public void testBindISODateTime() {
 		MutablePropertyValues propertyValues = new MutablePropertyValues();
-		propertyValues.add("isoDateTime", "2009-10-31T12:00:00.000-0800");
+		propertyValues.add("isoDateTime", "2009-10-31T12:00:00.000-08:00");
 		binder.bind(propertyValues);
 		assertEquals(0, binder.getBindingResult().getErrorCount());
-		assertEquals("2009-10-31T20:00:00.000+0000", binder.getBindingResult().getFieldValue("isoDateTime"));
+		assertEquals("2009-10-31T20:00:00.000Z", binder.getBindingResult().getFieldValue("isoDateTime"));
 	}
 
 	@Test
@@ -227,7 +242,7 @@ public class DateFormattingTests {
 		registrar.setFormatter(dateFormatter);
 		setup(registrar);
 		// This is a format that cannot be parsed by new Date(String)
-		String string = "2009-06-01T14:23:05.003+0000";
+		String string = "2009-06-01T14:23:05.003+00:00";
 		Date date = this.conversionService.convert(string, Date.class);
 		assertNotNull(date);
 	}

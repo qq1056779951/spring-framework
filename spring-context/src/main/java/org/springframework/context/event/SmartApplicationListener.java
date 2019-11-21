@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.context.event;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.Ordered;
+import org.springframework.lang.Nullable;
 
 /**
  * Extended variant of the standard {@link ApplicationListener} interface,
@@ -42,8 +43,20 @@ public interface SmartApplicationListener extends ApplicationListener<Applicatio
 
 	/**
 	 * Determine whether this listener actually supports the given source type.
+	 * <p>The default implementation always returns {@code true}.
 	 * @param sourceType the source type, or {@code null} if no source
 	 */
-	boolean supportsSourceType(Class<?> sourceType);
+	default boolean supportsSourceType(@Nullable Class<?> sourceType) {
+		return true;
+	}
+
+	/**
+	 * Determine this listener's order in a set of listeners for the same event.
+	 * <p>The default implementation returns {@link #LOWEST_PRECEDENCE}.
+	 */
+	@Override
+	default int getOrder() {
+		return LOWEST_PRECEDENCE;
+	}
 
 }

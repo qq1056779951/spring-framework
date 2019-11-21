@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,15 +29,18 @@ import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 
 /**
- * Parse the <mvc:tiles-configurer> MVC namespace element and register
- * a corresponding TilesConfigurer bean.
-
+ * Parse the <code>&lt;mvc:tiles-configurer&gt;</code> MVC namespace element and register
+ * a corresponding {@code TilesConfigurer} bean.
+ *
  * @author Rossen Stoyanchev
  * @author Juergen Hoeller
  * @since 4.1
  */
 public class TilesConfigurerBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
 
+	/**
+	 * The bean name used for the {@code TilesConfigurer}.
+	 */
 	public static final String BEAN_NAME = "mvcTilesConfigurer";
 
 
@@ -55,7 +58,7 @@ public class TilesConfigurerBeanDefinitionParser extends AbstractSingleBeanDefin
 	protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
 		List<Element> childElements = DomUtils.getChildElementsByTagName(element, "definitions");
 		if (!childElements.isEmpty()) {
-			List<String> locations = new ArrayList<String>(childElements.size());
+			List<String> locations = new ArrayList<>(childElements.size());
 			for (Element childElement : childElements) {
 				locations.add(childElement.getAttribute("location"));
 			}

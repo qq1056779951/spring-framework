@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,9 +22,11 @@ import javax.resource.ResourceException;
 import javax.resource.spi.UnavailableException;
 
 import org.springframework.jca.endpoint.AbstractMessageEndpointFactory;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
- * JMS-specific implementation of the JCA 1.5
+ * JMS-specific implementation of the JCA 1.7
  * {@link javax.resource.spi.endpoint.MessageEndpointFactory} interface,
  * providing transaction management capabilities for a JMS listener object
  * (e.g. a {@link javax.jms.MessageListener} object).
@@ -47,6 +49,7 @@ import org.springframework.jca.endpoint.AbstractMessageEndpointFactory;
  */
 public class JmsMessageEndpointFactory extends AbstractMessageEndpointFactory  {
 
+	@Nullable
 	private MessageListener messageListener;
 
 
@@ -61,6 +64,7 @@ public class JmsMessageEndpointFactory extends AbstractMessageEndpointFactory  {
 	 * Return the JMS MessageListener for this endpoint.
 	 */
 	protected MessageListener getMessageListener() {
+		Assert.state(this.messageListener != null, "No MessageListener set");
 		return this.messageListener;
 	}
 
@@ -91,17 +95,12 @@ public class JmsMessageEndpointFactory extends AbstractMessageEndpointFactory  {
 				}
 			}
 			try {
-				messageListener.onMessage(message);
+				getMessageListener().onMessage(message);
 			}
-			catch (RuntimeException ex) {
+			catch (RuntimeException | Error ex) {
 				endpointEx = ex;
 				onEndpointException(ex);
 				throw ex;
-			}
-			catch (Error err) {
-				endpointEx = err;
-				onEndpointException(err);
-				throw err;
 			}
 			finally {
 				if (applyDeliveryCalls) {

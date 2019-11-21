@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.7
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -28,14 +29,14 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * {@link org.springframework.messaging.MessageChannel}.
  *
  * @author Rossen Stoyanchev
- * @author Juergen Hoeller
  * @since 4.0
  */
 public class ChannelRegistration {
 
+	@Nullable
 	private TaskExecutorRegistration registration;
 
-	private final List<ChannelInterceptor> interceptors = new ArrayList<ChannelInterceptor>();
+	private final List<ChannelInterceptor> interceptors = new ArrayList<>();
 
 
 	/**
@@ -50,7 +51,7 @@ public class ChannelRegistration {
 	 * ThreadPoolTaskExecutor.
 	 * @param taskExecutor the executor to use (or {@code null} for a default executor)
 	 */
-	public TaskExecutorRegistration taskExecutor(ThreadPoolTaskExecutor taskExecutor) {
+	public TaskExecutorRegistration taskExecutor(@Nullable ThreadPoolTaskExecutor taskExecutor) {
 		if (this.registration == null) {
 			this.registration = (taskExecutor != null ? new TaskExecutorRegistration(taskExecutor) :
 					new TaskExecutorRegistration());
@@ -73,7 +74,7 @@ public class ChannelRegistration {
 	 * @deprecated as of 4.3.12, in favor of {@link #interceptors(ChannelInterceptor...)}
 	 */
 	@Deprecated
-	public ChannelRegistration setInterceptors(ChannelInterceptor... interceptors) {
+	public ChannelRegistration setInterceptors(@Nullable ChannelInterceptor... interceptors) {
 		if (interceptors != null) {
 			this.interceptors.addAll(Arrays.asList(interceptors));
 		}
@@ -83,22 +84,6 @@ public class ChannelRegistration {
 
 	protected boolean hasTaskExecutor() {
 		return (this.registration != null);
-	}
-
-	/**
-	 * @deprecated as of 4.3.12 since it's not used anymore
-	 */
-	@Deprecated
-	protected TaskExecutorRegistration getTaskExecRegistration() {
-		return this.registration;
-	}
-
-	/**
-	 * @deprecated as of 4.3.12 since it's not used anymore
-	 */
-	@Deprecated
-	protected TaskExecutorRegistration getOrCreateTaskExecRegistration() {
-		return taskExecutor();
 	}
 
 	protected boolean hasInterceptors() {

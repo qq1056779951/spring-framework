@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.ext.Locator2;
 import org.xml.sax.helpers.AttributesImpl;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -49,6 +50,7 @@ class StaxStreamXMLReader extends AbstractStaxXMLReader {
 
 	private String xmlVersion = DEFAULT_XML_VERSION;
 
+	@Nullable
 	private String encoding;
 
 
@@ -149,10 +151,12 @@ class StaxStreamXMLReader extends AbstractStaxXMLReader {
 					return (location != null ? location.getLineNumber() : -1);
 				}
 				@Override
+				@Nullable
 				public String getPublicId() {
 					return (location != null ? location.getPublicId() : null);
 				}
 				@Override
+				@Nullable
 				public String getSystemId() {
 					return (location != null ? location.getSystemId() : null);
 				}
@@ -161,6 +165,7 @@ class StaxStreamXMLReader extends AbstractStaxXMLReader {
 					return xmlVersion;
 				}
 				@Override
+				@Nullable
 				public String getEncoding() {
 					return encoding;
 				}

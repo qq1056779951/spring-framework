@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -292,32 +292,10 @@ public enum SpelMessage {
 		return formattedMessage.toString();
 	}
 
+
 	/**
-	 * Produce a complete message including the prefix, the position (if known)
-	 * and with the inserts applied to the message.
-	 * @param pos the position (ignored and not included in the message if less than 0)
-	 * @param inserts the inserts to put into the formatted message
-	 * @return a formatted message
-	 * @deprecated as of Spring 4.3.5, in favor of {@link #formatMessage(Object...)}
+	 * Message kinds.
 	 */
-	@Deprecated
-	public String formatMessage(int pos, Object... inserts) {
-		StringBuilder formattedMessage = new StringBuilder();
-		formattedMessage.append("EL").append(this.code);
-		switch (this.kind) {
-			case ERROR:
-				formattedMessage.append("E");
-				break;
-		}
-		formattedMessage.append(":");
-		if (pos >= 0) {
-			formattedMessage.append("(pos ").append(pos).append("): ");
-		}
-		formattedMessage.append(MessageFormat.format(this.message, inserts));
-		return formattedMessage.toString();
-	}
-
-
 	public enum Kind { INFO, WARNING, ERROR }
 
 }

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
@@ -124,7 +125,7 @@ public class SimpleMessageConverter implements MessageConverter {
 
 	/**
 	 * Create a JMS BytesMessage for the given byte array.
-	 * @param bytes the byyte array to convert
+	 * @param bytes the byte array to convert
 	 * @param session current JMS session
 	 * @return the resulting message
 	 * @throws JMSException if thrown by JMS methods
@@ -200,7 +201,7 @@ public class SimpleMessageConverter implements MessageConverter {
 	 */
 	@SuppressWarnings("unchecked")
 	protected Map<String, Object> extractMapFromMessage(MapMessage message) throws JMSException {
-		Map<String, Object> map = new HashMap<String, Object>();
+		Map<String, Object> map = new HashMap<>();
 		Enumeration<String> en = message.getMapNames();
 		while (en.hasMoreElements()) {
 			String key = en.nextElement();

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,7 +45,7 @@ import static org.junit.Assert.*;
  * @author Rod Johnson
  * @author Chris Beams
  */
-public final class BenchmarkTests {
+public class BenchmarkTests {
 
 	private static final Class<?> CLASS = BenchmarkTests.class;
 
@@ -231,7 +231,7 @@ class TraceAfterReturningAdvice implements AfterReturningAdvice {
 			new StaticMethodMatcherPointcut() {
 				@Override
 				public boolean matches(Method method, Class<?> targetClass) {
-					return method.getParameterTypes().length == 1 &&
+					return method.getParameterCount() == 1 &&
 						method.getParameterTypes()[0].equals(Integer.class);
 				}
 			},

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,8 @@ import java.util.List;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.springframework.lang.Nullable;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -84,26 +86,27 @@ public class JOptCommandLinePropertySource extends CommandLinePropertySource<Opt
 
 	@Override
 	public String[] getPropertyNames() {
-		List<String> names = new ArrayList<String>();
+		List<String> names = new ArrayList<>();
 		for (OptionSpec<?> spec : this.source.specs()) {
-			List<String> aliases = spec.options();
-			if (!aliases.isEmpty()) {
+			String lastOption = CollectionUtils.lastElement(spec.options());
+			if (lastOption != null) {
 				// Only the longest name is used for enumerating
-				names.add(aliases.get(aliases.size() - 1));
+				names.add(lastOption);
 			}
 		}
 		return StringUtils.toStringArray(names);
 	}
 
 	@Override
+	@Nullable
 	public List<String> getOptionValues(String name) {
 		List<?> argValues = this.source.valuesOf(name);
-		List<String> stringArgValues = new ArrayList<String>();
+		List<String> stringArgValues = new ArrayList<>();
 		for (Object argValue : argValues) {
 			stringArgValues.add(argValue.toString());
 		}
 		if (stringArgValues.isEmpty()) {
-			return (this.source.has(name) ? Collections.<String>emptyList() : null);
+			return (this.source.has(name) ? Collections.emptyList() : null);
 		}
 		return Collections.unmodifiableList(stringArgValues);
 	}
@@ -111,11 +114,11 @@ public class JOptCommandLinePropertySource extends CommandLinePropertySource<Opt
 	@Override
 	protected List<String> getNonOptionArgs() {
 		List<?> argValues = this.source.nonOptionArguments();
-		List<String> stringArgValues = new ArrayList<String>();
+		List<String> stringArgValues = new ArrayList<>();
 		for (Object argValue : argValues) {
 			stringArgValues.add(argValue.toString());
 		}
-		return (stringArgValues.isEmpty() ? Collections.<String>emptyList() :
+		return (stringArgValues.isEmpty() ? Collections.emptyList() :
 				Collections.unmodifiableList(stringArgValues));
 	}
 

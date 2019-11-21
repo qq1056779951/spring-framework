@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,7 +24,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.jdbc.support.nativejdbc.NativeJdbcExtractor;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -43,7 +43,8 @@ public class OracleTableMetaDataProvider extends GenericTableMetaDataProvider {
 
 	private final boolean includeSynonyms;
 
-	private String defaultSchema;
+	@Nullable
+	private final String defaultSchema;
 
 
 	/**
@@ -71,6 +72,7 @@ public class OracleTableMetaDataProvider extends GenericTableMetaDataProvider {
 	/*
 	 * Oracle-based implementation for detecting the current schema.
 	 */
+	@Nullable
 	private static String lookupDefaultSchema(DatabaseMetaData databaseMetaData) {
 		try {
 			CallableStatement cstmt = null;
@@ -98,9 +100,10 @@ public class OracleTableMetaDataProvider extends GenericTableMetaDataProvider {
 	}
 
 	@Override
+	@Nullable
 	protected String getDefaultSchema() {
 		if (this.defaultSchema != null) {
-			return defaultSchema;
+			return this.defaultSchema;
 		}
 		return super.getDefaultSchema();
 	}
@@ -108,7 +111,8 @@ public class OracleTableMetaDataProvider extends GenericTableMetaDataProvider {
 
 	@Override
 	public void initializeWithTableColumnMetaData(DatabaseMetaData databaseMetaData,
-			String catalogName, String schemaName, String tableName) throws SQLException {
+			@Nullable String catalogName, @Nullable String schemaName, @Nullable String tableName)
+			throws SQLException {
 
 		if (!this.includeSynonyms) {
 			logger.debug("Defaulting to no synonyms in table meta-data lookup");
@@ -118,37 +122,18 @@ public class OracleTableMetaDataProvider extends GenericTableMetaDataProvider {
 
 		Connection con = databaseMetaData.getConnection();
 		if (con == null) {
-			logger.warn("Unable to include synonyms in table meta-data lookup - no Connection from DatabaseMetaData");
+			logger.info("Unable to include synonyms in table meta-data lookup - no Connection from DatabaseMetaData");
 			super.initializeWithTableColumnMetaData(databaseMetaData, catalogName, schemaName, tableName);
 			return;
 		}
 
-		NativeJdbcExtractor nativeJdbcExtractor = getNativeJdbcExtractor();
-		if (nativeJdbcExtractor != null) {
-			con = nativeJdbcExtractor.getNativeConnection(con);
-		}
-
-		boolean isOracleCon = false;
 		try {
 			Class<?> oracleConClass = con.getClass().getClassLoader().loadClass("oracle.jdbc.OracleConnection");
-			isOracleCon = oracleConClass.isInstance(con);
-			if (!isOracleCon) {
-				con = (Connection) con.unwrap(oracleConClass);
-				isOracleCon = oracleConClass.isInstance(con);
-			}
+			con = (Connection) con.unwrap(oracleConClass);
 		}
-		catch (ClassNotFoundException ex) {
+		catch (ClassNotFoundException | SQLException ex) {
 			if (logger.isInfoEnabled()) {
-				logger.info("Could not find Oracle JDBC API: " + ex);
-			}
-		}
-		catch (SQLException ex) {
-			// No OracleConnection found by unwrap
-		}
-
-		if (!isOracleCon) {
-			if (logger.isWarnEnabled()) {
-				logger.warn("Unable to include synonyms in table meta-data lookup - no Oracle Connection: " + con);
+				logger.info("Unable to include synonyms in table meta-data lookup - no Oracle Connection: " + ex);
 			}
 			super.initializeWithTableColumnMetaData(databaseMetaData, catalogName, schemaName, tableName);
 			return;

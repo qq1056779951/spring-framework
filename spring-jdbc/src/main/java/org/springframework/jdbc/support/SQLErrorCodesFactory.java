@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.jdbc.support;
 
 import java.util.Collections;
 import java.util.Map;
+
 import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
@@ -28,9 +29,11 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.PatternMatchUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Factory for creating {@link SQLErrorCodes} based on the
@@ -85,8 +88,7 @@ public class SQLErrorCodesFactory {
 	/**
 	 * Map to cache the SQLErrorCodes instance per DataSource.
 	 */
-	private final Map<DataSource, SQLErrorCodes> dataSourceCache =
-			new ConcurrentReferenceHashMap<DataSource, SQLErrorCodes>(16);
+	private final Map<DataSource, SQLErrorCodes> dataSourceCache = new ConcurrentReferenceHashMap<>(16);
 
 
 	/**
@@ -111,20 +113,20 @@ public class SQLErrorCodesFactory {
 				bdr.loadBeanDefinitions(resource);
 			}
 			else {
-				logger.warn("Default sql-error-codes.xml not found (should be included in spring.jar)");
+				logger.info("Default sql-error-codes.xml not found (should be included in spring-jdbc jar)");
 			}
 
 			// Load custom SQL error codes, overriding defaults.
 			resource = loadResource(SQL_ERROR_CODE_OVERRIDE_PATH);
 			if (resource != null && resource.exists()) {
 				bdr.loadBeanDefinitions(resource);
-				logger.info("Found custom sql-error-codes.xml file at the root of the classpath");
+				logger.debug("Found custom sql-error-codes.xml file at the root of the classpath");
 			}
 
 			// Check all beans of type SQLErrorCodes.
 			errorCodes = lbf.getBeansOfType(SQLErrorCodes.class, true, false);
-			if (logger.isDebugEnabled()) {
-				logger.debug("SQLErrorCodes loaded: " + errorCodes.keySet());
+			if (logger.isTraceEnabled()) {
+				logger.trace("SQLErrorCodes loaded: " + errorCodes.keySet());
 			}
 		}
 		catch (BeansException ex) {
@@ -146,6 +148,7 @@ public class SQLErrorCodesFactory {
 	 * @return the resource, or {@code null} if the resource wasn't found
 	 * @see #getInstance
 	 */
+	@Nullable
 	protected Resource loadResource(String path) {
 		return new ClassPathResource(path, getClass().getClassLoader());
 	}
@@ -209,8 +212,8 @@ public class SQLErrorCodesFactory {
 				if (sec == null) {
 					// We could not find it - got to look it up.
 					try {
-						String name = (String) JdbcUtils.extractDatabaseMetaData(dataSource, "getDatabaseProductName");
-						if (name != null) {
+						String name = JdbcUtils.extractDatabaseMetaData(dataSource, "getDatabaseProductName");
+						if (StringUtils.hasLength(name)) {
 							return registerDatabase(dataSource, name);
 						}
 					}
@@ -256,6 +259,7 @@ public class SQLErrorCodesFactory {
 	 * @since 4.3.5
 	 * @see #registerDatabase(DataSource, String)
 	 */
+	@Nullable
 	public SQLErrorCodes unregisterDatabase(DataSource dataSource) {
 		return this.dataSourceCache.remove(dataSource);
 	}
@@ -277,14 +281,14 @@ public class SQLErrorCodesFactory {
 		SQLExceptionTranslator customTranslator =
 				CustomSQLExceptionTranslatorRegistry.getInstance().findTranslatorForDatabase(databaseName);
 		if (customTranslator != null) {
-			if (errorCodes.getCustomSqlExceptionTranslator() != null && logger.isWarnEnabled()) {
-				logger.warn("Overriding already defined custom translator '" +
+			if (errorCodes.getCustomSqlExceptionTranslator() != null && logger.isDebugEnabled()) {
+				logger.debug("Overriding already defined custom translator '" +
 						errorCodes.getCustomSqlExceptionTranslator().getClass().getSimpleName() +
 						" with '" + customTranslator.getClass().getSimpleName() +
 						"' found in the CustomSQLExceptionTranslatorRegistry for database '" + databaseName + "'");
 			}
-			else if (logger.isInfoEnabled()) {
-				logger.info("Using custom translator '" + customTranslator.getClass().getSimpleName() +
+			else if (logger.isTraceEnabled()) {
+				logger.trace("Using custom translator '" + customTranslator.getClass().getSimpleName() +
 						"' found in the CustomSQLExceptionTranslatorRegistry for database '" + databaseName + "'");
 			}
 			errorCodes.setCustomSqlExceptionTranslator(customTranslator);

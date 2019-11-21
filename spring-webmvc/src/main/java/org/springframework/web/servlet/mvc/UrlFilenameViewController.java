@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2014 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,8 +18,10 @@ package org.springframework.web.servlet.mvc;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerMapping;
 
@@ -52,15 +54,15 @@ public class UrlFilenameViewController extends AbstractUrlViewController {
 
 	private String suffix = "";
 
-	/** Request URL path String --> view name String */
-	private final Map<String, String> viewNameCache = new ConcurrentHashMap<String, String>(256);
+	/** Request URL path String to view name String. */
+	private final Map<String, String> viewNameCache = new ConcurrentHashMap<>(256);
 
 
 	/**
 	 * Set the prefix to prepend to the request URL filename
 	 * to build a view name.
 	 */
-	public void setPrefix(String prefix) {
+	public void setPrefix(@Nullable String prefix) {
 		this.prefix = (prefix != null ? prefix : "");
 	}
 
@@ -75,7 +77,7 @@ public class UrlFilenameViewController extends AbstractUrlViewController {
 	 * Set the suffix to append to the request URL filename
 	 * to build a view name.
 	 */
-	public void setSuffix(String suffix) {
+	public void setSuffix(@Nullable String suffix) {
 		this.suffix = (suffix != null ? suffix : "");
 	}
 

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.jmx.export.assembler;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.management.Descriptor;
 import javax.management.MBeanInfo;
 import javax.management.MBeanParameterInfo;
@@ -172,7 +173,7 @@ public abstract class AbstractMetadataAssemblerTests extends AbstractJmxAssemble
 
 		String objectName = "spring:bean=test,proxy=true";
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(objectName, proxy);
 		exporter.setBeans(beans);
 		start(exporter);

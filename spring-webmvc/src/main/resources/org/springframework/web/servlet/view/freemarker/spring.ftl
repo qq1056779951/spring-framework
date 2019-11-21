@@ -1,4 +1,4 @@
-<#ftl strip_whitespace=true>
+<#ftl output_format="HTML" strip_whitespace=true>
 <#--
  * spring.ftl
  *
@@ -25,7 +25,7 @@
  *
  * Macro to translate a message code into a message.
  -->
-<#macro message code>${springMacroRequestContext.getMessage(code)}</#macro>
+<#macro message code>${springMacroRequestContext.getMessage(code)?no_esc}</#macro>
 
 <#--
  * messageText
@@ -33,14 +33,14 @@
  * Macro to translate a message code into a message,
  * using the given default text if no message found.
  -->
-<#macro messageText code, text>${springMacroRequestContext.getMessage(code, text)}</#macro>
+<#macro messageText code, text>${springMacroRequestContext.getMessage(code, text)?no_esc}</#macro>
 
 <#--
  * messageArgs
  *
  * Macro to translate a message code with arguments into a message.
  -->
-<#macro messageArgs code, args>${springMacroRequestContext.getMessage(code, args)}</#macro>
+<#macro messageArgs code, args>${springMacroRequestContext.getMessage(code, args)?no_esc}</#macro>
 
 <#--
  * messageArgsText
@@ -48,14 +48,14 @@
  * Macro to translate a message code with arguments into a message,
  * using the given default text if no message found.
  -->
-<#macro messageArgsText code, args, text>${springMacroRequestContext.getMessage(code, args, text)}</#macro>
+<#macro messageArgsText code, args, text>${springMacroRequestContext.getMessage(code, args, text)?no_esc}</#macro>
 
 <#--
  * theme
  *
  * Macro to translate a theme message code into a message.
  -->
-<#macro theme code>${springMacroRequestContext.getThemeMessage(code)}</#macro>
+<#macro theme code>${springMacroRequestContext.getThemeMessage(code)?no_esc}</#macro>
 
 <#--
  * themeText
@@ -63,14 +63,14 @@
  * Macro to translate a theme message code into a message,
  * using the given default text if no message found.
  -->
-<#macro themeText code, text>${springMacroRequestContext.getThemeMessage(code, text)}</#macro>
+<#macro themeText code, text>${springMacroRequestContext.getThemeMessage(code, text)?no_esc}</#macro>
 
 <#--
  * themeArgs
  *
  * Macro to translate a theme message code with arguments into a message.
  -->
-<#macro themeArgs code, args>${springMacroRequestContext.getThemeMessage(code, args)}</#macro>
+<#macro themeArgs code, args>${springMacroRequestContext.getThemeMessage(code, args)?no_esc}</#macro>
 
 <#--
  * themeArgsText
@@ -78,7 +78,7 @@
  * Macro to translate a theme message code with arguments into a message,
  * using the given default text if no message found.
  -->
-<#macro themeArgsText code, args, text>${springMacroRequestContext.getThemeMessage(code, args, text)}</#macro>
+<#macro themeArgsText code, args, text>${springMacroRequestContext.getThemeMessage(code, args, text)?no_esc}</#macro>
 
 <#--
  * url
@@ -86,7 +86,7 @@
  * Takes a relative URL and makes it absolute from the server root by
  * adding the context root for the web application.
  -->
-<#macro url relativeUrl extra...><#if extra?? && extra?size!=0>${springMacroRequestContext.getContextUrl(relativeUrl,extra)}<#else>${springMacroRequestContext.getContextUrl(relativeUrl)}</#if></#macro>
+<#macro url relativeUrl extra...><#if extra?? && extra?size!=0>${springMacroRequestContext.getContextUrl(relativeUrl,extra)?no_esc}<#else>${springMacroRequestContext.getContextUrl(relativeUrl)?no_esc}</#if></#macro>
 
 <#--
  * bind
@@ -157,7 +157,7 @@
  -->
 <#macro formInput path attributes="" fieldType="text">
     <@bind path/>
-    <input type="${fieldType}" id="${status.expression?replace('[','')?replace(']','')}" name="${status.expression}" value="<#if fieldType!="password">${stringStatusValue}</#if>" ${attributes}<@closeTag/>
+    <input type="${fieldType}" id="${status.expression?replace('[','')?replace(']','')}" name="${status.expression}" value="<#if fieldType!="password">${stringStatusValue}</#if>" ${attributes?no_esc}<@closeTag/>
 </#macro>
 
 <#--
@@ -202,7 +202,7 @@
  -->
 <#macro formTextarea path attributes="">
     <@bind path/>
-    <textarea id="${status.expression?replace('[','')?replace(']','')}" name="${status.expression}" ${attributes}>
+    <textarea id="${status.expression?replace('[','')?replace(']','')}" name="${status.expression}" ${attributes?no_esc}>
 ${stringStatusValue}</textarea>
 </#macro>
 
@@ -219,14 +219,14 @@ ${stringStatusValue}</textarea>
 -->
 <#macro formSingleSelect path options attributes="">
     <@bind path/>
-    <select id="${status.expression?replace('[','')?replace(']','')}" name="${status.expression}" ${attributes}>
+    <select id="${status.expression?replace('[','')?replace(']','')}" name="${status.expression}" ${attributes?no_esc}>
         <#if options?is_hash>
             <#list options?keys as value>
-            <option value="${value?html}"<@checkSelected value/>>${options[value]?html}</option>
+            <option value="${value}"<@checkSelected value/>>${options[value]}</option>
             </#list>
         <#else> 
             <#list options as value>
-            <option value="${value?html}"<@checkSelected value/>>${value?html}</option>
+            <option value="${value}"<@checkSelected value/>>${value}</option>
             </#list>
         </#if>
     </select>
@@ -245,10 +245,10 @@ ${stringStatusValue}</textarea>
 -->
 <#macro formMultiSelect path options attributes="">
     <@bind path/>
-    <select multiple="multiple" id="${status.expression?replace('[','')?replace(']','')}" name="${status.expression}" ${attributes}>
+    <select multiple="multiple" id="${status.expression?replace('[','')?replace(']','')}" name="${status.expression}" ${attributes?no_esc}>
         <#list options?keys as value>
         <#assign isSelected = contains(status.actualValue?default([""]), value)>
-        <option value="${value?html}"<#if isSelected> selected="selected"</#if>>${options[value]?html}</option>
+        <option value="${value}"<#if isSelected> selected="selected"</#if>>${options[value]}</option>
         </#list>
     </select>
 </#macro>
@@ -269,8 +269,8 @@ ${stringStatusValue}</textarea>
     <@bind path/>
     <#list options?keys as value>
     <#assign id="${status.expression?replace('[','')?replace(']','')}${value_index}">
-    <input type="radio" id="${id}" name="${status.expression}" value="${value?html}"<#if stringStatusValue == value> checked="checked"</#if> ${attributes}<@closeTag/>
-    <label for="${id}">${options[value]?html}</label>${separator}
+    <input type="radio" id="${id}" name="${status.expression}" value="${value}"<#if stringStatusValue == value> checked="checked"</#if> ${attributes?no_esc}<@closeTag/>
+    <label for="${id}">${options[value]}</label>${separator?no_esc}
     </#list>
 </#macro>
 
@@ -291,8 +291,8 @@ ${stringStatusValue}</textarea>
     <#list options?keys as value>
     <#assign id="${status.expression?replace('[','')?replace(']','')}${value_index}">
     <#assign isSelected = contains(status.actualValue?default([""]), value)>
-    <input type="checkbox" id="${id}" name="${status.expression}" value="${value?html}"<#if isSelected> checked="checked"</#if> ${attributes}<@closeTag/>
-    <label for="${id}">${options[value]?html}</label>${separator}
+    <input type="checkbox" id="${id}" name="${status.expression}" value="${value}"<#if isSelected> checked="checked"</#if> ${attributes?no_esc}<@closeTag/>
+    <label for="${id}">${options[value]}</label>${separator?no_esc}
     </#list>
     <input type="hidden" name="_${status.expression}" value="on"/>
 </#macro>
@@ -311,7 +311,7 @@ ${stringStatusValue}</textarea>
     <#assign id="${status.expression?replace('[','')?replace(']','')}">
     <#assign isSelected = status.value?? && status.value?string=="true">
 	<input type="hidden" name="_${status.expression}" value="on"/>
-	<input type="checkbox" id="${id}" name="${status.expression}"<#if isSelected> checked="checked"</#if> ${attributes}/>
+	<input type="checkbox" id="${id}" name="${status.expression}"<#if isSelected> checked="checked"</#if> ${attributes?no_esc}/>
 </#macro>
 
 <#--
@@ -335,7 +335,7 @@ ${stringStatusValue}</textarea>
         <#if classOrStyle?index_of(":") == -1><#assign attr="class"><#else><#assign attr="style"></#if>
         <span ${attr}="${classOrStyle}">${error}</span>
     </#if>
-    <#if error_has_next>${separator}</#if>
+    <#if error_has_next>${separator?no_esc}</#if>
     </#list>
 </#macro>
 

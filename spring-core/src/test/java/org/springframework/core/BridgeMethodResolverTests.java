@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,9 +18,6 @@ package org.springframework.core;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,16 +41,6 @@ import static org.junit.Assert.*;
  */
 @SuppressWarnings("rawtypes")
 public class BridgeMethodResolverTests {
-
-	private static TypeVariable<?> findTypeVariable(Class<?> clazz, String name) {
-		TypeVariable<?>[] variables = clazz.getTypeParameters();
-		for (TypeVariable<?> variable : variables) {
-			if (variable.getName().equals(name)) {
-				return variable;
-			}
-		}
-		return null;
-	}
 
 	private static Method findMethodWithReturnType(String name, Class<?> returnType, Class<SettingsDaoImpl> targetType) {
 		Method[] methods = targetType.getMethods();
@@ -95,7 +82,7 @@ public class BridgeMethodResolverTests {
 		Method bridgedMethod = BridgeMethodResolver.findBridgedMethod(bridgeMethod);
 		assertFalse(bridgedMethod.isBridge());
 		assertEquals("add", bridgedMethod.getName());
-		assertEquals(1, bridgedMethod.getParameterTypes().length);
+		assertEquals(1, bridgedMethod.getParameterCount());
 		assertEquals(Date.class, bridgedMethod.getParameterTypes()[0]);
 	}
 
@@ -107,26 +94,6 @@ public class BridgeMethodResolverTests {
 
 		assertTrue("Should be bridge method", BridgeMethodResolver.isBridgeMethodFor(bridge, bridged, MyBar.class));
 		assertFalse("Should not be bridge method", BridgeMethodResolver.isBridgeMethodFor(bridge, other, MyBar.class));
-	}
-
-	@Test
-	@Deprecated
-	public void testCreateTypeVariableMap() throws Exception {
-		Map<TypeVariable, Type> typeVariableMap = GenericTypeResolver.getTypeVariableMap(MyBar.class);
-		TypeVariable<?> barT = findTypeVariable(InterBar.class, "T");
-		assertEquals(String.class, typeVariableMap.get(barT));
-
-		typeVariableMap = GenericTypeResolver.getTypeVariableMap(MyFoo.class);
-		TypeVariable<?> fooT = findTypeVariable(Foo.class, "T");
-		assertEquals(String.class, typeVariableMap.get(fooT));
-
-		typeVariableMap = GenericTypeResolver.getTypeVariableMap(ExtendsEnclosing.ExtendsEnclosed.ExtendsReallyDeepNow.class);
-		TypeVariable<?> r = findTypeVariable(Enclosing.Enclosed.ReallyDeepNow.class, "R");
-		TypeVariable<?> s = findTypeVariable(Enclosing.Enclosed.class, "S");
-		TypeVariable<?> t = findTypeVariable(Enclosing.class, "T");
-		assertEquals(Long.class, typeVariableMap.get(r));
-		assertEquals(Integer.class, typeVariableMap.get(s));
-		assertEquals(String.class, typeVariableMap.get(t));
 	}
 
 	@Test
@@ -226,14 +193,6 @@ public class BridgeMethodResolverTests {
 		assertTrue("Match not found correctly", BridgeMethodResolver.isBridgeMethodFor(bridgeMethod, bridgedMethod, MessageBroadcasterImpl.class));
 
 		assertEquals(bridgedMethod, BridgeMethodResolver.findBridgedMethod(bridgeMethod));
-	}
-
-	@Test
-	@Deprecated
-	public void testSPR2454() throws Exception {
-		Map<TypeVariable, Type> typeVariableMap = GenericTypeResolver.getTypeVariableMap(YourHomer.class);
-		TypeVariable<?> variable = findTypeVariable(MyHomer.class, "L");
-		assertEquals(AbstractBounded.class, ((ParameterizedType) typeVariableMap.get(variable)).getRawType());
 	}
 
 	@Test
@@ -1338,13 +1297,9 @@ public class BridgeMethodResolverTests {
 	//-------------------
 
 	public static abstract class BaseEntity {
-
-		private String id;
 	}
 
 	public static class FooEntity extends BaseEntity {
-
-		private String name;
 	}
 
 	public static class BaseClass<T> {

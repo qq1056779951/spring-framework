@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,7 +28,6 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.aop.target.dynamic.Refreshable;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.UnsatisfiedDependencyException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -278,7 +277,7 @@ public class GroovyScriptFactoryTests {
 			fail("Must have thrown a ScriptCompilationException (no public no-arg ctor in scripted class).");
 		}
 		catch (ScriptCompilationException expected) {
-			assertTrue(expected.contains(InstantiationException.class));
+			assertTrue(expected.contains(NoSuchMethodException.class));
 		}
 	}
 
@@ -289,13 +288,7 @@ public class GroovyScriptFactoryTests {
 		given(script.getScriptAsString()).willReturn(badScript);
 		given(script.suggestedClassName()).willReturn("someName");
 		GroovyScriptFactory factory = new GroovyScriptFactory(ScriptFactoryPostProcessor.INLINE_SCRIPT_PREFIX + badScript);
-		try {
-			factory.getScriptedObject(script);
-			fail("Must have thrown a ScriptCompilationException (no oublic no-arg ctor in scripted class).");
-		}
-		catch (ScriptCompilationException expected) {
-			assertTrue(expected.contains(IllegalAccessException.class));
-		}
+		assertEquals("X", factory.getScriptedObject(script).toString());
 	}
 
 	@Test
@@ -542,15 +535,6 @@ public class GroovyScriptFactoryTests {
 		ContextScriptBean bean2 = (ContextScriptBean) ctx.getBean("bean2");
 		assertEquals(tb, bean2.getTestBean());
 		assertEquals(ctx, bean2.getApplicationContext());
-
-		try {
-			ctx.getBean("bean3");
-			fail("Should have thrown BeanCreationException");
-		}
-		catch (BeanCreationException ex) {
-			// expected
-			assertTrue(ex.contains(UnsatisfiedDependencyException.class));
-		}
 	}
 
 	@Test

@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.factory.xml.ParserContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -60,7 +61,7 @@ public abstract class MvcNamespaceUtils {
 	private static final String HANDLER_MAPPING_INTROSPECTOR_BEAN_NAME = "mvcHandlerMappingIntrospector";
 
 
-	public static void registerDefaultComponents(ParserContext parserContext, Object source) {
+	public static void registerDefaultComponents(ParserContext parserContext, @Nullable Object source) {
 		registerBeanNameUrlHandlerMapping(parserContext, source);
 		registerHttpRequestHandlerAdapter(parserContext, source);
 		registerSimpleControllerHandlerAdapter(parserContext, source);
@@ -73,7 +74,7 @@ public abstract class MvcNamespaceUtils {
 	 * @return a RuntimeBeanReference to this {@link UrlPathHelper} instance
 	 */
 	public static RuntimeBeanReference registerUrlPathHelper(
-			RuntimeBeanReference urlPathHelperRef, ParserContext parserContext, Object source) {
+			@Nullable RuntimeBeanReference urlPathHelperRef, ParserContext parserContext, @Nullable Object source) {
 
 		if (urlPathHelperRef != null) {
 			if (parserContext.getRegistry().isAlias(URL_PATH_HELPER_BEAN_NAME)) {
@@ -81,8 +82,8 @@ public abstract class MvcNamespaceUtils {
 			}
 			parserContext.getRegistry().registerAlias(urlPathHelperRef.getBeanName(), URL_PATH_HELPER_BEAN_NAME);
 		}
-		else if (!parserContext.getRegistry().isAlias(URL_PATH_HELPER_BEAN_NAME)
-				&& !parserContext.getRegistry().containsBeanDefinition(URL_PATH_HELPER_BEAN_NAME)) {
+		else if (!parserContext.getRegistry().isAlias(URL_PATH_HELPER_BEAN_NAME) &&
+				!parserContext.getRegistry().containsBeanDefinition(URL_PATH_HELPER_BEAN_NAME)) {
 			RootBeanDefinition urlPathHelperDef = new RootBeanDefinition(UrlPathHelper.class);
 			urlPathHelperDef.setSource(source);
 			urlPathHelperDef.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
@@ -97,8 +98,8 @@ public abstract class MvcNamespaceUtils {
 	 * under that well-known name, unless already registered.
 	 * @return a RuntimeBeanReference to this {@link PathMatcher} instance
 	 */
-	public static RuntimeBeanReference registerPathMatcher(
-			RuntimeBeanReference pathMatcherRef, ParserContext parserContext, Object source) {
+	public static RuntimeBeanReference registerPathMatcher(@Nullable RuntimeBeanReference pathMatcherRef,
+			ParserContext parserContext, @Nullable Object source) {
 
 		if (pathMatcherRef != null) {
 			if (parserContext.getRegistry().isAlias(PATH_MATCHER_BEAN_NAME)) {
@@ -106,8 +107,8 @@ public abstract class MvcNamespaceUtils {
 			}
 			parserContext.getRegistry().registerAlias(pathMatcherRef.getBeanName(), PATH_MATCHER_BEAN_NAME);
 		}
-		else if (!parserContext.getRegistry().isAlias(PATH_MATCHER_BEAN_NAME)
-				&& !parserContext.getRegistry().containsBeanDefinition(PATH_MATCHER_BEAN_NAME)) {
+		else if (!parserContext.getRegistry().isAlias(PATH_MATCHER_BEAN_NAME) &&
+				!parserContext.getRegistry().containsBeanDefinition(PATH_MATCHER_BEAN_NAME)) {
 			RootBeanDefinition pathMatcherDef = new RootBeanDefinition(AntPathMatcher.class);
 			pathMatcherDef.setSource(source);
 			pathMatcherDef.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
@@ -121,8 +122,8 @@ public abstract class MvcNamespaceUtils {
 	 * Registers  an {@link HttpRequestHandlerAdapter} under a well-known
 	 * name unless already registered.
 	 */
-	private static void registerBeanNameUrlHandlerMapping(ParserContext context, Object source) {
-		if (!context.getRegistry().containsBeanDefinition(BEAN_NAME_URL_HANDLER_MAPPING_BEAN_NAME)){
+	private static void registerBeanNameUrlHandlerMapping(ParserContext context, @Nullable Object source) {
+		if (!context.getRegistry().containsBeanDefinition(BEAN_NAME_URL_HANDLER_MAPPING_BEAN_NAME)) {
 			RootBeanDefinition mappingDef = new RootBeanDefinition(BeanNameUrlHandlerMapping.class);
 			mappingDef.setSource(source);
 			mappingDef.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
@@ -138,7 +139,7 @@ public abstract class MvcNamespaceUtils {
 	 * Registers  an {@link HttpRequestHandlerAdapter} under a well-known
 	 * name unless already registered.
 	 */
-	private static void registerHttpRequestHandlerAdapter(ParserContext context, Object source) {
+	private static void registerHttpRequestHandlerAdapter(ParserContext context, @Nullable Object source) {
 		if (!context.getRegistry().containsBeanDefinition(HTTP_REQUEST_HANDLER_ADAPTER_BEAN_NAME)) {
 			RootBeanDefinition adapterDef = new RootBeanDefinition(HttpRequestHandlerAdapter.class);
 			adapterDef.setSource(source);
@@ -152,7 +153,7 @@ public abstract class MvcNamespaceUtils {
 	 * Registers a {@link SimpleControllerHandlerAdapter} under a well-known
 	 * name unless already registered.
 	 */
-	private static void registerSimpleControllerHandlerAdapter(ParserContext context, Object source) {
+	private static void registerSimpleControllerHandlerAdapter(ParserContext context, @Nullable Object source) {
 		if (!context.getRegistry().containsBeanDefinition(SIMPLE_CONTROLLER_HANDLER_ADAPTER_BEAN_NAME)) {
 			RootBeanDefinition beanDef = new RootBeanDefinition(SimpleControllerHandlerAdapter.class);
 			beanDef.setSource(source);
@@ -169,7 +170,8 @@ public abstract class MvcNamespaceUtils {
 	 * @return a RuntimeBeanReference to this {@code Map<String, CorsConfiguration>} instance
 	 */
 	public static RuntimeBeanReference registerCorsConfigurations(
-			Map<String, CorsConfiguration> corsConfigurations, ParserContext context, Object source) {
+			@Nullable Map<String, CorsConfiguration> corsConfigurations,
+			ParserContext context, @Nullable Object source) {
 
 		if (!context.getRegistry().containsBeanDefinition(CORS_CONFIGURATION_BEAN_NAME)) {
 			RootBeanDefinition corsDef = new RootBeanDefinition(LinkedHashMap.class);
@@ -192,8 +194,8 @@ public abstract class MvcNamespaceUtils {
 	 * Registers  an {@link HandlerMappingIntrospector} under a well-known name
 	 * unless already registered.
 	 */
-	private static void registerHandlerMappingIntrospector(ParserContext parserContext, Object source) {
-		if (!parserContext.getRegistry().containsBeanDefinition(HANDLER_MAPPING_INTROSPECTOR_BEAN_NAME)){
+	private static void registerHandlerMappingIntrospector(ParserContext parserContext, @Nullable Object source) {
+		if (!parserContext.getRegistry().containsBeanDefinition(HANDLER_MAPPING_INTROSPECTOR_BEAN_NAME)) {
 			RootBeanDefinition beanDef = new RootBeanDefinition(HandlerMappingIntrospector.class);
 			beanDef.setSource(source);
 			beanDef.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
@@ -208,6 +210,7 @@ public abstract class MvcNamespaceUtils {
 	 * with the {@code annotation-driven} element.
 	 * @return a bean definition, bean reference, or {@code null} if none defined
 	 */
+	@Nullable
 	public static Object getContentNegotiationManager(ParserContext context) {
 		String name = AnnotationDrivenBeanDefinitionParser.HANDLER_MAPPING_BEAN_NAME;
 		if (context.getRegistry().containsBeanDefinition(name)) {

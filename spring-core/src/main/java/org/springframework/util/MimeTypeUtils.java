@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 
 package org.springframework.util;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -28,17 +28,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
-import org.springframework.util.MimeType.SpecificityComparator;
+import org.springframework.lang.Nullable;
 
 /**
  * Miscellaneous {@link MimeType} utility methods.
  *
  * @author Arjen Poutsma
  * @author Rossen Stoyanchev
+ * @author Dimitrios Liapis
+ * @author Sam Brannen
  * @since 4.0
  */
-@SuppressWarnings("deprecation")
 public abstract class MimeTypeUtils {
 
 	private static final byte[] BOUNDARY_CHARS =
@@ -47,14 +49,10 @@ public abstract class MimeTypeUtils {
 					'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
 					'V', 'W', 'X', 'Y', 'Z'};
 
-	private static final Random RND = new SecureRandom();
-
-	private static Charset US_ASCII = Charset.forName("US-ASCII");
-
 	/**
 	 * Comparator used by {@link #sortBySpecificity(List)}.
 	 */
-	public static final Comparator<MimeType> SPECIFICITY_COMPARATOR = new SpecificityComparator<MimeType>();
+	public static final Comparator<MimeType> SPECIFICITY_COMPARATOR = new MimeType.SpecificityComparator<>();
 
 	/**
 	 * Public constant mime type that includes all media ranges (i.e. "&#42;/&#42;").
@@ -65,34 +63,6 @@ public abstract class MimeTypeUtils {
 	 * A String equivalent of {@link MimeTypeUtils#ALL}.
 	 */
 	public static final String ALL_VALUE = "*/*";
-
-	/**
-	 * Public constant mime type for {@code application/atom+xml}.
-	 * @deprecated as of 4.3.6, in favor of {@code MediaType} constants
-	 */
-	@Deprecated
-	public static final MimeType APPLICATION_ATOM_XML;
-
-	/**
-	 * A String equivalent of {@link MimeTypeUtils#APPLICATION_ATOM_XML}.
-	 * @deprecated as of 4.3.6, in favor of {@code MediaType} constants
-	 */
-	@Deprecated
-	public static final String APPLICATION_ATOM_XML_VALUE = "application/atom+xml";
-
-	/**
-	 * Public constant mime type for {@code application/x-www-form-urlencoded}.
-	 * @deprecated as of 4.3.6, in favor of {@code MediaType} constants
-	 *  */
-	@Deprecated
-	public static final MimeType APPLICATION_FORM_URLENCODED;
-
-	/**
-	 * A String equivalent of {@link MimeTypeUtils#APPLICATION_FORM_URLENCODED}.
-	 * @deprecated as of 4.3.6, in favor of {@code MediaType} constants
-	 */
-	@Deprecated
-	public static final String APPLICATION_FORM_URLENCODED_VALUE = "application/x-www-form-urlencoded";
 
 	/**
 	 * Public constant mime type for {@code application/json}.
@@ -113,20 +83,6 @@ public abstract class MimeTypeUtils {
 	 * A String equivalent of {@link MimeTypeUtils#APPLICATION_OCTET_STREAM}.
 	 */
 	public static final String APPLICATION_OCTET_STREAM_VALUE = "application/octet-stream";
-
-	/**
-	 * Public constant mime type for {@code application/xhtml+xml}.
-	 * @deprecated as of 4.3.6, in favor of {@code MediaType} constants
-	 */
-	@Deprecated
-	public static final MimeType APPLICATION_XHTML_XML;
-
-	/**
-	 * A String equivalent of {@link MimeTypeUtils#APPLICATION_XHTML_XML}.
-	 * @deprecated as of 4.3.6, in favor of {@code MediaType} constants
-	 */
-	@Deprecated
-	public static final String APPLICATION_XHTML_XML_VALUE = "application/xhtml+xml";
 
 	/**
 	 * Public constant mime type for {@code application/xml}.
@@ -169,20 +125,6 @@ public abstract class MimeTypeUtils {
 	public static final String IMAGE_PNG_VALUE = "image/png";
 
 	/**
-	 * Public constant mime type for {@code multipart/form-data}.
-	 * @deprecated as of 4.3.6, in favor of {@code MediaType} constants
-	 */
-	@Deprecated
-	public static final MimeType MULTIPART_FORM_DATA;
-
-	/**
-	 * A String equivalent of {@link MimeTypeUtils#MULTIPART_FORM_DATA}.
-	 * @deprecated as of 4.3.6, in favor of {@code MediaType} constants
-	 */
-	@Deprecated
-	public static final String MULTIPART_FORM_DATA_VALUE = "multipart/form-data";
-
-	/**
 	 * Public constant mime type for {@code text/html}.
 	 *  */
 	public static final MimeType TEXT_HTML;
@@ -213,18 +155,17 @@ public abstract class MimeTypeUtils {
 	public static final String TEXT_XML_VALUE = "text/xml";
 
 
+	@Nullable
+	private static volatile Random random;
+
 	static {
 		ALL = MimeType.valueOf(ALL_VALUE);
-		APPLICATION_ATOM_XML = MimeType.valueOf(APPLICATION_ATOM_XML_VALUE);
-		APPLICATION_FORM_URLENCODED = MimeType.valueOf(APPLICATION_FORM_URLENCODED_VALUE);
 		APPLICATION_JSON = MimeType.valueOf(APPLICATION_JSON_VALUE);
 		APPLICATION_OCTET_STREAM = MimeType.valueOf(APPLICATION_OCTET_STREAM_VALUE);
-		APPLICATION_XHTML_XML = MimeType.valueOf(APPLICATION_XHTML_XML_VALUE);
 		APPLICATION_XML = MimeType.valueOf(APPLICATION_XML_VALUE);
 		IMAGE_GIF = MimeType.valueOf(IMAGE_GIF_VALUE);
 		IMAGE_JPEG = MimeType.valueOf(IMAGE_JPEG_VALUE);
 		IMAGE_PNG = MimeType.valueOf(IMAGE_PNG_VALUE);
-		MULTIPART_FORM_DATA = MimeType.valueOf(MULTIPART_FORM_DATA_VALUE);
 		TEXT_HTML = MimeType.valueOf(TEXT_HTML_VALUE);
 		TEXT_PLAIN = MimeType.valueOf(TEXT_PLAIN_VALUE);
 		TEXT_XML = MimeType.valueOf(TEXT_XML_VALUE);
@@ -284,7 +225,7 @@ public abstract class MimeTypeUtils {
 			String parameter = mimeType.substring(index + 1, nextIndex).trim();
 			if (parameter.length() > 0) {
 				if (parameters == null) {
-					parameters = new LinkedHashMap<String, String>(4);
+					parameters = new LinkedHashMap<>(4);
 				}
 				int eqIndex = parameter.indexOf('=');
 				if (eqIndex >= 0) {
@@ -309,21 +250,56 @@ public abstract class MimeTypeUtils {
 	}
 
 	/**
-	 * Parse the given, comma-separated string into a list of {@code MimeType} objects.
+	 * Parse the comma-separated string into a list of {@code MimeType} objects.
 	 * @param mimeTypes the string to parse
 	 * @return the list of mime types
-	 * @throws IllegalArgumentException if the string cannot be parsed
+	 * @throws InvalidMimeTypeException if the string cannot be parsed
 	 */
 	public static List<MimeType> parseMimeTypes(String mimeTypes) {
 		if (!StringUtils.hasLength(mimeTypes)) {
 			return Collections.emptyList();
 		}
-		String[] tokens = StringUtils.tokenizeToStringArray(mimeTypes, ",");
-		List<MimeType> result = new ArrayList<MimeType>(tokens.length);
-		for (String token : tokens) {
-			result.add(parseMimeType(token));
+		return tokenize(mimeTypes).stream()
+				.filter(StringUtils::hasText)
+				.map(MimeTypeUtils::parseMimeType)
+				.collect(Collectors.toList());
+	}
+
+	/**
+	 * Tokenize the given comma-separated string of {@code MimeType} objects
+	 * into a {@code List<String>}. Unlike simple tokenization by ",", this
+	 * method takes into account quoted parameters.
+	 * @param mimeTypes the string to tokenize
+	 * @return the list of tokens
+	 * @since 5.1.3
+	 */
+	public static List<String> tokenize(String mimeTypes) {
+		if (!StringUtils.hasLength(mimeTypes)) {
+			return Collections.emptyList();
 		}
-		return result;
+		List<String> tokens = new ArrayList<>();
+		boolean inQuotes = false;
+		int startIndex = 0;
+		int i = 0;
+		while (i < mimeTypes.length()) {
+			switch (mimeTypes.charAt(i)) {
+				case '"':
+					inQuotes = !inQuotes;
+					break;
+				case ',':
+					if (!inQuotes) {
+						tokens.add(mimeTypes.substring(startIndex, i));
+						startIndex = i + 1;
+					}
+					break;
+				case '\\':
+					i++;
+					break;
+			}
+			i++;
+		}
+		tokens.add(mimeTypes.substring(startIndex));
+		return tokens;
 	}
 
 	/**
@@ -343,7 +319,6 @@ public abstract class MimeTypeUtils {
 		}
 		return builder.toString();
 	}
-
 
 	/**
 	 * Sorts the given list of {@code MimeType} objects by specificity.
@@ -366,23 +341,42 @@ public abstract class MimeTypeUtils {
 	 * <blockquote>audio/basic == text/html</blockquote> <blockquote>audio/basic ==
 	 * audio/wave</blockquote>
 	 * @param mimeTypes the list of mime types to be sorted
-	 * @see <a href="http://tools.ietf.org/html/rfc7231#section-5.3.2">HTTP 1.1: Semantics
+	 * @see <a href="https://tools.ietf.org/html/rfc7231#section-5.3.2">HTTP 1.1: Semantics
 	 * and Content, section 5.3.2</a>
 	 */
 	public static void sortBySpecificity(List<MimeType> mimeTypes) {
 		Assert.notNull(mimeTypes, "'mimeTypes' must not be null");
 		if (mimeTypes.size() > 1) {
-			Collections.sort(mimeTypes, SPECIFICITY_COMPARATOR);
+			mimeTypes.sort(SPECIFICITY_COMPARATOR);
 		}
+	}
+
+
+	/**
+	 * Lazily initialize the {@link SecureRandom} for {@link #generateMultipartBoundary()}.
+	 */
+	private static Random initRandom() {
+		Random randomToUse = random;
+		if (randomToUse == null) {
+			synchronized (MimeTypeUtils.class) {
+				randomToUse = random;
+				if (randomToUse == null) {
+					randomToUse = new SecureRandom();
+					random = randomToUse;
+				}
+			}
+		}
+		return randomToUse;
 	}
 
 	/**
 	 * Generate a random MIME boundary as bytes, often used in multipart mime types.
 	 */
 	public static byte[] generateMultipartBoundary() {
-		byte[] boundary = new byte[RND.nextInt(11) + 30];
+		Random randomToUse = initRandom();
+		byte[] boundary = new byte[randomToUse.nextInt(11) + 30];
 		for (int i = 0; i < boundary.length; i++) {
-			boundary[i] = BOUNDARY_CHARS[RND.nextInt(BOUNDARY_CHARS.length)];
+			boundary[i] = BOUNDARY_CHARS[randomToUse.nextInt(BOUNDARY_CHARS.length)];
 		}
 		return boundary;
 	}
@@ -391,7 +385,7 @@ public abstract class MimeTypeUtils {
 	 * Generate a random MIME boundary as String, often used in multipart mime types.
 	 */
 	public static String generateMultipartBoundaryString() {
-		return new String(generateMultipartBoundary(), US_ASCII);
+		return new String(generateMultipartBoundary(), StandardCharsets.US_ASCII);
 	}
 
 }

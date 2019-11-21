@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.servlet.handler.AbstractHandlerMapping;
+import org.springframework.lang.Nullable;
 import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
 
 /**
@@ -36,12 +36,12 @@ import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
  */
 public class ViewControllerRegistry {
 
+	@Nullable
 	private ApplicationContext applicationContext;
 
-	private final List<ViewControllerRegistration> registrations = new ArrayList<ViewControllerRegistration>(4);
+	private final List<ViewControllerRegistration> registrations = new ArrayList<>(4);
 
-	private final List<RedirectViewControllerRegistration> redirectRegistrations =
-			new ArrayList<RedirectViewControllerRegistration>(10);
+	private final List<RedirectViewControllerRegistration> redirectRegistrations = new ArrayList<>(10);
 
 	private int order = 1;
 
@@ -50,12 +50,8 @@ public class ViewControllerRegistry {
 	 * Class constructor with {@link ApplicationContext}.
 	 * @since 4.3.12
 	 */
-	public ViewControllerRegistry(ApplicationContext applicationContext) {
+	public ViewControllerRegistry(@Nullable ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
-	}
-
-	@Deprecated
-	public ViewControllerRegistry() {
 	}
 
 
@@ -115,12 +111,13 @@ public class ViewControllerRegistry {
 	 * controller mappings, or {@code null} for no registrations.
 	 * @since 4.3.12
 	 */
+	@Nullable
 	protected SimpleUrlHandlerMapping buildHandlerMapping() {
 		if (this.registrations.isEmpty() && this.redirectRegistrations.isEmpty()) {
 			return null;
 		}
 
-		Map<String, Object> urlMap = new LinkedHashMap<String, Object>();
+		Map<String, Object> urlMap = new LinkedHashMap<>();
 		for (ViewControllerRegistration registration : this.registrations) {
 			urlMap.put(registration.getUrlPath(), registration.getViewController());
 		}
@@ -132,19 +129,6 @@ public class ViewControllerRegistry {
 		handlerMapping.setUrlMap(urlMap);
 		handlerMapping.setOrder(this.order);
 		return handlerMapping;
-	}
-
-	/**
-	 * @deprecated as of 4.3.12, in favor of {@link #buildHandlerMapping()}
-	 */
-	@Deprecated
-	protected AbstractHandlerMapping getHandlerMapping() {
-		return buildHandlerMapping();
-	}
-
-	@Deprecated
-	protected void setApplicationContext(ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
 	}
 
 }

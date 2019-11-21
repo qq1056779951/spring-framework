@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,10 +34,11 @@ import static org.junit.Assert.*;
  * @author Rod Johnson
  * @author Rick Evans
  * @author Chris Beams
+ * @author Sam Brannen
  */
-public final class TypePatternClassFilterTests {
+public class TypePatternClassFilterTests {
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testInvalidPattern() {
 		// should throw - pattern must be recognized as invalid
 		new TypePatternClassFilter("-");
@@ -78,14 +79,44 @@ public final class TypePatternClassFilterTests {
 		assertTrue("matches Double",tpcf.matches(Double.class));
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testSetTypePatternWithNullArgument() throws Exception {
 		new TypePatternClassFilter(null);
 	}
 
-	@Test(expected=IllegalStateException.class)
+	@Test(expected = IllegalStateException.class)
 	public void testInvocationOfMatchesMethodBlowsUpWhenNoTypePatternHasBeenSet() throws Exception {
 		new TypePatternClassFilter().matches(String.class);
+	}
+
+	@Test
+	public void testEquals() {
+		TypePatternClassFilter filter1 = new TypePatternClassFilter("org.springframework.tests.sample.beans.*");
+		TypePatternClassFilter filter2 = new TypePatternClassFilter("org.springframework.tests.sample.beans.*");
+		TypePatternClassFilter filter3 = new TypePatternClassFilter("org.springframework.tests.*");
+
+		assertEquals(filter1, filter2);
+		assertNotEquals(filter1, filter3);
+	}
+
+	@Test
+	public void testHashCode() {
+		TypePatternClassFilter filter1 = new TypePatternClassFilter("org.springframework.tests.sample.beans.*");
+		TypePatternClassFilter filter2 = new TypePatternClassFilter("org.springframework.tests.sample.beans.*");
+		TypePatternClassFilter filter3 = new TypePatternClassFilter("org.springframework.tests.*");
+
+		assertEquals(filter1.hashCode(), filter2.hashCode());
+		assertNotEquals(filter1.hashCode(), filter3.hashCode());
+	}
+
+	@Test
+	public void testToString() {
+		TypePatternClassFilter filter1 = new TypePatternClassFilter("org.springframework.tests.sample.beans.*");
+		TypePatternClassFilter filter2 = new TypePatternClassFilter("org.springframework.tests.sample.beans.*");
+
+		assertEquals("org.springframework.aop.aspectj.TypePatternClassFilter: org.springframework.tests.sample.beans.*",
+			filter1.toString());
+		assertEquals(filter1.toString(), filter2.toString());
 	}
 
 }

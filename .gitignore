@@ -21,14 +21,12 @@ classes/
 /build
 buildSrc/build
 /spring-*/build
-/spring-core/kotlin-coroutines/build
-/framework-bom/build
-/integration-tests/build
 /src/asciidoc/build
 target/
 
-
-
+# Projects not in this branch
+integration-tests/
+spring-core/kotlin-coroutines/
 
 # Eclipse artifacts, including WTP generated manifests
 .classpath

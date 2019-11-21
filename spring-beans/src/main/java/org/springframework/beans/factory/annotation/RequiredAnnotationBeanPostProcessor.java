@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyValues;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
@@ -39,6 +38,7 @@ import org.springframework.core.Conventions;
 import org.springframework.core.Ordered;
 import org.springframework.core.PriorityOrdered;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -71,7 +71,10 @@ import org.springframework.util.Assert;
  * @since 2.0
  * @see #setRequiredAnnotationType
  * @see Required
+ * @deprecated as of 5.1, in favor of using constructor injection for required settings
+ * (or a custom {@link org.springframework.beans.factory.InitializingBean} implementation)
  */
+@Deprecated
 public class RequiredAnnotationBeanPostProcessor extends InstantiationAwareBeanPostProcessorAdapter
 		implements MergedBeanDefinitionPostProcessor, PriorityOrdered, BeanFactoryAware {
 
@@ -88,13 +91,13 @@ public class RequiredAnnotationBeanPostProcessor extends InstantiationAwareBeanP
 
 	private int order = Ordered.LOWEST_PRECEDENCE - 1;
 
+	@Nullable
 	private ConfigurableListableBeanFactory beanFactory;
 
 	/**
-	 * Cache for validated bean names, skipping re-validation for the same bean
+	 * Cache for validated bean names, skipping re-validation for the same bean.
 	 */
-	private final Set<String> validatedBeanNames =
-			Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>(64));
+	private final Set<String> validatedBeanNames = Collections.newSetFromMap(new ConcurrentHashMap<>(64));
 
 
 	/**
@@ -141,11 +144,11 @@ public class RequiredAnnotationBeanPostProcessor extends InstantiationAwareBeanP
 
 	@Override
 	public PropertyValues postProcessPropertyValues(
-			PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeansException {
+			PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) {
 
 		if (!this.validatedBeanNames.contains(beanName)) {
 			if (!shouldSkip(this.beanFactory, beanName)) {
-				List<String> invalidProperties = new ArrayList<String>();
+				List<String> invalidProperties = new ArrayList<>();
 				for (PropertyDescriptor pd : pds) {
 					if (isRequiredProperty(pd) && !pvs.contains(pd.getName())) {
 						invalidProperties.add(pd.getName());
@@ -171,7 +174,7 @@ public class RequiredAnnotationBeanPostProcessor extends InstantiationAwareBeanP
 	 * @param beanName the name of the bean to check against
 	 * @return {@code true} to skip the bean; {@code false} to process it
 	 */
-	protected boolean shouldSkip(ConfigurableListableBeanFactory beanFactory, String beanName) {
+	protected boolean shouldSkip(@Nullable ConfigurableListableBeanFactory beanFactory, String beanName) {
 		if (beanFactory == null || !beanFactory.containsBeanDefinition(beanName)) {
 			return false;
 		}

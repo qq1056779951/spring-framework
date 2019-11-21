@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,8 @@
 package org.springframework.scheduling.commonj;
 
 import commonj.timers.TimerListener;
+
+import org.springframework.lang.Nullable;
 
 /**
  * JavaBean that describes a scheduled TimerListener, consisting of
@@ -34,12 +36,13 @@ import commonj.timers.TimerListener;
  *
  * @author Juergen Hoeller
  * @since 2.0
- * @see commonj.timers.TimerListener
- * @see commonj.timers.TimerManager#schedule(commonj.timers.TimerListener, long, long)
- * @see commonj.timers.TimerManager#scheduleAtFixedRate(commonj.timers.TimerListener, long, long)
+ * @deprecated as of 5.1, in favor of EE 7's
+ * {@link org.springframework.scheduling.concurrent.DefaultManagedTaskScheduler}
  */
+@Deprecated
 public class ScheduledTimerListener {
 
+	@Nullable
 	private TimerListener timerListener;
 
 	private long delay = 0;
@@ -140,13 +143,14 @@ public class ScheduledTimerListener {
 	/**
 	 * Set the TimerListener to schedule.
 	 */
-	public void setTimerListener(TimerListener timerListener) {
+	public void setTimerListener(@Nullable TimerListener timerListener) {
 		this.timerListener = timerListener;
 	}
 
 	/**
 	 * Return the TimerListener to schedule.
 	 */
+	@Nullable
 	public TimerListener getTimerListener() {
 		return this.timerListener;
 	}

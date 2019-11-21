@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.springframework.cache.support.AbstractValueAdaptingCache;
 import org.springframework.core.serializer.support.SerializationDelegate;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -51,6 +52,7 @@ public class ConcurrentMapCache extends AbstractValueAdaptingCache {
 
 	private final ConcurrentMap<Object, Object> store;
 
+	@Nullable
 	private final SerializationDelegate serialization;
 
 
@@ -59,7 +61,7 @@ public class ConcurrentMapCache extends AbstractValueAdaptingCache {
 	 * @param name the name of the cache
 	 */
 	public ConcurrentMapCache(String name) {
-		this(name, new ConcurrentHashMap<Object, Object>(256), true);
+		this(name, new ConcurrentHashMap<>(256), true);
 	}
 
 	/**
@@ -69,7 +71,7 @@ public class ConcurrentMapCache extends AbstractValueAdaptingCache {
 	 * values for this cache
 	 */
 	public ConcurrentMapCache(String name, boolean allowNullValues) {
-		this(name, new ConcurrentHashMap<Object, Object>(256), allowNullValues);
+		this(name, new ConcurrentHashMap<>(256), allowNullValues);
 	}
 
 	/**
@@ -98,7 +100,7 @@ public class ConcurrentMapCache extends AbstractValueAdaptingCache {
 	 * @since 4.3
 	 */
 	protected ConcurrentMapCache(String name, ConcurrentMap<Object, Object> store,
-			boolean allowNullValues, SerializationDelegate serialization) {
+			boolean allowNullValues, @Nullable SerializationDelegate serialization) {
 
 		super(allowNullValues);
 		Assert.notNull(name, "Name must not be null");
@@ -130,45 +132,33 @@ public class ConcurrentMapCache extends AbstractValueAdaptingCache {
 	}
 
 	@Override
+	@Nullable
 	protected Object lookup(Object key) {
 		return this.store.get(key);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
+	@Nullable
 	public <T> T get(Object key, Callable<T> valueLoader) {
-		// Try efficient lookup on the ConcurrentHashMap first...
-		ValueWrapper storeValue = get(key);
-		if (storeValue != null) {
-			return (T) storeValue.get();
-		}
-
-		// No value found -> load value within full synchronization.
-		synchronized (this.store) {
-			storeValue = get(key);
-			if (storeValue != null) {
-				return (T) storeValue.get();
-			}
-
-			T value;
+		return (T) fromStoreValue(this.store.computeIfAbsent(key, k -> {
 			try {
-				value = valueLoader.call();
+				return toStoreValue(valueLoader.call());
 			}
 			catch (Throwable ex) {
 				throw new ValueRetrievalException(key, valueLoader, ex);
 			}
-			put(key, value);
-			return value;
-		}
+		}));
 	}
 
 	@Override
-	public void put(Object key, Object value) {
+	public void put(Object key, @Nullable Object value) {
 		this.store.put(key, toStoreValue(value));
 	}
 
 	@Override
-	public ValueWrapper putIfAbsent(Object key, Object value) {
+	@Nullable
+	public ValueWrapper putIfAbsent(Object key, @Nullable Object value) {
 		Object existing = this.store.putIfAbsent(key, toStoreValue(value));
 		return toValueWrapper(existing);
 	}
@@ -184,11 +174,11 @@ public class ConcurrentMapCache extends AbstractValueAdaptingCache {
 	}
 
 	@Override
-	protected Object toStoreValue(Object userValue) {
+	protected Object toStoreValue(@Nullable Object userValue) {
 		Object storeValue = super.toStoreValue(userValue);
 		if (this.serialization != null) {
 			try {
-				return serializeValue(storeValue);
+				return serializeValue(this.serialization, storeValue);
 			}
 			catch (Throwable ex) {
 				throw new IllegalArgumentException("Failed to serialize cache value '" + userValue +
@@ -200,10 +190,10 @@ public class ConcurrentMapCache extends AbstractValueAdaptingCache {
 		}
 	}
 
-	private Object serializeValue(Object storeValue) throws IOException {
+	private Object serializeValue(SerializationDelegate serialization, Object storeValue) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		try {
-			this.serialization.serialize(storeValue, out);
+			serialization.serialize(storeValue, out);
 			return out.toByteArray();
 		}
 		finally {
@@ -212,10 +202,10 @@ public class ConcurrentMapCache extends AbstractValueAdaptingCache {
 	}
 
 	@Override
-	protected Object fromStoreValue(Object storeValue) {
-		if (this.serialization != null) {
+	protected Object fromStoreValue(@Nullable Object storeValue) {
+		if (storeValue != null && this.serialization != null) {
 			try {
-				return super.fromStoreValue(deserializeValue(storeValue));
+				return super.fromStoreValue(deserializeValue(this.serialization, storeValue));
 			}
 			catch (Throwable ex) {
 				throw new IllegalArgumentException("Failed to deserialize cache value '" + storeValue + "'", ex);
@@ -227,10 +217,10 @@ public class ConcurrentMapCache extends AbstractValueAdaptingCache {
 
 	}
 
-	private Object deserializeValue(Object storeValue) throws IOException {
+	private Object deserializeValue(SerializationDelegate serialization, Object storeValue) throws IOException {
 		ByteArrayInputStream in = new ByteArrayInputStream((byte[]) storeValue);
 		try {
-			return this.serialization.deserialize(in);
+			return serialization.deserialize(in);
 		}
 		finally {
 			in.close();

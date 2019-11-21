@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,7 +28,10 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PostConstruct;
+
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -39,6 +42,7 @@ import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.PayloadApplicationEvent;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -561,6 +565,14 @@ public class AnnotationDrivenEventListenerTests {
 		assertThat(listener.order, contains("first", "second", "third"));
 	}
 
+	@Test @Ignore  // SPR-15122
+	public void listenersReceiveEarlyEvents() {
+		load(EventOnPostConstruct.class, OrderedTestListener.class);
+		OrderedTestListener listener = this.context.getBean(OrderedTestListener.class);
+
+		assertThat(listener.order, contains("first", "second", "third"));
+	}
+
 
 	private void load(Class<?>... classes) {
 		List<Class<?>> allClasses = new ArrayList<>();
@@ -782,6 +794,7 @@ public class AnnotationDrivenEventListenerTests {
 
 		@EventListener
 		@Async
+		@Override
 		public void handleAsync(AnotherTestEvent event) {
 			assertTrue(!Thread.currentThread().getName().equals(event.content));
 			this.eventCollector.addEvent(this, event);
@@ -808,6 +821,7 @@ public class AnnotationDrivenEventListenerTests {
 
 		@EventListener
 		@Async
+		@Override
 		public void handleAsync(AnotherTestEvent event) {
 			assertTrue(!Thread.currentThread().getName().equals(event.content));
 			this.eventCollector.addEvent(this, event);
@@ -890,7 +904,6 @@ public class AnnotationDrivenEventListenerTests {
 	}
 
 
-
 	@EventListener
 	@Retention(RetentionPolicy.RUNTIME)
 	public @interface ConditionalEvent {
@@ -922,25 +935,27 @@ public class AnnotationDrivenEventListenerTests {
 			super.handle(event);
 		}
 
-		@Override
 		@EventListener(condition = "#payload.startsWith('OK')")
+		@Override
 		public void handleString(String payload) {
 			super.handleString(payload);
 		}
 
 		@ConditionalEvent("#root.event.timestamp > #p0")
+		@Override
 		public void handleTimestamp(Long timestamp) {
 			collectEvent(timestamp);
 		}
 
 		@ConditionalEvent("@conditionEvaluator.valid(#p0)")
+		@Override
 		public void handleRatio(Double ratio) {
 			collectEvent(ratio);
 		}
 	}
 
 
-	@Component
+	@Configuration
 	static class OrderedTestListener extends TestEventListener {
 
 		public final List<String> order = new ArrayList<>();
@@ -960,6 +975,18 @@ public class AnnotationDrivenEventListenerTests {
 		@EventListener
 		public void handleSecond(String payload) {
 			this.order.add("second");
+		}
+	}
+
+
+	static class EventOnPostConstruct {
+
+		@Autowired
+		ApplicationEventPublisher publisher;
+
+		@PostConstruct
+		public void init() {
+			this.publisher.publishEvent("earlyEvent");
 		}
 	}
 

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.nio.charset.Charset;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 
 /**
  * Exception thrown when an unknown (or custom) HTTP status code is received.
@@ -41,8 +42,8 @@ public class UnknownHttpStatusCodeException extends RestClientResponseException 
 	 * @param responseBody the response body content (may be {@code null})
 	 * @param responseCharset the response body charset (may be {@code null})
 	 */
-	public UnknownHttpStatusCodeException(int rawStatusCode, String statusText,
-			HttpHeaders responseHeaders, byte[] responseBody, Charset responseCharset) {
+	public UnknownHttpStatusCodeException(int rawStatusCode, String statusText, @Nullable HttpHeaders responseHeaders,
+			@Nullable byte[] responseBody, @Nullable Charset responseCharset) {
 
 		super("Unknown status code [" + rawStatusCode + "]" + " " + statusText,
 				rawStatusCode, statusText, responseHeaders, responseBody, responseCharset);

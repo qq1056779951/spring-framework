@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -96,6 +96,9 @@ public abstract class CachedExpressionEvaluator {
 	}
 
 
+	/**
+	 * An expression key.
+	 */
 	protected static class ExpressionKey implements Comparable<ExpressionKey> {
 
 		private final AnnotatedElementKey element;
@@ -103,6 +106,8 @@ public abstract class CachedExpressionEvaluator {
 		private final String expression;
 
 		protected ExpressionKey(AnnotatedElementKey element, String expression) {
+			Assert.notNull(element, "AnnotatedElementKey must not be null");
+			Assert.notNull(expression, "Expression must not be null");
 			this.element = element;
 			this.expression = expression;
 		}
@@ -122,18 +127,18 @@ public abstract class CachedExpressionEvaluator {
 
 		@Override
 		public int hashCode() {
-			return this.element.hashCode() + (this.expression != null ? this.expression.hashCode() * 29 : 0);
+			return this.element.hashCode() * 29 + this.expression.hashCode();
 		}
 
 		@Override
 		public String toString() {
-			return this.element + (this.expression != null ? " with expression \"" + this.expression : "\"");
+			return this.element + " with expression \"" + this.expression + "\"";
 		}
 
 		@Override
 		public int compareTo(ExpressionKey other) {
 			int result = this.element.toString().compareTo(other.element.toString());
-			if (result == 0 && this.expression != null) {
+			if (result == 0) {
 				result = this.expression.compareTo(other.expression);
 			}
 			return result;

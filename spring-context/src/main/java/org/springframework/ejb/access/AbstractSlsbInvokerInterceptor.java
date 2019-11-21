@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.ejb.access;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
 import javax.naming.Context;
 import javax.naming.NamingException;
 
@@ -25,6 +26,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
 import org.springframework.jndi.JndiObjectLocator;
+import org.springframework.lang.Nullable;
 
 /**
  * Base class for AOP interceptors invoking local or remote Stateless Session Beans.
@@ -50,11 +52,13 @@ public abstract class AbstractSlsbInvokerInterceptor extends JndiObjectLocator
 	 * The EJB's home object, potentially cached.
 	 * The type must be Object as it could be either EJBHome or EJBLocalHome.
 	 */
+	@Nullable
 	private Object cachedHome;
 
 	/**
 	 * The no-arg create() method required on EJB homes, potentially cached.
 	 */
+	@Nullable
 	private Method createMethod;
 
 	private final Object homeMonitor = new Object();
@@ -132,6 +136,7 @@ public abstract class AbstractSlsbInvokerInterceptor extends JndiObjectLocator
 	 * @return the create method
 	 * @throws EjbAccessException if the method couldn't be retrieved
 	 */
+	@Nullable
 	protected Method getCreateMethod(Object home) throws EjbAccessException {
 		try {
 			// Cache the EJB create() method that must be declared on the home interface.
@@ -179,10 +184,11 @@ public abstract class AbstractSlsbInvokerInterceptor extends JndiObjectLocator
 
 
 	/**
-	 * Prepares the thread context if necessar, and delegates to
+	 * Prepares the thread context if necessary, and delegates to
 	 * {@link #invokeInContext}.
 	 */
 	@Override
+	@Nullable
 	public Object invoke(MethodInvocation invocation) throws Throwable {
 		Context ctx = (this.exposeAccessContext ? getJndiTemplate().getContext() : null);
 		try {
@@ -201,6 +207,7 @@ public abstract class AbstractSlsbInvokerInterceptor extends JndiObjectLocator
 	 * @return the invocation result, if any
 	 * @throws Throwable in case of invocation failure
 	 */
+	@Nullable
 	protected abstract Object invokeInContext(MethodInvocation invocation) throws Throwable;
 
 

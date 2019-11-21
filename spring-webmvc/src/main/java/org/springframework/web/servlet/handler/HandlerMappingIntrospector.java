@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
@@ -33,6 +34,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -61,8 +63,10 @@ import org.springframework.web.servlet.HandlerMapping;
 public class HandlerMappingIntrospector
 		implements CorsConfigurationSource, ApplicationContextAware, InitializingBean {
 
+	@Nullable
 	private ApplicationContext applicationContext;
 
+	@Nullable
 	private List<HandlerMapping> handlerMappings;
 
 
@@ -88,7 +92,7 @@ public class HandlerMappingIntrospector
 	 * Return the configured HandlerMapping's.
 	 */
 	public List<HandlerMapping> getHandlerMappings() {
-		return (this.handlerMappings != null ? this.handlerMappings : Collections.<HandlerMapping>emptyList());
+		return (this.handlerMappings != null ? this.handlerMappings : Collections.emptyList());
 	}
 
 
@@ -116,6 +120,7 @@ public class HandlerMappingIntrospector
 	 * @return the resolved matcher, or {@code null}
 	 * @throws Exception if any of the HandlerMapping's raise an exception
 	 */
+	@Nullable
 	public MatchableHandlerMapping getMatchableHandlerMapping(HttpServletRequest request) throws Exception {
 		Assert.notNull(this.handlerMappings, "Handler mappings not initialized");
 		HttpServletRequest wrapper = new RequestAttributeChangeIgnoringWrapper(request);
@@ -133,6 +138,7 @@ public class HandlerMappingIntrospector
 	}
 
 	@Override
+	@Nullable
 	public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
 		Assert.notNull(this.handlerMappings, "Handler mappings not initialized");
 		HttpServletRequest wrapper = new RequestAttributeChangeIgnoringWrapper(request);
@@ -166,7 +172,7 @@ public class HandlerMappingIntrospector
 		Map<String, HandlerMapping> beans = BeanFactoryUtils.beansOfTypeIncludingAncestors(
 				applicationContext, HandlerMapping.class, true, false);
 		if (!beans.isEmpty()) {
-			List<HandlerMapping> mappings = new ArrayList<HandlerMapping>(beans.values());
+			List<HandlerMapping> mappings = new ArrayList<>(beans.values());
 			AnnotationAwareOrderComparator.sort(mappings);
 			return Collections.unmodifiableList(mappings);
 		}
@@ -186,7 +192,7 @@ public class HandlerMappingIntrospector
 
 		String value = props.getProperty(HandlerMapping.class.getName());
 		String[] names = StringUtils.commaDelimitedListToStringArray(value);
-		List<HandlerMapping> result = new ArrayList<HandlerMapping>(names.length);
+		List<HandlerMapping> result = new ArrayList<>(names.length);
 		for (String name : names) {
 			try {
 				Class<?> clazz = ClassUtils.forName(name, DispatcherServlet.class.getClassLoader());

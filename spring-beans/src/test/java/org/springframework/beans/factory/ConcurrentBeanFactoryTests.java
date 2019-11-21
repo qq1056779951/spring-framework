@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,12 +48,10 @@ import static org.springframework.tests.TestResourceUtils.*;
  * @author Chris Beams
  * @since 10.03.2004
  */
-public final class ConcurrentBeanFactoryTests {
-
-	private static final Log logger = LogFactory.getLog(ConcurrentBeanFactoryTests.class);
-	private static final Resource CONTEXT = qualifiedResource(ConcurrentBeanFactoryTests.class, "context.xml");
+public class ConcurrentBeanFactoryTests {
 
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
+
 	private static final Date DATE_1, DATE_2;
 
 	static {
@@ -66,26 +64,31 @@ public final class ConcurrentBeanFactoryTests {
 		}
 	}
 
+
+	private static final Log logger = LogFactory.getLog(ConcurrentBeanFactoryTests.class);
+
 	private BeanFactory factory;
 
-	private final Set<TestRun> set = Collections.synchronizedSet(new HashSet<TestRun>());
+	private final Set<TestRun> set = Collections.synchronizedSet(new HashSet<>());
 
-	private Throwable ex = null;
+	private Throwable ex;
+
 
 	@Before
-	public void setUp() throws Exception {
+	public void setup() throws Exception {
 		Assume.group(TestGroup.PERFORMANCE);
 
 		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
-		new XmlBeanDefinitionReader(factory).loadBeanDefinitions(CONTEXT);
-		factory.addPropertyEditorRegistrar(new PropertyEditorRegistrar() {
-			@Override
-			public void registerCustomEditors(PropertyEditorRegistry registry) {
-				registry.registerCustomEditor(Date.class, new CustomDateEditor((DateFormat) DATE_FORMAT.clone(), false));
-			}
-		});
+		new XmlBeanDefinitionReader(factory).loadBeanDefinitions(
+				qualifiedResource(ConcurrentBeanFactoryTests.class, "context.xml"));
+
+		factory.addPropertyEditorRegistrar(
+				registry -> registry.registerCustomEditor(Date.class,
+						new CustomDateEditor((DateFormat) DATE_FORMAT.clone(), false)));
+
 		this.factory = factory;
 	}
+
 
 	@Test
 	public void testSingleThread() {
@@ -101,7 +104,7 @@ public final class ConcurrentBeanFactoryTests {
 			run.setDaemon(true);
 			set.add(run);
 		}
-		for (Iterator<TestRun> it = new HashSet<TestRun>(set).iterator(); it.hasNext();) {
+		for (Iterator<TestRun> it = new HashSet<>(set).iterator(); it.hasNext();) {
 			TestRun run = it.next();
 			run.start();
 		}
@@ -126,8 +129,8 @@ public final class ConcurrentBeanFactoryTests {
 		ConcurrentBean b1 = (ConcurrentBean) factory.getBean("bean1");
 		ConcurrentBean b2 = (ConcurrentBean) factory.getBean("bean2");
 
-		assertEquals(b1.getDate(), DATE_1);
-		assertEquals(b2.getDate(), DATE_2);
+		assertEquals(DATE_1, b1.getDate());
+		assertEquals(DATE_2, b2.getDate());
 	}
 
 

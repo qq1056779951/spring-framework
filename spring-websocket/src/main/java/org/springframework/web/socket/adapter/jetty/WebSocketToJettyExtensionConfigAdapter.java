@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,13 +16,14 @@
 
 package org.springframework.web.socket.adapter.jetty;
 
-import java.util.Map;
-
 import org.eclipse.jetty.websocket.api.extensions.ExtensionConfig;
 
 import org.springframework.web.socket.WebSocketExtension;
 
 /**
+ * Adapter class to convert a {@link WebSocketExtension} to a Jetty
+ * {@link ExtensionConfig}.
+ *
  * @author Rossen Stoyanchev
  * @since 4.0
  */
@@ -30,9 +31,7 @@ public class WebSocketToJettyExtensionConfigAdapter extends ExtensionConfig {
 
 	public WebSocketToJettyExtensionConfigAdapter(WebSocketExtension extension) {
 		super(extension.getName());
-		for (Map.Entry<String,String> parameter : extension.getParameters().entrySet()) {
-			super.setParameter(parameter.getKey(), parameter.getValue());
-		}
+		extension.getParameters().forEach(super::setParameter);
 	}
 
 }

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,14 +17,18 @@
 package org.springframework.util.xml;
 
 import java.io.StringWriter;
+
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLOutputFactory;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.w3c.dom.Node;
+import org.xmlunit.util.Predicate;
 
-import static org.custommonkey.xmlunit.XMLAssert.*;
+import static org.junit.Assert.*;
+import static org.xmlunit.matchers.CompareMatcher.*;
 
 public class XMLEventStreamWriterTests {
 
@@ -57,7 +61,8 @@ public class XMLEventStreamWriterTests {
 		streamWriter.writeEndElement();
 		streamWriter.writeEndDocument();
 
-		assertXMLEqual(XML, stringWriter.toString());
+		Predicate<Node> nodeFilter = n -> n.getNodeType() != Node.DOCUMENT_TYPE_NODE && n.getNodeType() != Node.PROCESSING_INSTRUCTION_NODE;
+		assertThat(stringWriter.toString(), isSimilarTo(XML).withNodeFilter(nodeFilter));
 	}
 
 

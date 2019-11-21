@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,7 @@ package org.springframework.web.client;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
 
@@ -39,8 +39,6 @@ import static org.mockito.BDDMockito.*;
  * @author Denys Ivano
  */
 public class DefaultResponseErrorHandlerTests {
-
-	private final Charset UTF8 = Charset.forName("UTF-8");
 
 	private final DefaultResponseErrorHandler handler = new DefaultResponseErrorHandler();
 
@@ -64,10 +62,10 @@ public class DefaultResponseErrorHandlerTests {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.TEXT_PLAIN);
 
-		given(response.getStatusCode()).willReturn(HttpStatus.NOT_FOUND);
+		given(response.getRawStatusCode()).willReturn(HttpStatus.NOT_FOUND.value());
 		given(response.getStatusText()).willReturn("Not Found");
 		given(response.getHeaders()).willReturn(headers);
-		given(response.getBody()).willReturn(new ByteArrayInputStream("Hello World".getBytes("UTF-8")));
+		given(response.getBody()).willReturn(new ByteArrayInputStream("Hello World".getBytes(StandardCharsets.UTF_8)));
 
 		try {
 			handler.handleError(response);
@@ -83,7 +81,7 @@ public class DefaultResponseErrorHandlerTests {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.TEXT_PLAIN);
 
-		given(response.getStatusCode()).willReturn(HttpStatus.NOT_FOUND);
+		given(response.getRawStatusCode()).willReturn(HttpStatus.NOT_FOUND.value());
 		given(response.getStatusText()).willReturn("Not Found");
 		given(response.getHeaders()).willReturn(headers);
 		given(response.getBody()).willThrow(new IOException());
@@ -96,20 +94,8 @@ public class DefaultResponseErrorHandlerTests {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.TEXT_PLAIN);
 
-		given(response.getStatusCode()).willReturn(HttpStatus.NOT_FOUND);
+		given(response.getRawStatusCode()).willReturn(HttpStatus.NOT_FOUND.value());
 		given(response.getStatusText()).willReturn("Not Found");
-		given(response.getHeaders()).willReturn(headers);
-
-		handler.handleError(response);
-	}
-
-	@Test(expected = UnknownHttpStatusCodeException.class)  // SPR-9406
-	public void unknownStatusCode() throws Exception {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.TEXT_PLAIN);
-
-		given(response.getStatusCode()).willThrow(new IllegalArgumentException("No matching constant for 999"));
-		given(response.getStatusText()).willReturn("Custom status code");
 		given(response.getHeaders()).willReturn(headers);
 
 		handler.handleError(response);
@@ -127,11 +113,71 @@ public class DefaultResponseErrorHandlerTests {
 		assertFalse(handler.hasError(response));
 	}
 
+	@Test(expected = UnknownHttpStatusCodeException.class)  // SPR-9406
+	public void handleErrorUnknownStatusCode() throws Exception {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.TEXT_PLAIN);
+
+		given(response.getRawStatusCode()).willReturn(999);
+		given(response.getStatusText()).willReturn("Custom status code");
+		given(response.getHeaders()).willReturn(headers);
+
+		handler.handleError(response);
+	}
+
+	@Test  // SPR-17461
+	public void hasErrorForCustomClientError() throws Exception {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.TEXT_PLAIN);
+
+		given(response.getRawStatusCode()).willReturn(499);
+		given(response.getStatusText()).willReturn("Custom status code");
+		given(response.getHeaders()).willReturn(headers);
+
+		assertTrue(handler.hasError(response));
+	}
+
+	@Test(expected = UnknownHttpStatusCodeException.class)
+	public void handleErrorForCustomClientError() throws Exception {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.TEXT_PLAIN);
+
+		given(response.getRawStatusCode()).willReturn(499);
+		given(response.getStatusText()).willReturn("Custom status code");
+		given(response.getHeaders()).willReturn(headers);
+
+		handler.handleError(response);
+	}
+
+	@Test  // SPR-17461
+	public void hasErrorForCustomServerError() throws Exception {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.TEXT_PLAIN);
+
+		given(response.getRawStatusCode()).willReturn(599);
+		given(response.getStatusText()).willReturn("Custom status code");
+		given(response.getHeaders()).willReturn(headers);
+
+		assertTrue(handler.hasError(response));
+	}
+
+	@Test(expected = UnknownHttpStatusCodeException.class)
+	public void handleErrorForCustomServerError() throws Exception {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.TEXT_PLAIN);
+
+		given(response.getRawStatusCode()).willReturn(599);
+		given(response.getStatusText()).willReturn("Custom status code");
+		given(response.getHeaders()).willReturn(headers);
+
+		handler.handleError(response);
+	}
+
 	@Test  // SPR-16604
 	public void bodyAvailableAfterHasErrorForUnknownStatusCode() throws Exception {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.TEXT_PLAIN);
-		TestByteArrayInputStream body = new TestByteArrayInputStream("Hello World".getBytes("UTF-8"));
+		TestByteArrayInputStream body = new TestByteArrayInputStream("Hello World".getBytes(StandardCharsets.UTF_8));
 
 		given(response.getRawStatusCode()).willReturn(999);
 		given(response.getStatusText()).willReturn("Custom status code");
@@ -140,7 +186,7 @@ public class DefaultResponseErrorHandlerTests {
 
 		assertFalse(handler.hasError(response));
 		assertFalse(body.isClosed());
-		assertEquals("Hello World", StreamUtils.copyToString(response.getBody(), UTF8));
+		assertEquals("Hello World", StreamUtils.copyToString(response.getBody(), StandardCharsets.UTF_8));
 	}
 
 

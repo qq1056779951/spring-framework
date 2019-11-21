@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2012 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,31 +43,30 @@ public class PathVariableMapMethodArgumentResolverTests {
 
 	private PathVariableMapMethodArgumentResolver resolver;
 
-	private MethodParameter paramMap;
-
-	private MethodParameter paramNamedMap;
-
-	private MethodParameter paramMapNoAnnot;
-
 	private ModelAndViewContainer mavContainer;
 
 	private ServletWebRequest webRequest;
 
 	private MockHttpServletRequest request;
 
+	private MethodParameter paramMap;
+	private MethodParameter paramNamedMap;
+	private MethodParameter paramMapNoAnnot;
+
+
 	@Before
-	public void setUp() throws Exception {
+	public void setup() throws Exception {
 		resolver = new PathVariableMapMethodArgumentResolver();
+		mavContainer = new ModelAndViewContainer();
+		request = new MockHttpServletRequest();
+		webRequest = new ServletWebRequest(request, new MockHttpServletResponse());
 
 		Method method = getClass().getMethod("handle", Map.class, Map.class, Map.class);
 		paramMap = new MethodParameter(method, 0);
 		paramNamedMap = new MethodParameter(method, 1);
 		paramMapNoAnnot = new MethodParameter(method, 2);
-
-		mavContainer = new ModelAndViewContainer();
-		request = new MockHttpServletRequest();
-		webRequest = new ServletWebRequest(request, new MockHttpServletResponse());
 	}
+
 
 	@Test
 	public void supportsParameter() {
@@ -78,7 +77,7 @@ public class PathVariableMapMethodArgumentResolverTests {
 
 	@Test
 	public void resolveArgument() throws Exception {
-		Map<String, String> uriTemplateVars = new HashMap<String, String>();
+		Map<String, String> uriTemplateVars = new HashMap<>();
 		uriTemplateVars.put("name1", "value1");
 		uriTemplateVars.put("name2", "value2");
 		request.setAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE, uriTemplateVars);

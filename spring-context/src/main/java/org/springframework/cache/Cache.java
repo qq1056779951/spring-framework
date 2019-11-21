@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,8 @@
 package org.springframework.cache;
 
 import java.util.concurrent.Callable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Interface that defines common cache operations.
@@ -53,7 +55,9 @@ public interface Cache {
 	 * a cached {@code null} value. A straight {@code null} being
 	 * returned means that the cache contains no mapping for this key.
 	 * @see #get(Object, Class)
+	 * @see #get(Object, Callable)
 	 */
+	@Nullable
 	ValueWrapper get(Object key);
 
 	/**
@@ -74,7 +78,8 @@ public interface Cache {
 	 * @since 4.0
 	 * @see #get(Object)
 	 */
-	<T> T get(Object key, Class<T> type);
+	@Nullable
+	<T> T get(Object key, @Nullable Class<T> type);
 
 	/**
 	 * Return the value to which this cache maps the specified key, obtaining
@@ -90,7 +95,9 @@ public interface Cache {
 	 * @return the value to which this cache maps the specified key
 	 * @throws ValueRetrievalException if the {@code valueLoader} throws an exception
 	 * @since 4.3
+	 * @see #get(Object)
 	 */
+	@Nullable
 	<T> T get(Object key, Callable<T> valueLoader);
 
 	/**
@@ -100,20 +107,18 @@ public interface Cache {
 	 * @param key the key with which the specified value is to be associated
 	 * @param value the value to be associated with the specified key
 	 */
-	void put(Object key, Object value);
+	void put(Object key, @Nullable Object value);
 
 	/**
 	 * Atomically associate the specified value with the specified key in this cache
 	 * if it is not set already.
 	 * <p>This is equivalent to:
 	 * <pre><code>
-	 * Object existingValue = cache.get(key);
+	 * ValueWrapper existingValue = cache.get(key);
 	 * if (existingValue == null) {
 	 *     cache.put(key, value);
-	 *     return null;
-	 * } else {
-	 *     return existingValue;
 	 * }
+	 * return existingValue;
 	 * </code></pre>
 	 * except that the action is performed atomically. While all out-of-the-box
 	 * {@link CacheManager} implementations are able to perform the put atomically,
@@ -127,8 +132,10 @@ public interface Cache {
 	 * mapping for that key prior to this call. Returning {@code null} is therefore
 	 * an indicator that the given {@code value} has been associated with the key.
 	 * @since 4.1
+	 * @see #put(Object, Object)
 	 */
-	ValueWrapper putIfAbsent(Object key, Object value);
+	@Nullable
+	ValueWrapper putIfAbsent(Object key, @Nullable Object value);
 
 	/**
 	 * Evict the mapping for this key from this cache if it is present.
@@ -137,7 +144,7 @@ public interface Cache {
 	void evict(Object key);
 
 	/**
-	 * Remove all mappings from the cache.
+	 * Clear the cache through removing all mappings.
 	 */
 	void clear();
 
@@ -145,11 +152,13 @@ public interface Cache {
 	/**
 	 * A (wrapper) object representing a cache value.
 	 */
+	@FunctionalInterface
 	interface ValueWrapper {
 
 		/**
 		 * Return the actual value in the cache.
 		 */
+		@Nullable
 		Object get();
 	}
 
@@ -162,13 +171,15 @@ public interface Cache {
 	@SuppressWarnings("serial")
 	class ValueRetrievalException extends RuntimeException {
 
+		@Nullable
 		private final Object key;
 
-		public ValueRetrievalException(Object key, Callable<?> loader, Throwable ex) {
+		public ValueRetrievalException(@Nullable Object key, Callable<?> loader, Throwable ex) {
 			super(String.format("Value for key '%s' could not be loaded using '%s'", key, loader), ex);
 			this.key = key;
 		}
 
+		@Nullable
 		public Object getKey() {
 			return this.key;
 		}

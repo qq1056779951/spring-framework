@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,14 +32,17 @@ public class SimpMessageTypeMessageConditionTests {
 
 	@Test
 	public void combine() {
-		SimpMessageType actual = condition(SimpMessageType.MESSAGE).combine(condition(SimpMessageType.SUBSCRIBE)).getMessageType();
-		assertEquals(SimpMessageType.SUBSCRIBE, actual);
+		SimpMessageType messageType = SimpMessageType.MESSAGE;
+		SimpMessageType subscribeType = SimpMessageType.SUBSCRIBE;
 
-		actual = condition(SimpMessageType.MESSAGE).combine(condition(SimpMessageType.MESSAGE)).getMessageType();
-		assertEquals(SimpMessageType.MESSAGE, actual);
+		SimpMessageType actual = condition(messageType).combine(condition(subscribeType)).getMessageType();
+		assertEquals(subscribeType, actual);
 
-		actual = condition(SimpMessageType.SUBSCRIBE).combine(condition(SimpMessageType.SUBSCRIBE)).getMessageType();
-		assertEquals(SimpMessageType.SUBSCRIBE, actual);
+		actual = condition(messageType).combine(condition(messageType)).getMessageType();
+		assertEquals(messageType, actual);
+
+		actual = condition(subscribeType).combine(condition(subscribeType)).getMessageType();
+		assertEquals(subscribeType, actual);
 	}
 
 	@Test

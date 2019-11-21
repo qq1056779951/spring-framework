@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 
 package org.springframework.web.servlet.view.script;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 
@@ -100,7 +101,7 @@ public class ScriptTemplateViewTests {
 		this.configurer.setRenderObject("Template");
 		this.configurer.setRenderFunction("render");
 		this.configurer.setContentType(MediaType.TEXT_PLAIN_VALUE);
-		this.configurer.setCharset(Charset.forName("ISO-8859-1"));
+		this.configurer.setCharset(StandardCharsets.ISO_8859_1);
 		this.configurer.setSharedEngine(true);
 
 		DirectFieldAccessor accessor = new DirectFieldAccessor(this.view);
@@ -109,7 +110,7 @@ public class ScriptTemplateViewTests {
 		assertEquals("Template", accessor.getPropertyValue("renderObject"));
 		assertEquals("render", accessor.getPropertyValue("renderFunction"));
 		assertEquals(MediaType.TEXT_PLAIN_VALUE, accessor.getPropertyValue("contentType"));
-		assertEquals(Charset.forName("ISO-8859-1"), accessor.getPropertyValue("charset"));
+		assertEquals(StandardCharsets.ISO_8859_1, accessor.getPropertyValue("charset"));
 		assertEquals(true, accessor.getPropertyValue("sharedEngine"));
 	}
 
@@ -126,7 +127,7 @@ public class ScriptTemplateViewTests {
 		assertEquals("Template", accessor.getPropertyValue("renderObject"));
 		assertEquals("render", accessor.getPropertyValue("renderFunction"));
 		assertEquals(MediaType.TEXT_HTML_VALUE, accessor.getPropertyValue("contentType"));
-		assertEquals(Charset.forName("UTF-8"), accessor.getPropertyValue("charset"));
+		assertEquals(StandardCharsets.UTF_8, accessor.getPropertyValue("charset"));
 	}
 
 	@Test
@@ -142,7 +143,7 @@ public class ScriptTemplateViewTests {
 		DirectFieldAccessor accessor = new DirectFieldAccessor(this.view);
 		assertNull(accessor.getPropertyValue("renderObject"));
 		assertEquals("render", accessor.getPropertyValue("renderFunction"));
-		assertEquals(Charset.forName("UTF-8"), accessor.getPropertyValue("charset"));
+		assertEquals(StandardCharsets.UTF_8, accessor.getPropertyValue("charset"));
 	}
 
 	@Test
@@ -166,17 +167,16 @@ public class ScriptTemplateViewTests {
 
 	@Test
 	public void nonInvocableScriptEngine() throws Exception {
-		this.expectedException.expect(IllegalArgumentException.class);
 		this.view.setEngine(mock(ScriptEngine.class));
-		this.expectedException.expectMessage(contains("instance"));
+		this.view.setApplicationContext(this.wac);
 	}
 
 	@Test
-	public void noRenderFunctionDefined() {
-		this.view.setEngine(mock(InvocableScriptEngine.class));
+	public void nonInvocableScriptEngineWithRenderFunction() throws Exception {
+		this.view.setEngine(mock(ScriptEngine.class));
+		this.view.setRenderFunction("render");
 		this.expectedException.expect(IllegalArgumentException.class);
 		this.view.setApplicationContext(this.wac);
-		this.expectedException.expectMessage(contains("renderFunction"));
 	}
 
 	@Test
@@ -207,7 +207,7 @@ public class ScriptTemplateViewTests {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.setAttribute(DispatcherServlet.WEB_APPLICATION_CONTEXT_ATTRIBUTE, this.wac);
 		MockHttpServletResponse response = new MockHttpServletResponse();
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		InvocableScriptEngine engine = mock(InvocableScriptEngine.class);
 		when(engine.invokeFunction(any(), any(), any(), any())).thenReturn("foo");
 		this.view.setEngine(engine);
@@ -238,7 +238,7 @@ public class ScriptTemplateViewTests {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.setAttribute(DispatcherServlet.WEB_APPLICATION_CONTEXT_ATTRIBUTE, this.wac);
 		MockHttpServletResponse response = new MockHttpServletResponse();
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		this.view.setEngine(mock(InvocableScriptEngine.class));
 		this.view.setRenderFunction("render");
 		this.view.setResourceLoaderPath("classpath:org/springframework/web/servlet/view/script/");
@@ -247,19 +247,19 @@ public class ScriptTemplateViewTests {
 
 		this.view.render(model, request, response);
 		assertEquals(MediaType.TEXT_HTML_VALUE + ";charset=" +
-				Charset.forName("UTF-8"), response.getHeader(HttpHeaders.CONTENT_TYPE));
+				StandardCharsets.UTF_8, response.getHeader(HttpHeaders.CONTENT_TYPE));
 
 		response = new MockHttpServletResponse();
 		this.view.setContentType(MediaType.TEXT_PLAIN_VALUE);
 		this.view.render(model, request, response);
 		assertEquals(MediaType.TEXT_PLAIN_VALUE + ";charset=" +
-				Charset.forName("UTF-8"), response.getHeader(HttpHeaders.CONTENT_TYPE));
+				StandardCharsets.UTF_8, response.getHeader(HttpHeaders.CONTENT_TYPE));
 
 		response = new MockHttpServletResponse();
-		this.view.setCharset(Charset.forName("ISO-8859-1"));
+		this.view.setCharset(StandardCharsets.ISO_8859_1);
 		this.view.render(model, request, response);
 		assertEquals(MediaType.TEXT_PLAIN_VALUE + ";charset=" +
-				Charset.forName("ISO-8859-1"), response.getHeader(HttpHeaders.CONTENT_TYPE));
+				StandardCharsets.ISO_8859_1, response.getHeader(HttpHeaders.CONTENT_TYPE));
 
 	}
 

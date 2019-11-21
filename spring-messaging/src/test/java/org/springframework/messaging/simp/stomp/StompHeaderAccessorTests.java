@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,7 @@
 package org.springframework.messaging.simp.stomp;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -47,15 +47,12 @@ import static org.junit.Assert.*;
  */
 public class StompHeaderAccessorTests {
 
-	private static final Charset UTF_8 = Charset.forName("UTF-8");
-
-
 	@Test
 	public void createWithCommand() {
 		StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.CONNECTED);
 		assertEquals(StompCommand.CONNECTED, accessor.getCommand());
 
-		accessor = StompHeaderAccessor.create(StompCommand.CONNECTED, new LinkedMultiValueMap<String, String>());
+		accessor = StompHeaderAccessor.create(StompCommand.CONNECTED, new LinkedMultiValueMap<>());
 		assertEquals(StompCommand.CONNECTED, accessor.getCommand());
 	}
 
@@ -105,9 +102,9 @@ public class StompHeaderAccessorTests {
 		extHeaders.add(StompHeaderAccessor.STOMP_LOGIN_HEADER, "joe");
 		extHeaders.add(StompHeaderAccessor.STOMP_PASSCODE_HEADER, "joe123");
 
-		StompHeaderAccessor headerAccessor = StompHeaderAccessor.create(StompCommand.CONNECT, extHeaders);
+		StompHeaderAccessor headerAccessor = StompHeaderAccessor.create(StompCommand.STOMP, extHeaders);
 
-		assertEquals(StompCommand.CONNECT, headerAccessor.getCommand());
+		assertEquals(StompCommand.STOMP, headerAccessor.getCommand());
 		assertEquals(SimpMessageType.CONNECT, headerAccessor.getMessageType());
 		assertNotNull(headerAccessor.getHeader("stompCredentials"));
 		assertEquals("joe", headerAccessor.getLogin());
@@ -240,7 +237,7 @@ public class StompHeaderAccessorTests {
 		accessor.setDestination("/foo");
 		accessor.setContentType(MimeTypeUtils.APPLICATION_JSON);
 		accessor.setSessionId("123");
-		String actual = accessor.getShortLogMessage("payload".getBytes(Charset.forName("UTF-8")));
+		String actual = accessor.getShortLogMessage("payload".getBytes(StandardCharsets.UTF_8));
 		assertEquals("SEND /foo session=123 application/json payload=payload", actual);
 
 		StringBuilder sb = new StringBuilder();
@@ -248,7 +245,7 @@ public class StompHeaderAccessorTests {
 			sb.append("a");
 		}
 		final String payload = sb.toString() + " > 80";
-		actual = accessor.getShortLogMessage(payload.getBytes(UTF_8));
+		actual = accessor.getShortLogMessage(payload.getBytes(StandardCharsets.UTF_8));
 		assertEquals("SEND /foo session=123 application/json payload=" + sb + "...(truncated)", actual);
 	}
 

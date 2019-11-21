@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,14 +23,13 @@ import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceProperty;
 import javax.persistence.PersistenceUnit;
-
-import org.hibernate.ejb.HibernateEntityManager;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -39,6 +38,7 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.orm.jpa.AbstractEntityManagerFactoryBeanTests;
 import org.springframework.orm.jpa.DefaultJpaDialect;
 import org.springframework.orm.jpa.EntityManagerFactoryInfo;
@@ -547,7 +547,7 @@ public class PersistenceInjectionTests extends AbstractEntityManagerFactoryBeanT
 	public void testFieldOfWrongTypeAnnotatedWithPersistenceUnit() {
 		PersistenceAnnotationBeanPostProcessor pabpp = new PersistenceAnnotationBeanPostProcessor();
 		try {
-			pabpp.postProcessPropertyValues(null, null, new FieldOfWrongTypeAnnotatedWithPersistenceUnit(), "bean");
+			pabpp.postProcessProperties(null, new FieldOfWrongTypeAnnotatedWithPersistenceUnit(), "bean");
 			fail("Can't inject this field");
 		}
 		catch (IllegalStateException ex) {
@@ -559,7 +559,7 @@ public class PersistenceInjectionTests extends AbstractEntityManagerFactoryBeanT
 	public void testSetterOfWrongTypeAnnotatedWithPersistenceUnit() {
 		PersistenceAnnotationBeanPostProcessor pabpp = new PersistenceAnnotationBeanPostProcessor();
 		try {
-			pabpp.postProcessPropertyValues(null, null, new SetterOfWrongTypeAnnotatedWithPersistenceUnit(), "bean");
+			pabpp.postProcessProperties(null, new SetterOfWrongTypeAnnotatedWithPersistenceUnit(), "bean");
 			fail("Can't inject this setter");
 		}
 		catch (IllegalStateException ex) {
@@ -571,7 +571,7 @@ public class PersistenceInjectionTests extends AbstractEntityManagerFactoryBeanT
 	public void testSetterWithNoArgs() {
 		PersistenceAnnotationBeanPostProcessor pabpp = new PersistenceAnnotationBeanPostProcessor();
 		try {
-			pabpp.postProcessPropertyValues(null, null, new SetterWithNoArgs(), "bean");
+			pabpp.postProcessProperties(null, new SetterWithNoArgs(), "bean");
 			fail("Can't inject this setter");
 		}
 		catch (IllegalStateException ex) {
@@ -586,7 +586,7 @@ public class PersistenceInjectionTests extends AbstractEntityManagerFactoryBeanT
 
 		PersistenceAnnotationBeanPostProcessor pabpp = new MockPersistenceAnnotationBeanPostProcessor();
 		DefaultPrivatePersistenceContextFieldExtended dppcf = new DefaultPrivatePersistenceContextFieldExtended();
-		pabpp.postProcessPropertyValues(null, null, dppcf, "bean");
+		pabpp.postProcessProperties(null, dppcf, "bean");
 		assertNotNull(dppcf.em);
 	}
 
@@ -600,7 +600,7 @@ public class PersistenceInjectionTests extends AbstractEntityManagerFactoryBeanT
 		PersistenceAnnotationBeanPostProcessor pabpp = new MockPersistenceAnnotationBeanPostProcessor();
 		DefaultPrivatePersistenceContextFieldExtendedWithProps dppcf =
 				new DefaultPrivatePersistenceContextFieldExtendedWithProps();
-		pabpp.postProcessPropertyValues(null, null, dppcf, "bean");
+		pabpp.postProcessProperties(null, dppcf, "bean");
 		assertNotNull(dppcf.em);
 	}
 
@@ -616,7 +616,7 @@ public class PersistenceInjectionTests extends AbstractEntityManagerFactoryBeanT
 		PersistenceAnnotationBeanPostProcessor pabpp = new MockPersistenceAnnotationBeanPostProcessor();
 		DefaultPrivatePersistenceContextFieldWithProperties transactionalField =
 				new DefaultPrivatePersistenceContextFieldWithProperties();
-		pabpp.postProcessPropertyValues(null, null, transactionalField, "bean");
+		pabpp.postProcessProperties(null, transactionalField, "bean");
 
 		assertNotNull(transactionalField.em);
 		assertNotNull(transactionalField.em.getDelegate());
@@ -643,8 +643,8 @@ public class PersistenceInjectionTests extends AbstractEntityManagerFactoryBeanT
 				new DefaultPrivatePersistenceContextFieldWithProperties();
 		DefaultPrivatePersistenceContextField transactionalField = new DefaultPrivatePersistenceContextField();
 
-		pabpp.postProcessPropertyValues(null, null, transactionalFieldWithProperties, "bean1");
-		pabpp.postProcessPropertyValues(null, null, transactionalField, "bean2");
+		pabpp.postProcessProperties(null, transactionalFieldWithProperties, "bean1");
+		pabpp.postProcessProperties(null, transactionalField, "bean2");
 
 		assertNotNull(transactionalFieldWithProperties.em);
 		assertNotNull(transactionalField.em);
@@ -676,8 +676,8 @@ public class PersistenceInjectionTests extends AbstractEntityManagerFactoryBeanT
 				new DefaultPrivatePersistenceContextFieldWithProperties();
 		DefaultPrivatePersistenceContextField transactionalField = new DefaultPrivatePersistenceContextField();
 
-		pabpp.postProcessPropertyValues(null, null, transactionalFieldWithProperties, "bean1");
-		pabpp.postProcessPropertyValues(null, null, transactionalField, "bean2");
+		pabpp.postProcessProperties(null, transactionalFieldWithProperties, "bean1");
+		pabpp.postProcessProperties(null, transactionalField, "bean2");
 
 		assertNotNull(transactionalFieldWithProperties.em);
 		assertNotNull(transactionalField.em);
@@ -699,7 +699,7 @@ public class PersistenceInjectionTests extends AbstractEntityManagerFactoryBeanT
 	private static class MockPersistenceAnnotationBeanPostProcessor extends PersistenceAnnotationBeanPostProcessor {
 
 		@Override
-		protected EntityManagerFactory findEntityManagerFactory(String emfName, String requestingBeanName) {
+		protected EntityManagerFactory findEntityManagerFactory(@Nullable String emfName, String requestingBeanName) {
 			return mockEmf;
 		}
 	}
@@ -715,7 +715,8 @@ public class PersistenceInjectionTests extends AbstractEntityManagerFactoryBeanT
 	public static class DefaultVendorSpecificPrivatePersistenceContextField {
 
 		@PersistenceContext
-		private HibernateEntityManager em;
+		@SuppressWarnings("deprecation")
+		private org.hibernate.ejb.HibernateEntityManager em;
 	}
 
 

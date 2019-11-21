@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,23 +28,22 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
-import org.springframework.util.CollectionUtils;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.servlet.FlashMap;
-import org.springframework.web.servlet.FlashMapManager;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.SmartView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.support.RequestContextUtils;
 import org.springframework.web.servlet.support.RequestDataValueProcessor;
-import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 import org.springframework.web.util.WebUtils;
@@ -96,14 +95,17 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 
 	private boolean exposeModelAttributes = true;
 
+	@Nullable
 	private String encodingScheme;
 
+	@Nullable
 	private HttpStatus statusCode;
 
 	private boolean expandUriTemplateVariables = true;
 
 	private boolean propagateQueryParams = false;
 
+	@Nullable
 	private String[] hosts;
 
 
@@ -264,7 +266,7 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 	 * @param hosts one or more application hosts
 	 * @since 4.3
 	 */
-	public void setHosts(String... hosts) {
+	public void setHosts(@Nullable String... hosts) {
 		this.hosts = hosts;
 	}
 
@@ -272,6 +274,7 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 	 * Return the configured application hosts.
 	 * @since 4.3
 	 */
+	@Nullable
 	public String[] getHosts() {
 		return this.hosts;
 	}
@@ -305,18 +308,10 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 		String targetUrl = createTargetUrl(model, request);
 		targetUrl = updateTargetUrl(targetUrl, model, request, response);
 
-		FlashMap flashMap = RequestContextUtils.getOutputFlashMap(request);
-		if (!CollectionUtils.isEmpty(flashMap)) {
-			UriComponents uriComponents = UriComponentsBuilder.fromUriString(targetUrl).build();
-			flashMap.setTargetRequestPath(uriComponents.getPath());
-			flashMap.addTargetRequestParams(uriComponents.getQueryParams());
-			FlashMapManager flashMapManager = RequestContextUtils.getFlashMapManager(request);
-			if (flashMapManager == null) {
-				throw new IllegalStateException("FlashMapManager not found despite output FlashMap having been set");
-			}
-			flashMapManager.saveOutputFlashMap(flashMap, request, response);
-		}
+		// Save flash attributes
+		RequestContextUtils.saveOutputFlashMap(targetUrl, request, response);
 
+		// Redirect
 		sendRedirect(request, response, targetUrl, this.http10Compatible);
 	}
 
@@ -330,6 +325,9 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 
 		// Prepare target URL.
 		StringBuilder targetUrl = new StringBuilder();
+		String url = getUrl();
+		Assert.state(url != null, "'url' not set");
+
 		if (this.contextRelative && getUrl().startsWith("/")) {
 			// Do not apply context path to relative URLs.
 			targetUrl.append(getContextPath(request));
@@ -349,7 +347,7 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 			targetUrl = replaceUriTemplateVariables(targetUrl.toString(), model, variables, enc);
 		}
 		if (isPropagateQueryProperties()) {
-		 	appendCurrentQueryParams(targetUrl, request);
+			appendCurrentQueryParams(targetUrl, request);
 		}
 		if (this.exposeModelAttributes) {
 			appendQueryProperties(targetUrl, model, enc);
@@ -371,7 +369,7 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 	 * attributes or URI variables from the current request. Model attributes
 	 * referenced in the URL are removed from the model.
 	 * @param targetUrl the redirect URL
-	 * @param model Map that contains model attributes
+	 * @param model a Map that contains model attributes
 	 * @param currentUriVariables current request URI variables to use
 	 * @param encodingScheme the encoding scheme to use
 	 * @throws UnsupportedEncodingException if string encoding failed
@@ -393,7 +391,7 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 			result.append(UriUtils.encodePathSegment(value.toString(), encodingScheme));
 			endLastMatch = matcher.end();
 		}
-		result.append(targetUrl.substring(endLastMatch, targetUrl.length()));
+		result.append(targetUrl.substring(endLastMatch));
 		return result;
 	}
 
@@ -438,7 +436,7 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 	 * Append query properties to the redirect URL.
 	 * Stringifies, URL-encodes and formats model attributes as query properties.
 	 * @param targetUrl the StringBuilder to append the properties to
-	 * @param model Map that contains model attributes
+	 * @param model a Map that contains model attributes
 	 * @param encodingScheme the encoding scheme to use
 	 * @throws UnsupportedEncodingException if string encoding failed
 	 * @see #queryProperties
@@ -501,12 +499,12 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 	 * @see #isEligibleProperty(String, Object)
 	 */
 	protected Map<String, Object> queryProperties(Map<String, Object> model) {
-		Map<String, Object> result = new LinkedHashMap<String, Object>();
-		for (Map.Entry<String, Object> entry : model.entrySet()) {
-			if (isEligibleProperty(entry.getKey(), entry.getValue())) {
-				result.put(entry.getKey(), entry.getValue());
+		Map<String, Object> result = new LinkedHashMap<>();
+		model.forEach((name, value) -> {
+			if (isEligibleProperty(name, value)) {
+				result.put(name, value);
 			}
-		}
+		});
 		return result;
 	}
 
@@ -520,7 +518,7 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 	 * @param value the value of the model element
 	 * @return whether the element is eligible as query property
 	 */
-	protected boolean isEligibleProperty(String key, Object value) {
+	protected boolean isEligibleProperty(String key, @Nullable Object value) {
 		if (value == null) {
 			return false;
 		}
@@ -557,13 +555,14 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 
 	/**
 	 * Determine whether the given model element value is eligible for exposure.
-	 * <p>The default implementation considers primitives, Strings, Numbers, Dates,
-	 * URIs, URLs and Locale objects as eligible. This can be overridden in subclasses.
+	 * <p>The default implementation considers primitives, strings, numbers, dates,
+	 * URIs, URLs etc as eligible, according to {@link BeanUtils#isSimpleValueType}.
+	 * This can be overridden in subclasses.
 	 * @param value the model element value
 	 * @return whether the element value is eligible
 	 * @see BeanUtils#isSimpleValueType
 	 */
-	protected boolean isEligibleValue(Object value) {
+	protected boolean isEligibleValue(@Nullable Object value) {
 		return (value != null && BeanUtils.isSimpleValueType(value.getClass()));
 	}
 
@@ -575,10 +574,9 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 	 * @return the encoded output String
 	 * @throws UnsupportedEncodingException if thrown by the JDK URLEncoder
 	 * @see java.net.URLEncoder#encode(String, String)
-	 * @see java.net.URLEncoder#encode(String)
 	 */
 	protected String urlEncode(String input, String encodingScheme) throws UnsupportedEncodingException {
-		return (input != null ? URLEncoder.encode(input, encodingScheme) : null);
+		return URLEncoder.encode(input, encodingScheme);
 	}
 
 	/**
@@ -605,7 +603,7 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 	}
 
 	/**
-	 * Send a redirect back to the HTTP client
+	 * Send a redirect back to the HTTP client.
 	 * @param request current HTTP request (allows for reacting to request method)
 	 * @param response current HTTP response (for sending response headers)
 	 * @param targetUrl the target URL to redirect to
@@ -653,7 +651,7 @@ public class RedirectView extends AbstractUrlBasedView implements SmartView {
 			return false;
 		}
 		String targetHost = UriComponentsBuilder.fromUriString(targetUrl).build().getHost();
-		if (StringUtils.isEmpty(targetHost)) {
+		if (!StringUtils.hasLength(targetHost)) {
 			return false;
 		}
 		for (String host : getHosts()) {

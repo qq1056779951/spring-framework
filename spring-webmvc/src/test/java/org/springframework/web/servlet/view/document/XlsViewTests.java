@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.web.servlet.view.document;
 import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -50,6 +51,7 @@ public class XlsViewTests {
 
 
 	@Test
+	@SuppressWarnings("resource")
 	public void testXls() throws Exception {
 		View excelView = new AbstractXlsView() {
 			@Override
@@ -62,7 +64,7 @@ public class XlsViewTests {
 			}
 		};
 
-		excelView.render(new HashMap<String, Object>(), request, response);
+		excelView.render(new HashMap<>(), request, response);
 
 		Workbook wb = new HSSFWorkbook(new ByteArrayInputStream(response.getContentAsByteArray()));
 		assertEquals("Test Sheet", wb.getSheetName(0));
@@ -73,6 +75,7 @@ public class XlsViewTests {
 	}
 
 	@Test
+	@SuppressWarnings("resource")
 	public void testXlsxView() throws Exception {
 		View excelView = new AbstractXlsxView() {
 			@Override
@@ -85,7 +88,7 @@ public class XlsViewTests {
 			}
 		};
 
-		excelView.render(new HashMap<String, Object>(), request, response);
+		excelView.render(new HashMap<>(), request, response);
 
 		Workbook wb = new XSSFWorkbook(new ByteArrayInputStream(response.getContentAsByteArray()));
 		assertEquals("Test Sheet", wb.getSheetName(0));
@@ -96,6 +99,7 @@ public class XlsViewTests {
 	}
 
 	@Test
+	@SuppressWarnings("resource")
 	public void testXlsxStreamingView() throws Exception {
 		View excelView = new AbstractXlsxStreamingView() {
 			@Override
@@ -108,7 +112,7 @@ public class XlsViewTests {
 			}
 		};
 
-		excelView.render(new HashMap<String, Object>(), request, response);
+		excelView.render(new HashMap<>(), request, response);
 
 		Workbook wb = new XSSFWorkbook(new ByteArrayInputStream(response.getContentAsByteArray()));
 		assertEquals("Test Sheet", wb.getSheetName(0));

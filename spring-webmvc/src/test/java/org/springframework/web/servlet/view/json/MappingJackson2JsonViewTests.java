@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,11 +17,9 @@
 package org.springframework.web.servlet.view.json;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -98,7 +96,7 @@ public class MappingJackson2JsonViewTests {
 
 	@Test
 	public void renderSimpleMap() throws Exception {
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put("bindingResult", mock(BindingResult.class, "binding_result"));
 		model.put("foo", "bar");
 
@@ -118,7 +116,7 @@ public class MappingJackson2JsonViewTests {
 
 	@Test
 	public void renderWithSelectedContentType() throws Exception {
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put("foo", "bar");
 
 		view.render(model, request, response);
@@ -134,7 +132,7 @@ public class MappingJackson2JsonViewTests {
 	public void renderCaching() throws Exception {
 		view.setDisableCaching(false);
 
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put("bindingResult", mock(BindingResult.class, "binding_result"));
 		model.put("foo", "bar");
 
@@ -152,7 +150,7 @@ public class MappingJackson2JsonViewTests {
 	@Test
 	public void renderSimpleBean() throws Exception {
 		Object bean = new TestBeanSimple();
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put("bindingResult", mock(BindingResult.class, "binding_result"));
 		model.put("foo", bean);
 
@@ -195,7 +193,7 @@ public class MappingJackson2JsonViewTests {
 	@Test
 	public void renderWithCustomSerializerLocatedByAnnotation() throws Exception {
 		Object bean = new TestBeanSimpleAnnotated();
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put("foo", bean);
 
 		view.render(model, request, response);
@@ -214,7 +212,7 @@ public class MappingJackson2JsonViewTests {
 		view.setObjectMapper(mapper);
 
 		Object bean = new TestBeanSimple();
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put("foo", bean);
 		model.put("bar", new TestChildBean());
 
@@ -230,13 +228,13 @@ public class MappingJackson2JsonViewTests {
 	@Test
 	public void renderOnlyIncludedAttributes() throws Exception {
 
-		Set<String> attrs = new HashSet<String>();
+		Set<String> attrs = new HashSet<>();
 		attrs.add("foo");
 		attrs.add("baz");
 		attrs.add("nil");
 
 		view.setModelKeys(attrs);
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put("foo", "foo");
 		model.put("bar", "bar");
 		model.put("baz", "baz");
@@ -285,7 +283,7 @@ public class MappingJackson2JsonViewTests {
 	@Test
 	public void renderSimpleBeanWithJsonView() throws Exception {
 		Object bean = new TestBeanSimple();
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put("bindingResult", mock(BindingResult.class, "binding_result"));
 		model.put("foo", bean);
 		model.put(JsonView.class.getName(), MyJacksonView1.class);
@@ -306,7 +304,7 @@ public class MappingJackson2JsonViewTests {
 		TestSimpleBeanFiltered bean = new TestSimpleBeanFiltered();
 		bean.setProperty1("value");
 		bean.setProperty2("value");
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put("bindingResult", mock(BindingResult.class, "binding_result"));
 		model.put("foo", bean);
 		FilterProvider filters = new SimpleFilterProvider().addFilter("myJacksonFilter",
@@ -324,25 +322,6 @@ public class MappingJackson2JsonViewTests {
 		assertFalse(content.contains(FilterProvider.class.getName()));
 	}
 
-	@Test
-	public void renderWithJsonp() throws Exception {
-		testJsonp("jsonp", "callback", false);
-		testJsonp("jsonp", "_callback", false);
-		testJsonp("jsonp", "_Call.bAcK", false);
-		testJsonp("jsonp", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.", false);
-		testJsonp("jsonp", "<script>", false);
-		testJsonp("jsonp", "!foo!bar", false);
-
-		this.view.setJsonpParameterNames(new LinkedHashSet<String>(Arrays.asList("jsonp")));
-
-		testJsonp("jsonp", "callback", true);
-		testJsonp("jsonp", "_callback", true);
-		testJsonp("jsonp", "_Call.bAcK", true);
-		testJsonp("jsonp", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.", true);
-		testJsonp("jsonp", "<script>", false);
-		testJsonp("jsonp", "!foo!bar", false);
-	}
-
 	private void validateResult() throws Exception {
 		String json = response.getContentAsString();
 		DirectFieldAccessor viewAccessor = new DirectFieldAccessor(view);
@@ -354,26 +333,6 @@ public class MappingJackson2JsonViewTests {
 				jsContext.evaluateString(jsScope, "(" + json + ")", "JSON Stream", 1, null);
 		assertNotNull("Json Result did not eval as valid JavaScript", jsResult);
 		assertEquals("application/json", response.getContentType());
-	}
-
-	private void testJsonp(String paramName, String paramValue, boolean validValue) throws Exception {
-		Map<String, Object> model = new HashMap<String, Object>();
-		model.put("foo", "bar");
-
-		this.request = new MockHttpServletRequest();
-		this.request.addParameter("otherparam", "value");
-		this.request.addParameter(paramName, paramValue);
-		this.response = new MockHttpServletResponse();
-
-		this.view.render(model, this.request, this.response);
-
-		String content = this.response.getContentAsString();
-		if (validValue) {
-			assertEquals("/**/" + paramValue + "({\"foo\":\"bar\"});", content);
-		}
-		else {
-			assertEquals("{\"foo\":\"bar\"}", content);
-		}
 	}
 
 
@@ -464,6 +423,7 @@ public class MappingJackson2JsonViewTests {
 
 
 	@JsonFilter("myJacksonFilter")
+	@SuppressWarnings("unused")
 	private static class TestSimpleBeanFiltered {
 
 		private String property1;

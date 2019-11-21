@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.beans.factory.config;
 import org.springframework.beans.BeanMetadataElement;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.core.AttributeAccessor;
+import org.springframework.lang.Nullable;
 
 /**
  * A BeanDefinition describes a bean instance, which has property values,
@@ -84,11 +85,12 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	/**
 	 * Set the name of the parent definition of this bean definition, if any.
 	 */
-	void setParentName(String parentName);
+	void setParentName(@Nullable String parentName);
 
 	/**
 	 * Return the name of the parent definition of this bean definition, if any.
 	 */
+	@Nullable
 	String getParentName();
 
 	/**
@@ -99,7 +101,7 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 * @see #setFactoryBeanName
 	 * @see #setFactoryMethodName
 	 */
-	void setBeanClassName(String beanClassName);
+	void setBeanClassName(@Nullable String beanClassName);
 
 	/**
 	 * Return the current bean class name of this bean definition.
@@ -113,6 +115,7 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 * @see #getFactoryBeanName()
 	 * @see #getFactoryMethodName()
 	 */
+	@Nullable
 	String getBeanClassName();
 
 	/**
@@ -120,12 +123,13 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 * @see #SCOPE_SINGLETON
 	 * @see #SCOPE_PROTOTYPE
 	 */
-	void setScope(String scope);
+	void setScope(@Nullable String scope);
 
 	/**
 	 * Return the name of the current target scope for this bean,
 	 * or {@code null} if not known yet.
 	 */
+	@Nullable
 	String getScope();
 
 	/**
@@ -145,11 +149,12 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 * Set the names of the beans that this bean depends on being initialized.
 	 * The bean factory will guarantee that these beans get initialized first.
 	 */
-	void setDependsOn(String... dependsOn);
+	void setDependsOn(@Nullable String... dependsOn);
 
 	/**
 	 * Return the bean names that this bean depends on.
 	 */
+	@Nullable
 	String[] getDependsOn();
 
 	/**
@@ -183,11 +188,12 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 * This the name of the bean to call the specified factory method on.
 	 * @see #setFactoryMethodName
 	 */
-	void setFactoryBeanName(String factoryBeanName);
+	void setFactoryBeanName(@Nullable String factoryBeanName);
 
 	/**
 	 * Return the factory bean name, if any.
 	 */
+	@Nullable
 	String getFactoryBeanName();
 
 	/**
@@ -198,11 +204,12 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 * @see #setFactoryBeanName
 	 * @see #setBeanClassName
 	 */
-	void setFactoryMethodName(String factoryMethodName);
+	void setFactoryMethodName(@Nullable String factoryMethodName);
 
 	/**
 	 * Return a factory method, if any.
 	 */
+	@Nullable
 	String getFactoryMethodName();
 
 	/**
@@ -213,11 +220,86 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	ConstructorArgumentValues getConstructorArgumentValues();
 
 	/**
+	 * Return if there are constructor argument values defined for this bean.
+	 * @since 5.0.2
+	 */
+	default boolean hasConstructorArgumentValues() {
+		return !getConstructorArgumentValues().isEmpty();
+	}
+
+	/**
 	 * Return the property values to be applied to a new instance of the bean.
 	 * <p>The returned instance can be modified during bean factory post-processing.
 	 * @return the MutablePropertyValues object (never {@code null})
 	 */
 	MutablePropertyValues getPropertyValues();
+
+	/**
+	 * Return if there are property values values defined for this bean.
+	 * @since 5.0.2
+	 */
+	default boolean hasPropertyValues() {
+		return !getPropertyValues().isEmpty();
+	}
+
+	/**
+	 * Set the name of the initializer method.
+	 * @since 5.1
+	 */
+	void setInitMethodName(@Nullable String initMethodName);
+
+	/**
+	 * Return the name of the initializer method.
+	 * @since 5.1
+	 */
+	@Nullable
+	String getInitMethodName();
+
+	/**
+	 * Set the name of the destroy method.
+	 * @since 5.1
+	 */
+	void setDestroyMethodName(@Nullable String destroyMethodName);
+
+	/**
+	 * Return the name of the destroy method.
+	 * @since 5.1
+	 */
+	@Nullable
+	String getDestroyMethodName();
+
+	/**
+	 * Set the role hint for this {@code BeanDefinition}. The role hint
+	 * provides the frameworks as well as tools with an indication of
+	 * the role and importance of a particular {@code BeanDefinition}.
+	 * @since 5.1
+	 * @see #ROLE_APPLICATION
+	 * @see #ROLE_SUPPORT
+	 * @see #ROLE_INFRASTRUCTURE
+	 */
+	void setRole(int role);
+
+	/**
+	 * Get the role hint for this {@code BeanDefinition}. The role hint
+	 * provides the frameworks as well as tools with an indication of
+	 * the role and importance of a particular {@code BeanDefinition}.
+	 * @see #ROLE_APPLICATION
+	 * @see #ROLE_SUPPORT
+	 * @see #ROLE_INFRASTRUCTURE
+	 */
+	int getRole();
+
+	/**
+	 * Set a human-readable description of this bean definition.
+	 * @since 5.1
+	 */
+	void setDescription(@Nullable String description);
+
+	/**
+	 * Return a human-readable description of this bean definition.
+	 */
+	@Nullable
+	String getDescription();
 
 
 	// Read-only attributes
@@ -243,24 +325,10 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	boolean isAbstract();
 
 	/**
-	 * Get the role hint for this {@code BeanDefinition}. The role hint
-	 * provides the frameworks as well as tools with an indication of
-	 * the role and importance of a particular {@code BeanDefinition}.
-	 * @see #ROLE_APPLICATION
-	 * @see #ROLE_SUPPORT
-	 * @see #ROLE_INFRASTRUCTURE
-	 */
-	int getRole();
-
-	/**
-	 * Return a human-readable description of this bean definition.
-	 */
-	String getDescription();
-
-	/**
 	 * Return a description of the resource that this bean definition
 	 * came from (for the purpose of showing context in case of errors).
 	 */
+	@Nullable
 	String getResourceDescription();
 
 	/**
@@ -269,6 +337,7 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	 * <p>Note that this method returns the immediate originator. Iterate through the
 	 * originator chain to find the original BeanDefinition as defined by the user.
 	 */
+	@Nullable
 	BeanDefinition getOriginatingBeanDefinition();
 
 }

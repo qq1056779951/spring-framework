@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import org.junit.rules.ExpectedException;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.subpackage.NonPublicAnnotatedClass;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ClassUtils;
 
@@ -144,8 +146,20 @@ public class AnnotationUtilsTests {
 		assertNull(getAnnotation(bridgeMethod, Order.class));
 		assertNotNull(findAnnotation(bridgeMethod, Order.class));
 
-		// Inconsistent behavior between javac and Eclipse compiler
-		// assertNotNull(bridgeMethod.getAnnotation(Transactional.class));
+		boolean runningInEclipse = Arrays.stream(new Exception().getStackTrace())
+				.anyMatch(element -> element.getClassName().startsWith("org.eclipse.jdt"));
+
+		// As of JDK 8, invoking getAnnotation() on a bridge method actually finds an
+		// annotation on its 'bridged' method [1]; however, the Eclipse compiler will not
+		// support this until Eclipse 4.9 [2]. Thus, we effectively ignore the following
+		// assertion if the test is currently executing within the Eclipse IDE.
+		//
+		// [1] https://bugs.openjdk.java.net/browse/JDK-6695379
+		// [2] https://bugs.eclipse.org/bugs/show_bug.cgi?id=495396
+		//
+		if (!runningInEclipse) {
+			assertNotNull(bridgeMethod.getAnnotation(Transactional.class));
+		}
 		assertNotNull(getAnnotation(bridgeMethod, Transactional.class));
 		assertNotNull(findAnnotation(bridgeMethod, Transactional.class));
 	}
@@ -157,9 +171,7 @@ public class AnnotationUtilsTests {
 
 		assertNull(bridgedMethod.getAnnotation(Order.class));
 		assertNull(getAnnotation(bridgedMethod, Order.class));
-		// AnnotationUtils.findAnnotation(Method, Class<A>) will not find an annotation on
-		// the bridge method for a bridged method.
-		assertNull(findAnnotation(bridgedMethod, Order.class));
+		assertNotNull(findAnnotation(bridgedMethod, Order.class));
 
 		assertNotNull(bridgedMethod.getAnnotation(Transactional.class));
 		assertNotNull(getAnnotation(bridgedMethod, Transactional.class));
@@ -169,6 +181,20 @@ public class AnnotationUtilsTests {
 	@Test
 	public void findMethodAnnotationFromInterface() throws Exception {
 		Method method = ImplementsInterfaceWithAnnotatedMethod.class.getMethod("foo");
+		Order order = findAnnotation(method, Order.class);
+		assertNotNull(order);
+	}
+
+	@Test  // SPR-16060
+	public void findMethodAnnotationFromGenericInterface() throws Exception {
+		Method method = ImplementsInterfaceWithGenericAnnotatedMethod.class.getMethod("foo", String.class);
+		Order order = findAnnotation(method, Order.class);
+		assertNotNull(order);
+	}
+
+	@Test  // SPR-17146
+	public void findMethodAnnotationFromGenericSuperclass() throws Exception {
+		Method method = ExtendsBaseClassWithGenericAnnotatedMethod.class.getMethod("foo", String.class);
 		Order order = findAnnotation(method, Order.class);
 		assertNotNull(order);
 	}
@@ -1518,6 +1544,13 @@ public class AnnotationUtilsTests {
 		assertArrayEquals(new char[] { 'x', 'y', 'z' }, chars);
 	}
 
+	@Test
+	public void interfaceWithAnnotatedMethods() {
+		assertTrue(AnnotationUtils.getAnnotatedMethodsInBaseType(NonAnnotatedInterface.class).isEmpty());
+		assertFalse(AnnotationUtils.getAnnotatedMethodsInBaseType(AnnotatedInterface.class).isEmpty());
+		assertTrue(AnnotationUtils.getAnnotatedMethodsInBaseType(NullableAnnotatedInterface.class).isEmpty());
+	}
+
 
 	@SafeVarargs
 	static <T> T[] asArray(T... arr) {
@@ -1608,6 +1641,12 @@ public class AnnotationUtilsTests {
 	public interface AnnotatedInterface {
 
 		@Order(0)
+		void fromInterfaceImplementedByRoot();
+	}
+
+	public interface NullableAnnotatedInterface {
+
+		@Nullable
 		void fromInterfaceImplementedByRoot();
 	}
 
@@ -1761,6 +1800,32 @@ public class AnnotationUtilsTests {
 
 		@Override
 		public void foo() {
+		}
+	}
+
+	public interface InterfaceWithGenericAnnotatedMethod<T> {
+
+		@Order
+		void foo(T t);
+	}
+
+	public static class ImplementsInterfaceWithGenericAnnotatedMethod implements InterfaceWithGenericAnnotatedMethod<String> {
+
+		@Override
+		public void foo(String t) {
+		}
+	}
+
+	public static abstract class BaseClassWithGenericAnnotatedMethod<T> {
+
+		@Order
+		abstract void foo(T t);
+	}
+
+	public static class ExtendsBaseClassWithGenericAnnotatedMethod extends BaseClassWithGenericAnnotatedMethod<String> {
+
+		@Override
+		public void foo(String t) {
 		}
 	}
 

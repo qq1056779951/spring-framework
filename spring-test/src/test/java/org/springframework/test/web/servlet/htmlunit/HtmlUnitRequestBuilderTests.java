@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,11 +18,13 @@ package org.springframework.test.web.servlet.htmlunit;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
 import javax.servlet.ServletContext;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
@@ -44,10 +46,16 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static java.util.Arrays.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.isEmptyString;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.Assert.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 /**
  * Unit tests for {@link HtmlUnitRequestBuilder}.
@@ -114,12 +122,11 @@ public class HtmlUnitRequestBuilderTests {
 
 	@Test
 	public void buildRequestCharacterEncoding() {
-		String charset = "UTF-8";
-		webRequest.setCharset(charset);
+		webRequest.setCharset(StandardCharsets.UTF_8);
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
-		assertThat(actualRequest.getCharacterEncoding(), equalTo(charset));
+		assertThat(actualRequest.getCharacterEncoding(), equalTo("UTF-8"));
 	}
 
 	@Test
@@ -172,7 +179,7 @@ public class HtmlUnitRequestBuilderTests {
 
 	@Test
 	public void buildRequestContextPathUsesNoFirstSegmentWithDefault() throws MalformedURLException {
-		webRequest.setUrl(new URL("http://example.com/"));
+		webRequest.setUrl(new URL("https://example.com/"));
 		String contextPath = requestBuilder.buildRequest(servletContext).getContextPath();
 
 		assertThat(contextPath, equalTo(""));
@@ -291,16 +298,16 @@ public class HtmlUnitRequestBuilderTests {
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
-		assertThat(actualRequest.getLocale(), equalTo(new Locale("en", "gb", "0.8")));
+		assertThat(actualRequest.getLocale(), equalTo(new Locale("en", "gb")));
 	}
 
 	@Test
 	public void buildRequestLocaleEnQ07() {
-		webRequest.setAdditionalHeader("Accept-Language", "en;q=0.7");
+		webRequest.setAdditionalHeader("Accept-Language", "en");
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
-		assertThat(actualRequest.getLocale(), equalTo(new Locale("en", "", "0.7")));
+		assertThat(actualRequest.getLocale(), equalTo(new Locale("en", "")));
 	}
 
 	@Test
@@ -323,13 +330,11 @@ public class HtmlUnitRequestBuilderTests {
 
 	@Test
 	public void buildRequestLocaleMulti() {
-		webRequest.setAdditionalHeader("Accept-Language", "da, en-gb;q=0.8, en;q=0.7");
+		webRequest.setAdditionalHeader("Accept-Language", "en-gb;q=0.8, da, en;q=0.7");
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
-		// Append Locale.ENGLISH since MockHttpServletRequest automatically sets it as the
-		// preferred locale.
-		List<Locale> expected = asList(new Locale("da"), new Locale("en", "gb", "0.8"), new Locale("en", "", "0.7"), Locale.ENGLISH);
+		List<Locale> expected = asList(new Locale("da"), new Locale("en", "gb"), new Locale("en", ""));
 		assertThat(Collections.list(actualRequest.getLocales()), equalTo(expected));
 	}
 
@@ -417,7 +422,7 @@ public class HtmlUnitRequestBuilderTests {
 
 	@Test
 	public void buildRequestParameterMapFromSingleQueryParam() throws Exception {
-		webRequest.setUrl(new URL("http://example.com/example/?name=value"));
+		webRequest.setUrl(new URL("https://example.com/example/?name=value"));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -428,7 +433,7 @@ public class HtmlUnitRequestBuilderTests {
 	// SPR-14177
 	@Test
 	public void buildRequestParameterMapDecodesParameterName() throws Exception {
-		webRequest.setUrl(new URL("http://example.com/example/?row%5B0%5D=value"));
+		webRequest.setUrl(new URL("https://example.com/example/?row%5B0%5D=value"));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -438,7 +443,7 @@ public class HtmlUnitRequestBuilderTests {
 
 	@Test
 	public void buildRequestParameterMapDecodesParameterValue() throws Exception {
-		webRequest.setUrl(new URL("http://example.com/example/?name=row%5B0%5D"));
+		webRequest.setUrl(new URL("https://example.com/example/?name=row%5B0%5D"));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -448,7 +453,7 @@ public class HtmlUnitRequestBuilderTests {
 
 	@Test
 	public void buildRequestParameterMapFromSingleQueryParamWithoutValueAndWithoutEqualsSign() throws Exception {
-		webRequest.setUrl(new URL("http://example.com/example/?name"));
+		webRequest.setUrl(new URL("https://example.com/example/?name"));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -458,7 +463,7 @@ public class HtmlUnitRequestBuilderTests {
 
 	@Test
 	public void buildRequestParameterMapFromSingleQueryParamWithoutValueButWithEqualsSign() throws Exception {
-		webRequest.setUrl(new URL("http://example.com/example/?name="));
+		webRequest.setUrl(new URL("https://example.com/example/?name="));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -468,7 +473,7 @@ public class HtmlUnitRequestBuilderTests {
 
 	@Test
 	public void buildRequestParameterMapFromSingleQueryParamWithValueSetToEncodedSpace() throws Exception {
-		webRequest.setUrl(new URL("http://example.com/example/?name=%20"));
+		webRequest.setUrl(new URL("https://example.com/example/?name=%20"));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -478,7 +483,7 @@ public class HtmlUnitRequestBuilderTests {
 
 	@Test
 	public void buildRequestParameterMapFromMultipleQueryParams() throws Exception {
-		webRequest.setUrl(new URL("http://example.com/example/?name=value&param2=value+2"));
+		webRequest.setUrl(new URL("https://example.com/example/?name=value&param2=value+2"));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -496,7 +501,7 @@ public class HtmlUnitRequestBuilderTests {
 
 	@Test
 	public void buildRequestPathInfoNull() throws Exception {
-		webRequest.setUrl(new URL("http://example.com/example"));
+		webRequest.setUrl(new URL("https://example.com/example"));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -505,7 +510,7 @@ public class HtmlUnitRequestBuilderTests {
 
 	@Test
 	public void buildRequestAndAntPathRequestMatcher() throws Exception {
-		webRequest.setUrl(new URL("http://example.com/app/login/authenticate"));
+		webRequest.setUrl(new URL("https://example.com/app/login/authenticate"));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -524,7 +529,7 @@ public class HtmlUnitRequestBuilderTests {
 	@Test
 	public void buildRequestQueryWithSingleQueryParam() throws Exception {
 		String expectedQuery = "param=value";
-		webRequest.setUrl(new URL("http://example.com/example?" + expectedQuery));
+		webRequest.setUrl(new URL("https://example.com/example?" + expectedQuery));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -534,7 +539,7 @@ public class HtmlUnitRequestBuilderTests {
 	@Test
 	public void buildRequestQueryWithSingleQueryParamWithoutValueAndWithoutEqualsSign() throws Exception {
 		String expectedQuery = "param";
-		webRequest.setUrl(new URL("http://example.com/example?" + expectedQuery));
+		webRequest.setUrl(new URL("https://example.com/example?" + expectedQuery));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -544,7 +549,7 @@ public class HtmlUnitRequestBuilderTests {
 	@Test
 	public void buildRequestQueryWithSingleQueryParamWithoutValueButWithEqualsSign() throws Exception {
 		String expectedQuery = "param=";
-		webRequest.setUrl(new URL("http://example.com/example?" + expectedQuery));
+		webRequest.setUrl(new URL("https://example.com/example?" + expectedQuery));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -554,7 +559,7 @@ public class HtmlUnitRequestBuilderTests {
 	@Test
 	public void buildRequestQueryWithSingleQueryParamWithValueSetToEncodedSpace() throws Exception {
 		String expectedQuery = "param=%20";
-		webRequest.setUrl(new URL("http://example.com/example?" + expectedQuery));
+		webRequest.setUrl(new URL("https://example.com/example?" + expectedQuery));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -564,7 +569,7 @@ public class HtmlUnitRequestBuilderTests {
 	@Test
 	public void buildRequestQueryWithMultipleQueryParams() throws Exception {
 		String expectedQuery = "param1=value1&param2=value2";
-		webRequest.setUrl(new URL("http://example.com/example?" + expectedQuery));
+		webRequest.setUrl(new URL("https://example.com/example?" + expectedQuery));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 
@@ -605,7 +610,7 @@ public class HtmlUnitRequestBuilderTests {
 
 	@Test
 	public void buildRequestRemotePort8080() throws Exception {
-		webRequest.setUrl(new URL("http://example.com:8080/"));
+		webRequest.setUrl(new URL("https://example.com:8080/"));
 
 		MockHttpServletRequest actualRequest = requestBuilder.buildRequest(servletContext);
 

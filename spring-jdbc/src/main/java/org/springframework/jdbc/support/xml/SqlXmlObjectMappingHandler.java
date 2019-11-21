@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2012 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,8 @@ package org.springframework.jdbc.support.xml;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.springframework.lang.Nullable;
+
 /**
  * Abstraction for handling XML object mapping to fields in a database.
  *
@@ -30,7 +32,10 @@ import java.sql.SQLException;
  * @since 2.5.5
  * @see java.sql.ResultSet#getSQLXML
  * @see java.sql.SQLXML
+ * @deprecated as of Spring Framework 5.1.5 since this class is only known to be used in spring-data-jdbc-ext project
+ * which was never upgraded to Spring Framework 5.x and is no longer actively developed
  */
+@Deprecated
 public interface SqlXmlObjectMappingHandler extends SqlXmlHandler {
 
 	/**
@@ -43,6 +48,7 @@ public interface SqlXmlObjectMappingHandler extends SqlXmlHandler {
 	 * @throws java.sql.SQLException if thrown by JDBC methods
 	 * @see java.sql.ResultSet#getSQLXML
 	 */
+	@Nullable
 	Object getXmlAsObject(ResultSet rs, String columnName) throws SQLException;
 
 	/**
@@ -55,6 +61,7 @@ public interface SqlXmlObjectMappingHandler extends SqlXmlHandler {
 	 * @throws java.sql.SQLException if thrown by JDBC methods
 	 * @see java.sql.ResultSet#getSQLXML
 	 */
+	@Nullable
 	Object getXmlAsObject(ResultSet rs, int columnIndex) throws SQLException;
 
 	/**

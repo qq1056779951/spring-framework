@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,11 @@ import java.util.Collections;
 
 import org.junit.Test;
 
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.test.MockHttpServletRequest;
+import org.springframework.web.accept.ContentNegotiationManager;
+import org.springframework.web.accept.FixedContentNegotiationStrategy;
+import org.springframework.web.accept.HeaderContentNegotiationStrategy;
 import org.springframework.web.servlet.mvc.condition.ProducesRequestCondition.ProduceMediaTypeExpression;
 
 import static org.junit.Assert.*;
@@ -128,6 +132,35 @@ public class ProducesRequestConditionTests {
 		assertNotNull(condition.getMatchingCondition(request));
 	}
 
+	@Test // SPR-17550
+	public void matchWithNegationAndMediaTypeAllWithQualityParameter() {
+		ProducesRequestCondition condition = new ProducesRequestCondition("!application/json");
+
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		request.addHeader("Accept",
+				"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
+
+		assertNotNull(condition.getMatchingCondition(request));
+	}
+
+	@Test // gh-22853
+	public void matchAndCompare() {
+		ContentNegotiationManager manager = new ContentNegotiationManager(
+				new HeaderContentNegotiationStrategy(),
+				new FixedContentNegotiationStrategy(MediaType.TEXT_HTML));
+
+		ProducesRequestCondition none = new ProducesRequestCondition(new String[0], null, manager);
+		ProducesRequestCondition html = new ProducesRequestCondition(new String[] {"text/html"}, null, manager);
+
+		MockHttpServletRequest request = new MockHttpServletRequest();
+		request.addHeader("Accept", "*/*");
+
+		ProducesRequestCondition noneMatch = none.getMatchingCondition(request);
+		ProducesRequestCondition htmlMatch = html.getMatchingCondition(request);
+
+		assertEquals(1, noneMatch.compareTo(htmlMatch, request));
+	}
+
 	@Test
 	public void compareTo() {
 		ProducesRequestCondition html = new ProducesRequestCondition("text/html");
@@ -195,7 +228,7 @@ public class ProducesRequestConditionTests {
 	}
 
 	@Test
-	public void compareToMultipleExpressionsAndMultipeAcceptHeaderValues() {
+	public void compareToMultipleExpressionsAndMultipleAcceptHeaderValues() {
 		ProducesRequestCondition condition1 = new ProducesRequestCondition("text/*", "text/plain");
 		ProducesRequestCondition condition2 = new ProducesRequestCondition("application/*", "application/xml");
 

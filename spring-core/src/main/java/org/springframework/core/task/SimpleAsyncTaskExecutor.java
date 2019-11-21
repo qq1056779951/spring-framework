@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ConcurrencyThrottleSupport;
 import org.springframework.util.CustomizableThreadCreator;
@@ -63,11 +64,13 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	public static final int NO_CONCURRENCY = ConcurrencyThrottleSupport.NO_CONCURRENCY;
 
 
-	/** Internal concurrency throttle used by this executor */
+	/** Internal concurrency throttle used by this executor. */
 	private final ConcurrencyThrottleAdapter concurrencyThrottle = new ConcurrencyThrottleAdapter();
 
+	@Nullable
 	private ThreadFactory threadFactory;
 
+	@Nullable
 	private TaskDecorator taskDecorator;
 
 
@@ -103,13 +106,14 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 	 * @see #setThreadNamePrefix
 	 * @see #setThreadPriority
 	 */
-	public void setThreadFactory(ThreadFactory threadFactory) {
+	public void setThreadFactory(@Nullable ThreadFactory threadFactory) {
 		this.threadFactory = threadFactory;
 	}
 
 	/**
 	 * Return the external factory to use for creating new Threads, if any.
 	 */
+	@Nullable
 	public final ThreadFactory getThreadFactory() {
 		return this.threadFactory;
 	}
@@ -194,28 +198,28 @@ public class SimpleAsyncTaskExecutor extends CustomizableThreadCreator
 
 	@Override
 	public Future<?> submit(Runnable task) {
-		FutureTask<Object> future = new FutureTask<Object>(task, null);
+		FutureTask<Object> future = new FutureTask<>(task, null);
 		execute(future, TIMEOUT_INDEFINITE);
 		return future;
 	}
 
 	@Override
 	public <T> Future<T> submit(Callable<T> task) {
-		FutureTask<T> future = new FutureTask<T>(task);
+		FutureTask<T> future = new FutureTask<>(task);
 		execute(future, TIMEOUT_INDEFINITE);
 		return future;
 	}
 
 	@Override
 	public ListenableFuture<?> submitListenable(Runnable task) {
-		ListenableFutureTask<Object> future = new ListenableFutureTask<Object>(task, null);
+		ListenableFutureTask<Object> future = new ListenableFutureTask<>(task, null);
 		execute(future, TIMEOUT_INDEFINITE);
 		return future;
 	}
 
 	@Override
 	public <T> ListenableFuture<T> submitListenable(Callable<T> task) {
-		ListenableFutureTask<T> future = new ListenableFutureTask<T>(task);
+		ListenableFutureTask<T> future = new ListenableFutureTask<>(task);
 		execute(future, TIMEOUT_INDEFINITE);
 		return future;
 	}

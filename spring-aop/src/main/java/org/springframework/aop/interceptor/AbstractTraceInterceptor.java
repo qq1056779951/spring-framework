@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.support.AopUtils;
+import org.springframework.lang.Nullable;
 
 /**
  * Base {@code MethodInterceptor} implementation for tracing.
@@ -50,6 +51,7 @@ public abstract class AbstractTraceInterceptor implements MethodInterceptor, Ser
 	 * The default {@code Log} instance used to write trace messages.
 	 * This instance is mapped to the implementing {@code Class}.
 	 */
+	@Nullable
 	protected transient Log defaultLogger = LogFactory.getLog(getClass());
 
 	/**
@@ -89,7 +91,6 @@ public abstract class AbstractTraceInterceptor implements MethodInterceptor, Ser
 	 * but rather into a specific named category.
 	 * <p><b>NOTE:</b> Specify either this property or "useDynamicLogger", not both.
 	 * @see org.apache.commons.logging.LogFactory#getLog(String)
-	 * @see org.apache.log4j.Logger#getLogger(String)
 	 * @see java.util.logging.Logger#getLogger(String)
 	 */
 	public void setLoggerName(String loggerName) {
@@ -123,6 +124,7 @@ public abstract class AbstractTraceInterceptor implements MethodInterceptor, Ser
 	 * @see #invokeUnderTrace(org.aopalliance.intercept.MethodInvocation, org.apache.commons.logging.Log)
 	 */
 	@Override
+	@Nullable
 	public Object invoke(MethodInvocation invocation) throws Throwable {
 		Log logger = getLoggerForInvocation(invocation);
 		if (isInterceptorEnabled(invocation, logger)) {
@@ -213,7 +215,7 @@ public abstract class AbstractTraceInterceptor implements MethodInterceptor, Ser
 	 * @see #setLogExceptionStackTrace
 	 * @see #isLogEnabled
 	 */
-	protected void writeToLog(Log logger, String message, Throwable ex) {
+	protected void writeToLog(Log logger, String message, @Nullable Throwable ex) {
 		if (ex != null && this.logExceptionStackTrace) {
 			logger.trace(message, ex);
 		}
@@ -241,6 +243,7 @@ public abstract class AbstractTraceInterceptor implements MethodInterceptor, Ser
 	 * @see #writeToLog(Log, String)
 	 * @see #writeToLog(Log, String, Throwable)
 	 */
+	@Nullable
 	protected abstract Object invokeUnderTrace(MethodInvocation invocation, Log logger) throws Throwable;
 
 }

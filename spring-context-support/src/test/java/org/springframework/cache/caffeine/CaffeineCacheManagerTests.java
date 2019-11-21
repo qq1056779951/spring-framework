@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -102,13 +102,6 @@ public class CaffeineCacheManagerTests {
 		assertEquals("value1", cache1x.get("key1").get());
 		cache1x.put("key2", 2);
 		assertEquals(2, cache1x.get("key2").get());
-		try {
-			cache1x.put("key3", null);
-			fail("Should have thrown NullPointerException");
-		}
-		catch (NullPointerException ex) {
-			// expected
-		}
 
 		cm.setAllowNullValues(true);
 		Cache cache1y = cm.getCache("c1");

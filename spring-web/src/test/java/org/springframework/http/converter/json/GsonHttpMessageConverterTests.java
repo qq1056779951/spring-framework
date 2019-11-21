@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,14 +17,15 @@
 package org.springframework.http.converter.json;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.reflect.TypeToken;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 
@@ -43,8 +44,6 @@ import static org.junit.Assert.*;
  * @author Juergen Hoeller
  */
 public class GsonHttpMessageConverterTests {
-
-	private static final Charset UTF8 = Charset.forName("UTF-8");
 
 	private final GsonHttpMessageConverter converter = new GsonHttpMessageConverter();
 
@@ -120,14 +119,15 @@ public class GsonHttpMessageConverterTests {
 		body.setBool(true);
 		body.setBytes(new byte[] {0x1, 0x2});
 		this.converter.write(body, null, outputMessage);
-		String result = outputMessage.getBodyAsString(UTF8);
+		Charset utf8 = StandardCharsets.UTF_8;
+		String result = outputMessage.getBodyAsString(utf8);
 		assertTrue(result.contains("\"string\":\"Foo\""));
 		assertTrue(result.contains("\"number\":42"));
 		assertTrue(result.contains("fraction\":42.0"));
 		assertTrue(result.contains("\"array\":[\"Foo\",\"Bar\"]"));
 		assertTrue(result.contains("\"bool\":true"));
 		assertTrue(result.contains("\"bytes\":[1,2]"));
-		assertEquals("Invalid content-type", new MediaType("application", "json", UTF8),
+		assertEquals("Invalid content-type", new MediaType("application", "json", utf8),
 				outputMessage.getHeaders().getContentType());
 	}
 
@@ -142,25 +142,25 @@ public class GsonHttpMessageConverterTests {
 		body.setBool(true);
 		body.setBytes(new byte[] {0x1, 0x2});
 		this.converter.write(body, MyBase.class, null, outputMessage);
-		String result = outputMessage.getBodyAsString(UTF8);
+		Charset utf8 = StandardCharsets.UTF_8;
+		String result = outputMessage.getBodyAsString(utf8);
 		assertTrue(result.contains("\"string\":\"Foo\""));
 		assertTrue(result.contains("\"number\":42"));
 		assertTrue(result.contains("fraction\":42.0"));
 		assertTrue(result.contains("\"array\":[\"Foo\",\"Bar\"]"));
 		assertTrue(result.contains("\"bool\":true"));
 		assertTrue(result.contains("\"bytes\":[1,2]"));
-		assertEquals("Invalid content-type", new MediaType("application", "json", UTF8),
+		assertEquals("Invalid content-type", new MediaType("application", "json", utf8),
 				outputMessage.getHeaders().getContentType());
 	}
 
 	@Test
 	public void writeUTF16() throws IOException {
-		Charset utf16 = Charset.forName("UTF-16BE");
-		MediaType contentType = new MediaType("application", "json", utf16);
+		MediaType contentType = new MediaType("application", "json", StandardCharsets.UTF_16BE);
 		MockHttpOutputMessage outputMessage = new MockHttpOutputMessage();
 		String body = "H\u00e9llo W\u00f6rld";
 		this.converter.write(body, contentType, outputMessage);
-		assertEquals("Invalid result", "\"" + body + "\"", outputMessage.getBodyAsString(utf16));
+		assertEquals("Invalid result", "\"" + body + "\"", outputMessage.getBodyAsString(StandardCharsets.UTF_16BE));
 		assertEquals("Invalid content-type", contentType, outputMessage.getHeaders().getContentType());
 	}
 
@@ -174,25 +174,16 @@ public class GsonHttpMessageConverterTests {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	public void readGenerics() throws IOException {
-		GsonHttpMessageConverter converter = new GsonHttpMessageConverter() {
-			@Override
-			protected TypeToken<?> getTypeToken(Type type) {
-				if (type instanceof Class && List.class.isAssignableFrom((Class<?>) type)) {
-					return new TypeToken<ArrayList<MyBean>>() {
-					};
-				}
-				else {
-					return super.getTypeToken(type);
-				}
-			}
-		};
+	public void readAndWriteGenerics() throws Exception {
+		Field beansList = ListHolder.class.getField("listField");
+
 		String body = "[{\"bytes\":[1,2],\"array\":[\"Foo\",\"Bar\"]," +
 				"\"number\":42,\"string\":\"Foo\",\"bool\":true,\"fraction\":42.0}]";
-		MockHttpInputMessage inputMessage = new MockHttpInputMessage(body.getBytes(UTF8));
+		MockHttpInputMessage inputMessage = new MockHttpInputMessage(body.getBytes(StandardCharsets.UTF_8));
 		inputMessage.getHeaders().setContentType(new MediaType("application", "json"));
 
-		List<MyBean> results = (List<MyBean>) converter.read(List.class, inputMessage);
+		Type genericType = beansList.getGenericType();
+		List<MyBean> results = (List<MyBean>) converter.read(genericType, MyBeanListHolder.class, inputMessage);
 		assertEquals(1, results.size());
 		MyBean result = results.get(0);
 		assertEquals("Foo", result.getString());
@@ -201,6 +192,10 @@ public class GsonHttpMessageConverterTests {
 		assertArrayEquals(new String[] {"Foo", "Bar"}, result.getArray());
 		assertTrue(result.isBool());
 		assertArrayEquals(new byte[] {0x1, 0x2}, result.getBytes());
+
+		MockHttpOutputMessage outputMessage = new MockHttpOutputMessage();
+		converter.write(results, genericType, new MediaType("application", "json"), outputMessage);
+		JSONAssert.assertEquals(body, outputMessage.getBodyAsString(StandardCharsets.UTF_8), true);
 	}
 
 	@Test
@@ -211,7 +206,7 @@ public class GsonHttpMessageConverterTests {
 
 		String body = "[{\"bytes\":[1,2],\"array\":[\"Foo\",\"Bar\"]," +
 				"\"number\":42,\"string\":\"Foo\",\"bool\":true,\"fraction\":42.0}]";
-		MockHttpInputMessage inputMessage = new MockHttpInputMessage(body.getBytes(UTF8));
+		MockHttpInputMessage inputMessage = new MockHttpInputMessage(body.getBytes(StandardCharsets.UTF_8));
 		inputMessage.getHeaders().setContentType(new MediaType("application", "json"));
 
 		List<MyBean> results = (List<MyBean>) converter.read(beansList.getType(), null, inputMessage);
@@ -226,7 +221,7 @@ public class GsonHttpMessageConverterTests {
 
 		MockHttpOutputMessage outputMessage = new MockHttpOutputMessage();
 		converter.write(results, beansList.getType(), new MediaType("application", "json"), outputMessage);
-		JSONAssert.assertEquals(body, outputMessage.getBodyAsString(UTF8), true);
+		JSONAssert.assertEquals(body, outputMessage.getBodyAsString(StandardCharsets.UTF_8), true);
 	}
 
 	@Test
@@ -237,7 +232,7 @@ public class GsonHttpMessageConverterTests {
 
 		String body = "[{\"bytes\":[1,2],\"array\":[\"Foo\",\"Bar\"]," +
 				"\"number\":42,\"string\":\"Foo\",\"bool\":true,\"fraction\":42.0}]";
-		MockHttpInputMessage inputMessage = new MockHttpInputMessage(body.getBytes(UTF8));
+		MockHttpInputMessage inputMessage = new MockHttpInputMessage(body.getBytes(StandardCharsets.UTF_8));
 		inputMessage.getHeaders().setContentType(new MediaType("application", "json"));
 
 		List<MyBean> results = (List<MyBean>) converter.read(beansList.getType(), null, inputMessage);
@@ -252,7 +247,7 @@ public class GsonHttpMessageConverterTests {
 
 		MockHttpOutputMessage outputMessage = new MockHttpOutputMessage();
 		converter.write(results, baseList.getType(), new MediaType("application", "json"), outputMessage);
-		JSONAssert.assertEquals(body, outputMessage.getBodyAsString(UTF8), true);
+		JSONAssert.assertEquals(body, outputMessage.getBodyAsString(StandardCharsets.UTF_8), true);
 	}
 
 	@Test
@@ -260,7 +255,7 @@ public class GsonHttpMessageConverterTests {
 		MockHttpOutputMessage outputMessage = new MockHttpOutputMessage();
 		this.converter.setPrefixJson(true);
 		this.converter.writeInternal("foo", null, outputMessage);
-		assertEquals(")]}', \"foo\"", outputMessage.getBodyAsString(UTF8));
+		assertEquals(")]}', \"foo\"", outputMessage.getBodyAsString(StandardCharsets.UTF_8));
 	}
 
 	@Test
@@ -268,7 +263,7 @@ public class GsonHttpMessageConverterTests {
 		MockHttpOutputMessage outputMessage = new MockHttpOutputMessage();
 		this.converter.setJsonPrefix(")))");
 		this.converter.writeInternal("foo", null, outputMessage);
-		assertEquals(")))\"foo\"", outputMessage.getBodyAsString(UTF8));
+		assertEquals(")))\"foo\"", outputMessage.getBodyAsString(StandardCharsets.UTF_8));
 	}
 
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.aop.framework;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.accessibility.Accessible;
 import javax.swing.JFrame;
 import javax.swing.RootPaneContainer;
@@ -216,7 +217,7 @@ public class ProxyFactoryTests {
 		TimeStamped ts = (TimeStamped) factory.getProxy();
 		assertTrue(ts.getTimeStamp() == t);
 		// Shouldn't fail;
-		 ((IOther) ts).absquatulate();
+		((IOther) ts).absquatulate();
 	}
 
 	@Test
@@ -332,7 +333,7 @@ public class ProxyFactoryTests {
 	}
 
 	@Test
-	@Ignore("Not implemented yet, see http://jira.springframework.org/browse/SPR-5708")
+	@Ignore("Not implemented yet, see https://jira.springframework.org/browse/SPR-5708")
 	public void testExclusionOfNonPublicInterfaces() {
 		JFrame frame = new JFrame();
 		ProxyFactory proxyFactory = new ProxyFactory(frame);
@@ -345,7 +346,7 @@ public class ProxyFactoryTests {
 	public void testInterfaceProxiesCanBeOrderedThroughAnnotations() {
 		Object proxy1 = new ProxyFactory(new A()).getProxy();
 		Object proxy2 = new ProxyFactory(new B()).getProxy();
-		List<Object> list = new ArrayList<Object>(2);
+		List<Object> list = new ArrayList<>(2);
 		list.add(proxy1);
 		list.add(proxy2);
 		AnnotationAwareOrderComparator.sort(list);
@@ -361,12 +362,22 @@ public class ProxyFactoryTests {
 		pf2.setProxyTargetClass(true);
 		Object proxy1 = pf1.getProxy();
 		Object proxy2 = pf2.getProxy();
-		List<Object> list = new ArrayList<Object>(2);
+		List<Object> list = new ArrayList<>(2);
 		list.add(proxy1);
 		list.add(proxy2);
 		AnnotationAwareOrderComparator.sort(list);
 		assertSame(proxy2, list.get(0));
 		assertSame(proxy1, list.get(1));
+	}
+
+	@Test
+	public void testInterceptorWithoutJoinpoint() {
+		final TestBean target = new TestBean("tb");
+		ITestBean proxy = ProxyFactory.getProxy(ITestBean.class, (MethodInterceptor) invocation -> {
+			assertNull(invocation.getThis());
+			return invocation.getMethod().invoke(target, invocation.getArguments());
+		});
+		assertEquals("tb", proxy.getName());
 	}
 
 

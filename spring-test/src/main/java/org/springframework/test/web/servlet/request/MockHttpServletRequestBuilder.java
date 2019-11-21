@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,9 +19,8 @@ package org.springframework.test.web.servlet.request;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,10 +28,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
+
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.Mergeable;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -41,6 +41,7 @@ import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.lang.Nullable;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
@@ -49,6 +50,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -81,8 +83,6 @@ import org.springframework.web.util.UrlPathHelper;
 public class MockHttpServletRequestBuilder
 		implements ConfigurableSmartRequestBuilder<MockHttpServletRequestBuilder>, Mergeable {
 
-	private static final Charset UTF8_CHARSET = Charset.forName("UTF-8");
-
 	private static final UrlPathHelper urlPathHelper = new UrlPathHelper();
 
 
@@ -94,35 +94,42 @@ public class MockHttpServletRequestBuilder
 
 	private String servletPath = "";
 
+	@Nullable
 	private String pathInfo = "";
 
+	@Nullable
 	private Boolean secure;
 
+	@Nullable
 	private Principal principal;
 
+	@Nullable
 	private MockHttpSession session;
 
+	@Nullable
 	private String characterEncoding;
 
+	@Nullable
 	private byte[] content;
 
+	@Nullable
 	private String contentType;
 
-	private final MultiValueMap<String, Object> headers = new LinkedMultiValueMap<String, Object>();
+	private final MultiValueMap<String, Object> headers = new LinkedMultiValueMap<>();
 
-	private final MultiValueMap<String, String> parameters = new LinkedMultiValueMap<String, String>();
+	private final MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
 
-	private final List<Cookie> cookies = new ArrayList<Cookie>();
+	private final List<Cookie> cookies = new ArrayList<>();
 
-	private final List<Locale> locales = new ArrayList<Locale>();
+	private final List<Locale> locales = new ArrayList<>();
 
-	private final Map<String, Object> requestAttributes = new LinkedHashMap<String, Object>();
+	private final Map<String, Object> requestAttributes = new LinkedHashMap<>();
 
-	private final Map<String, Object> sessionAttributes = new LinkedHashMap<String, Object>();
+	private final Map<String, Object> sessionAttributes = new LinkedHashMap<>();
 
-	private final Map<String, Object> flashAttributes = new LinkedHashMap<String, Object>();
+	private final Map<String, Object> flashAttributes = new LinkedHashMap<>();
 
-	private final List<RequestPostProcessor> postProcessors = new ArrayList<RequestPostProcessor>();
+	private final List<RequestPostProcessor> postProcessors = new ArrayList<>();
 
 
 	/**
@@ -178,7 +185,7 @@ public class MockHttpServletRequestBuilder
 			Assert.isTrue(contextPath.startsWith("/"), "Context path must start with a '/'");
 			Assert.isTrue(!contextPath.endsWith("/"), "Context path must not end with a '/'");
 		}
-		this.contextPath = (contextPath != null ? contextPath : "");
+		this.contextPath = contextPath;
 		return this;
 	}
 
@@ -200,7 +207,7 @@ public class MockHttpServletRequestBuilder
 			Assert.isTrue(servletPath.startsWith("/"), "Servlet path must start with a '/'");
 			Assert.isTrue(!servletPath.endsWith("/"), "Servlet path must not end with a '/'");
 		}
-		this.servletPath = (servletPath != null ? servletPath : "");
+		this.servletPath = servletPath;
 		return this;
 	}
 
@@ -212,7 +219,7 @@ public class MockHttpServletRequestBuilder
 	 * <p>If specified, the pathInfo will be used as-is.
 	 * @see javax.servlet.http.HttpServletRequest#getPathInfo()
 	 */
-	public MockHttpServletRequestBuilder pathInfo(String pathInfo) {
+	public MockHttpServletRequestBuilder pathInfo(@Nullable String pathInfo) {
 		if (StringUtils.hasText(pathInfo)) {
 			Assert.isTrue(pathInfo.startsWith("/"), "Path info must start with a '/'");
 		}
@@ -253,7 +260,7 @@ public class MockHttpServletRequestBuilder
 	 * @param content the body content
 	 */
 	public MockHttpServletRequestBuilder content(String content) {
-		this.content = content.getBytes(UTF8_CHARSET);
+		this.content = content.getBytes(StandardCharsets.UTF_8);
 		return this;
 	}
 
@@ -293,7 +300,7 @@ public class MockHttpServletRequestBuilder
 	 */
 	public MockHttpServletRequestBuilder accept(String... mediaTypes) {
 		Assert.notEmpty(mediaTypes, "'mediaTypes' must not be empty");
-		List<MediaType> result = new ArrayList<MediaType>(mediaTypes.length);
+		List<MediaType> result = new ArrayList<>(mediaTypes.length);
 		for (String mediaType : mediaTypes) {
 			result.add(MediaType.parseMediaType(mediaType));
 		}
@@ -316,10 +323,7 @@ public class MockHttpServletRequestBuilder
 	 * @param httpHeaders the headers and values to add
 	 */
 	public MockHttpServletRequestBuilder headers(HttpHeaders httpHeaders) {
-		for (String name : httpHeaders.keySet()) {
-			Object[] values = ObjectUtils.toObjectArray(httpHeaders.get(name).toArray());
-			addToMultiValueMap(this.headers, name, values);
-		}
+		httpHeaders.forEach(this.headers::addAll);
 		return this;
 	}
 
@@ -342,11 +346,11 @@ public class MockHttpServletRequestBuilder
 	 * @since 4.2.4
 	 */
 	public MockHttpServletRequestBuilder params(MultiValueMap<String, String> params) {
-		for (String name : params.keySet()) {
-			for (String value : params.get(name)) {
+		params.forEach((name, values) -> {
+			for (String value : values) {
 				this.parameters.add(name, value);
 			}
-		}
+		});
 		return this;
 	}
 
@@ -377,7 +381,7 @@ public class MockHttpServletRequestBuilder
 	 * @param locale the locale, or {@code null} to reset it
 	 * @see #locale(Locale...)
 	 */
-	public MockHttpServletRequestBuilder locale(Locale locale) {
+	public MockHttpServletRequestBuilder locale(@Nullable Locale locale) {
 		this.locales.clear();
 		if (locale != null) {
 			this.locales.add(locale);
@@ -411,9 +415,7 @@ public class MockHttpServletRequestBuilder
 	 */
 	public MockHttpServletRequestBuilder sessionAttrs(Map<String, Object> sessionAttributes) {
 		Assert.notEmpty(sessionAttributes, "'sessionAttributes' must not be empty");
-		for (String name : sessionAttributes.keySet()) {
-			sessionAttr(name, sessionAttributes.get(name));
-		}
+		sessionAttributes.forEach(this::sessionAttr);
 		return this;
 	}
 
@@ -433,9 +435,7 @@ public class MockHttpServletRequestBuilder
 	 */
 	public MockHttpServletRequestBuilder flashAttrs(Map<String, Object> flashAttributes) {
 		Assert.notEmpty(flashAttributes, "'flashAttributes' must not be empty");
-		for (String name : flashAttributes.keySet()) {
-			flashAttr(name, flashAttributes.get(name));
-		}
+		flashAttributes.forEach(this::flashAttr);
 		return this;
 	}
 
@@ -492,7 +492,7 @@ public class MockHttpServletRequestBuilder
 	 * @return the result of the merge
 	 */
 	@Override
-	public Object merge(Object parent) {
+	public Object merge(@Nullable Object parent) {
 		if (parent == null) {
 			return this;
 		}
@@ -621,22 +621,22 @@ public class MockHttpServletRequestBuilder
 		request.setContent(this.content);
 		request.setContentType(this.contentType);
 
-		for (String name : this.headers.keySet()) {
-			for (Object value : this.headers.get(name)) {
+		this.headers.forEach((name, values) -> {
+			for (Object value : values) {
 				request.addHeader(name, value);
 			}
-		}
+		});
 
 		if (this.url.getRawQuery() != null) {
 			request.setQueryString(this.url.getRawQuery());
 		}
 		addRequestParams(request, UriComponentsBuilder.fromUri(this.url).build().getQueryParams());
 
-		for (String name : this.parameters.keySet()) {
-			for (String value : this.parameters.get(name)) {
+		this.parameters.forEach((name, values) -> {
+			for (String value : values) {
 				request.addParameter(name, value);
 			}
-		}
+		});
 
 		if (this.content != null && this.content.length > 0) {
 			String requestContentType = request.getContentType();
@@ -649,18 +649,18 @@ public class MockHttpServletRequestBuilder
 		}
 
 		if (!ObjectUtils.isEmpty(this.cookies)) {
-			request.setCookies(this.cookies.toArray(new Cookie[this.cookies.size()]));
+			request.setCookies(this.cookies.toArray(new Cookie[0]));
 		}
 		if (!ObjectUtils.isEmpty(this.locales)) {
 			request.setPreferredLocales(this.locales);
 		}
 
-		for (String name : this.requestAttributes.keySet()) {
-			request.setAttribute(name, this.requestAttributes.get(name));
-		}
-		for (String name : this.sessionAttributes.keySet()) {
-			request.getSession().setAttribute(name, this.sessionAttributes.get(name));
-		}
+		this.requestAttributes.forEach(request::setAttribute);
+		this.sessionAttributes.forEach((name, attribute) -> {
+			HttpSession session = request.getSession();
+			Assert.state(session != null, "No HttpSession");
+			session.setAttribute(name, attribute);
+		});
 
 		FlashMap flashMap = new FlashMap();
 		flashMap.putAll(this.flashAttributes);
@@ -703,24 +703,17 @@ public class MockHttpServletRequestBuilder
 	}
 
 	private void addRequestParams(MockHttpServletRequest request, MultiValueMap<String, String> map) {
-		try {
-			for (Entry<String, List<String>> entry : map.entrySet()) {
-				for (String value : entry.getValue()) {
-					value = (value != null) ? UriUtils.decode(value, "UTF-8") : null;
-					request.addParameter(UriUtils.decode(entry.getKey(), "UTF-8"), value);
-				}
-			}
-		}
-		catch (UnsupportedEncodingException ex) {
-			// shouldn't happen
-		}
+		map.forEach((key, values) -> values.forEach(value -> {
+			value = (value != null ? UriUtils.decode(value, StandardCharsets.UTF_8) : null);
+			request.addParameter(UriUtils.decode(key, StandardCharsets.UTF_8), value);
+		}));
 	}
 
 	private MultiValueMap<String, String> parseFormData(final MediaType mediaType) {
 		HttpInputMessage message = new HttpInputMessage() {
 			@Override
-			public InputStream getBody() throws IOException {
-				return new ByteArrayInputStream(content);
+			public InputStream getBody() {
+				return (content != null ? new ByteArrayInputStream(content) : StreamUtils.emptyInput());
 			}
 			@Override
 			public HttpHeaders getHeaders() {
@@ -745,10 +738,7 @@ public class MockHttpServletRequestBuilder
 			WebApplicationContext wac = WebApplicationContextUtils.getRequiredWebApplicationContext(servletContext);
 			flashMapManager = wac.getBean(DispatcherServlet.FLASH_MAP_MANAGER_BEAN_NAME, FlashMapManager.class);
 		}
-		catch (IllegalStateException ex) {
-			// ignore
-		}
-		catch (NoSuchBeanDefinitionException ex) {
+		catch (IllegalStateException | NoSuchBeanDefinitionException ex) {
 			// ignore
 		}
 		return (flashMapManager != null ? flashMapManager : new SessionFlashMapManager());
@@ -758,10 +748,6 @@ public class MockHttpServletRequestBuilder
 	public MockHttpServletRequest postProcessRequest(MockHttpServletRequest request) {
 		for (RequestPostProcessor postProcessor : this.postProcessors) {
 			request = postProcessor.postProcessRequest(request);
-			if (request == null) {
-				throw new IllegalStateException(
-						"Post-processor [" + postProcessor.getClass().getName() + "] returned null");
-			}
 		}
 		return request;
 	}

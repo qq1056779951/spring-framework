@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -143,6 +143,13 @@ public class MediaTypeTests {
 		assertEquals("Invalid amount of media types", 0, mediaTypes.size());
 	}
 
+	@Test // gh-23241
+	public void parseMediaTypesWithTrailingComma() {
+		List<MediaType> mediaTypes = MediaType.parseMediaTypes("text/plain, text/html, ");
+		assertNotNull("No media types returned", mediaTypes);
+		assertEquals("Incorrect number of media types", 2, mediaTypes.size());
+	}
+
 	@Test
 	public void compareTo() {
 		MediaType audioBasic = new MediaType("audio", "basic");
@@ -158,14 +165,14 @@ public class MediaTypeTests {
 
 		assertTrue("Invalid comparison result", audioBasicLevel.compareTo(audio) > 0);
 
-		List<MediaType> expected = new ArrayList<MediaType>();
+		List<MediaType> expected = new ArrayList<>();
 		expected.add(audio);
 		expected.add(audioBasic);
 		expected.add(audioBasicLevel);
 		expected.add(audioBasic07);
 		expected.add(audioWave);
 
-		List<MediaType> result = new ArrayList<MediaType>(expected);
+		List<MediaType> result = new ArrayList<>(expected);
 		Random rnd = new Random();
 		// shuffle & sort 10 times
 		for (int i = 0; i < 10; i++) {
@@ -277,7 +284,7 @@ public class MediaTypeTests {
 		MediaType audioBasicLevel = new MediaType("audio", "basic", Collections.singletonMap("level", "1"));
 		MediaType all = MediaType.ALL;
 
-		List<MediaType> expected = new ArrayList<MediaType>();
+		List<MediaType> expected = new ArrayList<>();
 		expected.add(audioBasicLevel);
 		expected.add(audioBasic);
 		expected.add(audio);
@@ -285,7 +292,7 @@ public class MediaTypeTests {
 		expected.add(audio03);
 		expected.add(all);
 
-		List<MediaType> result = new ArrayList<MediaType>(expected);
+		List<MediaType> result = new ArrayList<>(expected);
 		Random rnd = new Random();
 		// shuffle & sort 10 times
 		for (int i = 0; i < 10; i++) {
@@ -304,12 +311,12 @@ public class MediaTypeTests {
 		MediaType audioWave = new MediaType("audio", "wave");
 		MediaType textHtml = new MediaType("text", "html");
 
-		List<MediaType> expected = new ArrayList<MediaType>();
+		List<MediaType> expected = new ArrayList<>();
 		expected.add(textHtml);
 		expected.add(audioBasic);
 		expected.add(audioWave);
 
-		List<MediaType> result = new ArrayList<MediaType>(expected);
+		List<MediaType> result = new ArrayList<>(expected);
 		MediaType.sortBySpecificity(result);
 
 		for (int i = 0; i < result.size(); i++) {
@@ -381,7 +388,7 @@ public class MediaTypeTests {
 		MediaType audioBasicLevel = new MediaType("audio", "basic", Collections.singletonMap("level", "1"));
 		MediaType all = MediaType.ALL;
 
-		List<MediaType> expected = new ArrayList<MediaType>();
+		List<MediaType> expected = new ArrayList<>();
 		expected.add(audioBasicLevel);
 		expected.add(audioBasic);
 		expected.add(audio);
@@ -389,7 +396,7 @@ public class MediaTypeTests {
 		expected.add(audio07);
 		expected.add(audio03);
 
-		List<MediaType> result = new ArrayList<MediaType>(expected);
+		List<MediaType> result = new ArrayList<>(expected);
 		Random rnd = new Random();
 		// shuffle & sort 10 times
 		for (int i = 0; i < 10; i++) {
@@ -408,12 +415,12 @@ public class MediaTypeTests {
 		MediaType audioWave = new MediaType("audio", "wave");
 		MediaType textHtml = new MediaType("text", "html");
 
-		List<MediaType> expected = new ArrayList<MediaType>();
+		List<MediaType> expected = new ArrayList<>();
 		expected.add(textHtml);
 		expected.add(audioBasic);
 		expected.add(audioWave);
 
-		List<MediaType> result = new ArrayList<MediaType>(expected);
+		List<MediaType> result = new ArrayList<>(expected);
 		MediaType.sortBySpecificity(result);
 
 		for (int i = 0; i < result.size(); i++) {

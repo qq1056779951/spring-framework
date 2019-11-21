@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,8 @@ package org.springframework.aop.interceptor;
 import java.lang.reflect.Method;
 
 import org.aopalliance.intercept.MethodInvocation;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Base class for monitoring interceptors, such as performance monitors.
@@ -50,7 +52,7 @@ public abstract class AbstractMonitoringInterceptor extends AbstractTraceInterce
 	 * Set the text that will get appended to the trace data.
 	 * <p>Default is none.
 	 */
-	public void setPrefix(String prefix) {
+	public void setPrefix(@Nullable String prefix) {
 		this.prefix = (prefix != null ? prefix : "");
 	}
 
@@ -65,7 +67,7 @@ public abstract class AbstractMonitoringInterceptor extends AbstractTraceInterce
 	 * Set the text that will get prepended to the trace data.
 	 * <p>Default is none.
 	 */
-	public void setSuffix(String suffix) {
+	public void setSuffix(@Nullable String suffix) {
 		this.suffix = (suffix != null ? suffix : "");
 	}
 

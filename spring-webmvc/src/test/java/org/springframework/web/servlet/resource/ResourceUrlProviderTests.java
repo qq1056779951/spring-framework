@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,7 +35,9 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
 import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
 
 import static org.junit.Assert.*;
-
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link ResourceUrlProvider}.
@@ -78,9 +80,9 @@ public class ResourceUrlProviderTests {
 		request.setContextPath("/");
 		request.setRequestURI("/");
 
-		String url = "/resources/foo.css?foo=bar&url=http://example.org";
+		String url = "/resources/foo.css?foo=bar&url=https://example.org";
 		String resolvedUrl = this.urlProvider.getForRequestUrl(request, url);
-		assertEquals("/resources/foo.css?foo=bar&url=http://example.org", resolvedUrl);
+		assertEquals("/resources/foo.css?foo=bar&url=https://example.org", resolvedUrl);
 
 		url = "/resources/foo.css#hash";
 		resolvedUrl = this.urlProvider.getForRequestUrl(request, url);
@@ -135,6 +137,7 @@ public class ResourceUrlProviderTests {
 	}
 
 	@Test // SPR-12592
+	@SuppressWarnings("resource")
 	public void initializeOnce() throws Exception {
 		AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
 		context.setServletContext(new MockServletContext());
@@ -146,9 +149,29 @@ public class ResourceUrlProviderTests {
 		assertFalse(urlProviderBean.isAutodetect());
 	}
 
+	@Test // SPR-16296
+	public void getForLookupPathShouldNotFailIfPathContainsDoubleSlashes() {
+		// given
+		ResourceResolver mockResourceResolver = mock(ResourceResolver.class);
+		when(mockResourceResolver.resolveUrlPath(any(), any(), any())).thenReturn("some-path");
 
-	@Configuration @SuppressWarnings("unused")
-	public static class HandlerMappingConfiguration {
+		ResourceHttpRequestHandler handler = new ResourceHttpRequestHandler();
+		handler.getResourceResolvers().add(mockResourceResolver);
+
+		ResourceUrlProvider provider = new ResourceUrlProvider();
+		provider.getHandlerMap().put("/some-pattern/**", handler);
+
+		// when
+		String lookupForPath = provider.getForLookupPath("/some-pattern/some-lib//some-resource");
+
+		// then
+		assertEquals("/some-pattern/some-path", lookupForPath);
+	}
+
+
+	@Configuration
+	@SuppressWarnings({"unused", "WeakerAccess"})
+	static class HandlerMappingConfiguration {
 
 		@Bean
 		public SimpleUrlHandlerMapping simpleUrlHandlerMapping() {

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,14 +30,14 @@ import static org.junit.Assert.*;
  * @author Alef Arendsen
  * @author Rick Evans
  */
-public final class TagUtilsTests {
+public class TagUtilsTests {
 
 	@Test
 	public void getScopeSunnyDay() {
-		assertEquals(TagUtils.SCOPE_PAGE, "page");
-		assertEquals(TagUtils.SCOPE_APPLICATION, "application");
-		assertEquals(TagUtils.SCOPE_SESSION, "session");
-		assertEquals(TagUtils.SCOPE_REQUEST, "request");
+		assertEquals("page", TagUtils.SCOPE_PAGE);
+		assertEquals("application", TagUtils.SCOPE_APPLICATION);
+		assertEquals("session", TagUtils.SCOPE_SESSION);
+		assertEquals("request", TagUtils.SCOPE_REQUEST);
 
 		assertEquals(PageContext.PAGE_SCOPE, TagUtils.getScope("page"));
 		assertEquals(PageContext.REQUEST_SCOPE, TagUtils.getScope("request"));

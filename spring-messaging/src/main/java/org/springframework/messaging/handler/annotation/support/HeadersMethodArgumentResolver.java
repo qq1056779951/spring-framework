@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.handler.annotation.Headers;
@@ -28,7 +29,8 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.util.ReflectionUtils;
 
 /**
- * Resolves the following method parameters:
+ * {@link HandlerMethodArgumentResolver} for header method parameters. Resolves the
+ * following method parameters:
  * <ul>
  * <li>Parameters assignable to {@link Map} annotated with {@link Headers @Headers}
  * <li>Parameters of type {@link MessageHeaders}
@@ -48,6 +50,7 @@ public class HeadersMethodArgumentResolver implements HandlerMethodArgumentResol
 	}
 
 	@Override
+	@Nullable
 	public Object resolveArgument(MethodParameter parameter, Message<?> message) throws Exception {
 		Class<?> paramType = parameter.getParameterType();
 		if (Map.class.isAssignableFrom(paramType)) {

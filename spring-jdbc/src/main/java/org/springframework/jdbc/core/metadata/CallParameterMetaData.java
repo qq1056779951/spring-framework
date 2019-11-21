@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,8 @@ package org.springframework.jdbc.core.metadata;
 
 import java.sql.DatabaseMetaData;
 
+import org.springframework.lang.Nullable;
+
 /**
  * Holder of meta-data for a specific parameter that is used for call processing.
  *
@@ -28,12 +30,14 @@ import java.sql.DatabaseMetaData;
  */
 public class CallParameterMetaData {
 
+	@Nullable
 	private String parameterName;
 
 	private int parameterType;
 
 	private int sqlType;
 
+	@Nullable
 	private String typeName;
 
 	private boolean nullable;
@@ -43,7 +47,7 @@ public class CallParameterMetaData {
 	 * Constructor taking all the properties.
 	 */
 	public CallParameterMetaData(
-			String columnName, int columnType, int sqlType, String typeName, boolean nullable) {
+			@Nullable String columnName, int columnType, int sqlType, @Nullable String typeName, boolean nullable) {
 
 		this.parameterName = columnName;
 		this.parameterType = columnType;
@@ -56,6 +60,7 @@ public class CallParameterMetaData {
 	/**
 	 * Get the parameter name.
 	 */
+	@Nullable
 	public String getParameterName() {
 		return this.parameterName;
 	}
@@ -88,6 +93,7 @@ public class CallParameterMetaData {
 	/**
 	 * Get the parameter type name.
 	 */
+	@Nullable
 	public String getTypeName() {
 		return this.typeName;
 	}

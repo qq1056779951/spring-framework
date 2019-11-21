@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 
 package org.springframework.util;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +36,7 @@ import static org.junit.Assert.*;
  * @author Arjen Poutsma
  * @author Juergen Hoeller
  * @author Sam Brannen
+ * @author Dimitrios Liapis
  */
 public class MimeTypeTests {
 
@@ -75,7 +76,7 @@ public class MimeTypeTests {
 		MimeType mimeType = MimeType.valueOf(s);
 		assertEquals("Invalid type", "text", mimeType.getType());
 		assertEquals("Invalid subtype", "html", mimeType.getSubtype());
-		assertEquals("Invalid charset", Charset.forName("ISO-8859-1"), mimeType.getCharset());
+		assertEquals("Invalid charset", StandardCharsets.ISO_8859_1, mimeType.getCharset());
 	}
 
 	@Test
@@ -84,7 +85,17 @@ public class MimeTypeTests {
 		MimeType mimeType = MimeType.valueOf(s);
 		assertEquals("Invalid type", "application", mimeType.getType());
 		assertEquals("Invalid subtype", "xml", mimeType.getSubtype());
-		assertEquals("Invalid charset", Charset.forName("UTF-8"), mimeType.getCharset());
+		assertEquals("Invalid charset", StandardCharsets.UTF_8, mimeType.getCharset());
+	}
+
+	@Test
+	public void parseQuotedSeparator() {
+		String s = "application/xop+xml;charset=utf-8;type=\"application/soap+xml;action=\\\"https://x.y.z\\\"\"";
+		MimeType mimeType = MimeType.valueOf(s);
+		assertEquals("Invalid type", "application", mimeType.getType());
+		assertEquals("Invalid subtype", "xop+xml", mimeType.getSubtype());
+		assertEquals("Invalid charset", StandardCharsets.UTF_8, mimeType.getCharset());
+		assertEquals("\"application/soap+xml;action=\\\"https://x.y.z\\\"\"", mimeType.getParameter("type"));
 	}
 
 	@Test
@@ -122,12 +133,15 @@ public class MimeTypeTests {
 
 		MimeType applicationSoapXml = new MimeType("application", "soap+xml");
 		MimeType applicationWildcardXml = new MimeType("application", "*+xml");
+		MimeType suffixXml = new MimeType("application", "x.y+z+xml"); // SPR-15795
 
 		assertTrue(applicationSoapXml.includes(applicationSoapXml));
 		assertTrue(applicationWildcardXml.includes(applicationWildcardXml));
+		assertTrue(applicationWildcardXml.includes(suffixXml));
 
 		assertTrue(applicationWildcardXml.includes(applicationSoapXml));
 		assertFalse(applicationSoapXml.includes(applicationWildcardXml));
+		assertFalse(suffixXml.includes(applicationWildcardXml));
 
 		assertFalse(applicationWildcardXml.includes(MimeTypeUtils.APPLICATION_JSON));
 	}
@@ -149,12 +163,15 @@ public class MimeTypeTests {
 
 		MimeType applicationSoapXml = new MimeType("application", "soap+xml");
 		MimeType applicationWildcardXml = new MimeType("application", "*+xml");
+		MimeType suffixXml = new MimeType("application", "x.y+z+xml"); // SPR-15795
 
 		assertTrue(applicationSoapXml.isCompatibleWith(applicationSoapXml));
 		assertTrue(applicationWildcardXml.isCompatibleWith(applicationWildcardXml));
+		assertTrue(applicationWildcardXml.isCompatibleWith(suffixXml));
 
 		assertTrue(applicationWildcardXml.isCompatibleWith(applicationSoapXml));
 		assertTrue(applicationSoapXml.isCompatibleWith(applicationWildcardXml));
+		assertTrue(suffixXml.isCompatibleWith(applicationWildcardXml));
 
 		assertFalse(applicationWildcardXml.isCompatibleWith(MimeTypeUtils.APPLICATION_JSON));
 	}
@@ -268,6 +285,32 @@ public class MimeTypeTests {
 		mimeTypes = MimeTypeUtils.parseMimeTypes(null);
 		assertNotNull("No mime types returned", mimeTypes);
 		assertEquals("Invalid amount of mime types", 0, mimeTypes.size());
+	}
+
+	@Test // gh-23241
+	public void parseMimeTypesWithTrailingComma() {
+		List<MimeType> mimeTypes = MimeTypeUtils.parseMimeTypes("text/plain, text/html,");
+		assertNotNull("No mime types returned", mimeTypes);
+		assertEquals("Incorrect number of mime types", 2, mimeTypes.size());
+	}
+
+	@Test // SPR-17459
+	public void parseMimeTypesWithQuotedParameters() {
+		testWithQuotedParameters("foo/bar;param=\",\"");
+		testWithQuotedParameters("foo/bar;param=\"s,a,\"");
+		testWithQuotedParameters("foo/bar;param=\"s,\"", "text/x-c");
+		testWithQuotedParameters("foo/bar;param=\"a\\\"b,c\"");
+		testWithQuotedParameters("foo/bar;param=\"\\\\\"");
+		testWithQuotedParameters("foo/bar;param=\"\\,\\\"");
+	}
+
+	private void testWithQuotedParameters(String... mimeTypes) {
+		String s = String.join(",", mimeTypes);
+		List<MimeType> actual = MimeTypeUtils.parseMimeTypes(s);
+		assertEquals(mimeTypes.length, actual.size());
+		for (int i=0; i < mimeTypes.length; i++) {
+			assertEquals(mimeTypes[i], actual.get(i).toString());
+		}
 	}
 
 	@Test

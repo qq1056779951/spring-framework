@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -62,7 +62,6 @@ public class StaticMessageSourceTests extends AbstractApplicationContextTests {
 	@Test
 	@Override
 	public void count() {
-		// These are only checked for current Ctx (not parent ctx)
 		assertCount(15);
 	}
 
@@ -109,8 +108,8 @@ public class StaticMessageSourceTests extends AbstractApplicationContextTests {
 
 		// Now msg better be as expected
 		assertTrue("2nd search within MsgFormat cache returned expected message for Locale.US",
-				sac.getMessage("message.format.example1", arguments, Locale.US).indexOf(
-						"there was \"a disturbance in the Force\" on planet 7.") != -1);
+				sac.getMessage("message.format.example1", arguments, Locale.US).
+						contains("there was \"a disturbance in the Force\" on planet 7."));
 
 		Object[] newArguments = {
 			new Integer(8), new Date(System.currentTimeMillis()),
@@ -119,8 +118,8 @@ public class StaticMessageSourceTests extends AbstractApplicationContextTests {
 
 		// Now msg better be as expected even with different args
 		assertTrue("2nd search within MsgFormat cache with different args returned expected message for Locale.US",
-				sac.getMessage("message.format.example1", newArguments, Locale.US)
-				.indexOf("there was \"a disturbance in the Force\" on planet 8.") != -1);
+				sac.getMessage("message.format.example1", newArguments, Locale.US).
+						contains("there was \"a disturbance in the Force\" on planet 8."));
 	}
 
 	/**
@@ -142,13 +141,13 @@ public class StaticMessageSourceTests extends AbstractApplicationContextTests {
 		 minutes of the time might not be the same.
 		 */
 		assertTrue("msg from staticMsgSource for Locale.US substituting args for placeholders is as expected",
-				sac.getMessage("message.format.example1", arguments, Locale.US)
-				.indexOf("there was \"a disturbance in the Force\" on planet 7.") != -1);
+				sac.getMessage("message.format.example1", arguments, Locale.US).
+						contains("there was \"a disturbance in the Force\" on planet 7."));
 
 		// Try with Locale.UK
 		assertTrue("msg from staticMsgSource for Locale.UK substituting args for placeholders is as expected",
-				sac.getMessage("message.format.example1", arguments, Locale.UK)
-				.indexOf("there was \"a disturbance in the Force\" on station number 7.") != -1);
+				sac.getMessage("message.format.example1", arguments, Locale.UK).
+						contains("there was \"a disturbance in the Force\" on station number 7."));
 
 		// Try with Locale.US - Use a different test msg that requires no args
 		assertTrue("msg from staticMsgSource for Locale.US that requires no args is as expected",
@@ -191,7 +190,7 @@ public class StaticMessageSourceTests extends AbstractApplicationContextTests {
 	protected ConfigurableApplicationContext createContext() throws Exception {
 		StaticApplicationContext parent = new StaticApplicationContext();
 
-		Map<String, String> m = new HashMap<String, String>();
+		Map<String, String> m = new HashMap<>();
 		m.put("name", "Roderick");
 		parent.registerPrototype("rod", org.springframework.tests.sample.beans.TestBean.class, new MutablePropertyValues(m));
 		m.put("name", "Albert");
@@ -214,7 +213,7 @@ public class StaticMessageSourceTests extends AbstractApplicationContextTests {
 		sac.addApplicationListener(listener);
 
 		StaticMessageSource messageSource = sac.getStaticMessageSource();
-		Map<String, String> usMessages = new HashMap<String, String>(3);
+		Map<String, String> usMessages = new HashMap<>(3);
 		usMessages.put("message.format.example1", MSG_TXT1_US);
 		usMessages.put("message.format.example2", MSG_TXT2_US);
 		usMessages.put("message.format.example3", MSG_TXT3_US);

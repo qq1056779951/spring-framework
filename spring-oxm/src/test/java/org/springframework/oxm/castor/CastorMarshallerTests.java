@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,26 +20,26 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamResult;
 
-import org.custommonkey.xmlunit.NamespaceContext;
-import org.custommonkey.xmlunit.SimpleNamespaceContext;
-import org.custommonkey.xmlunit.XMLAssert;
-import org.custommonkey.xmlunit.XMLUnit;
-import org.custommonkey.xmlunit.XpathEngine;
+import org.castor.xml.XMLProperties;
+import org.exolab.castor.xml.XercesXMLSerializerFactory;
 import org.junit.Test;
 import org.mockito.InOrder;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
+import org.xmlunit.builder.Input;
+import org.xmlunit.xpath.JAXPXPathEngine;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.oxm.AbstractMarshallerTests;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.xmlunit.matchers.CompareMatcher.*;
 
 /**
  * Tests the {@link CastorMarshaller} class.
@@ -111,6 +111,9 @@ public class CastorMarshallerTests extends AbstractMarshallerTests<CastorMarshal
 		CastorMarshaller marshaller = new CastorMarshaller();
 		ClassPathResource mappingLocation = new ClassPathResource("mapping.xml", CastorMarshaller.class);
 		marshaller.setMappingLocation(mappingLocation);
+		Map<String, String> props = new HashMap<>(1);
+		props.put(XMLProperties.SERIALIZER_FACTORY, XercesXMLSerializerFactory.class.getName());
+		marshaller.setCastorProperties(props);
 		marshaller.afterPropertiesSet();
 		return marshaller;
 	}
@@ -157,14 +160,14 @@ public class CastorMarshallerTests extends AbstractMarshallerTests<CastorMarshal
 	public void suppressNamespacesTrue() throws Exception {
 		marshaller.setSuppressNamespaces(true);
 		String result = marshalFlights();
-		XMLAssert.assertXMLEqual("Marshaller wrote invalid result", SUPPRESSED_NAMESPACE_EXPECTED_STRING, result);
+		assertThat("Marshaller wrote invalid result", result, isSimilarTo(SUPPRESSED_NAMESPACE_EXPECTED_STRING));
 	}
 
 	@Test
 	public void suppressNamespacesFalse() throws Exception {
 		marshaller.setSuppressNamespaces(false);
 		String result = marshalFlights();
-		XMLAssert.assertXMLEqual("Marshaller wrote invalid result", EXPECTED_STRING, result);
+		assertThat("Marshaller wrote invalid result", result, isSimilarTo(EXPECTED_STRING));
 	}
 
 	@Test
@@ -173,7 +176,7 @@ public class CastorMarshallerTests extends AbstractMarshallerTests<CastorMarshal
 		marshaller.setSuppressXsiType(true);
 		marshaller.setRootElement("objects");
 		String result = marshal(Arrays.asList(castorObject));
-		XMLAssert.assertXMLEqual("Marshaller wrote invalid result", SUPPRESSED_XSI_EXPECTED_STRING, result);
+		assertThat("Marshaller wrote invalid result", result, isSimilarTo(SUPPRESSED_XSI_EXPECTED_STRING));
 	}
 
 	@Test
@@ -182,14 +185,14 @@ public class CastorMarshallerTests extends AbstractMarshallerTests<CastorMarshal
 		marshaller.setSuppressXsiType(false);
 		marshaller.setRootElement("objects");
 		String result = marshal(Arrays.asList(castorObject));
-		XMLAssert.assertXMLEqual("Marshaller wrote invalid result", XSI_EXPECTED_STRING, result);
+		assertThat("Marshaller wrote invalid result", result, isSimilarTo(XSI_EXPECTED_STRING));
 	}
 
 	@Test
 	public void marshalAsDocumentTrue() throws Exception {
 		marshaller.setMarshalAsDocument(true);
 		String result = marshalFlights();
-		XMLAssert.assertXMLEqual("Marshaller wrote invalid result", DOCUMENT_EXPECTED_STRING, result);
+		assertThat("Marshaller wrote invalid result", result, isSimilarTo(DOCUMENT_EXPECTED_STRING));
 		assertTrue("Result doesn't contain xml declaration.",
 				result.contains("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"));
 	}
@@ -198,7 +201,7 @@ public class CastorMarshallerTests extends AbstractMarshallerTests<CastorMarshal
 	public void marshalAsDocumentFalse() throws Exception {
 		marshaller.setMarshalAsDocument(true);
 		String result = marshalFlights();
-		XMLAssert.assertXMLEqual("Marshaller wrote invalid result", EXPECTED_STRING, result);
+		assertThat("Marshaller wrote invalid result", result, isSimilarTo(EXPECTED_STRING));
 		assertFalse("Result contains xml declaration.", result.matches("<\\?\\s*xml"));
 	}
 
@@ -206,7 +209,7 @@ public class CastorMarshallerTests extends AbstractMarshallerTests<CastorMarshal
 	public void rootElement() throws Exception {
 		marshaller.setRootElement("canceledFlights");
 		String result = marshalFlights();
-		XMLAssert.assertXMLEqual("Marshaller wrote invalid result", ROOT_ELEMENT_EXPECTED_STRING, result);
+		assertThat("Marshaller wrote invalid result", result, isSimilarTo(ROOT_ELEMENT_EXPECTED_STRING));
 	}
 
 	@Test
@@ -216,7 +219,7 @@ public class CastorMarshallerTests extends AbstractMarshallerTests<CastorMarshal
 		String result = marshalFlights();
 		assertXpathEvaluatesTo("The xsi:noNamespaceSchemaLocation hasn't been written or has invalid value.",
 				noNamespaceSchemaLocation, "/tns:flights/@xsi:noNamespaceSchemaLocation", result);
-		XMLAssert.assertXMLEqual("Marshaller wrote invalid result", EXPECTED_STRING, result);
+		assertThat("Marshaller wrote invalid result", result, isSimilarTo(EXPECTED_STRING));
 	}
 
 	@Test
@@ -226,7 +229,7 @@ public class CastorMarshallerTests extends AbstractMarshallerTests<CastorMarshal
 		String result = marshalFlights();
 		assertXpathEvaluatesTo("The xsi:noNamespaceSchemaLocation hasn't been written or has invalid value.",
 				schemaLocation, "/tns:flights/@xsi:schemaLocation", result);
-		XMLAssert.assertXMLEqual("Marshaller wrote invalid result", EXPECTED_STRING, result);
+		assertThat("Marshaller wrote invalid result", result, isSimilarTo(EXPECTED_STRING));
 	}
 
 	@Test
@@ -236,7 +239,7 @@ public class CastorMarshallerTests extends AbstractMarshallerTests<CastorMarshal
 		marshaller.setUseXSITypeAtRoot(true);
 		marshaller.setRootElement("objects");
 		String result = marshal(Arrays.asList(castorObject));
-		XMLAssert.assertXMLEqual("Marshaller wrote invalid result", ROOT_WITH_XSI_EXPECTED_STRING, result);
+		assertThat("Marshaller wrote invalid result", result, isSimilarTo(ROOT_WITH_XSI_EXPECTED_STRING));
 	}
 
 	@Test
@@ -246,7 +249,7 @@ public class CastorMarshallerTests extends AbstractMarshallerTests<CastorMarshal
 		marshaller.setUseXSITypeAtRoot(false);
 		marshaller.setRootElement("objects");
 		String result = marshal(Arrays.asList(castorObject));
-		XMLAssert.assertXMLEqual("Marshaller wrote invalid result", ROOT_WITHOUT_XSI_EXPECTED_STRING, result);
+		assertThat("Marshaller wrote invalid result", result, isSimilarTo(ROOT_WITHOUT_XSI_EXPECTED_STRING));
 	}
 
 
@@ -272,17 +275,16 @@ public class CastorMarshallerTests extends AbstractMarshallerTests<CastorMarshal
 	 * @throws Exception if any error occurs during xpath evaluation
 	 */
 	private void assertXpathEvaluatesTo(String msg, String expected, String xpath, String xmlDoc) throws Exception {
-		Map<String, String> namespaces = new HashMap<String, String>();
+		Map<String, String> namespaces = new HashMap<>();
 		namespaces.put("tns", "http://samples.springframework.org/flight");
 		namespaces.put("xsi", "http://www.w3.org/2001/XMLSchema-instance");
 
-		NamespaceContext ctx = new SimpleNamespaceContext(namespaces);
-		XpathEngine engine = XMLUnit.newXpathEngine();
-		engine.setNamespaceContext(ctx);
+		JAXPXPathEngine engine = new JAXPXPathEngine();
+		engine.setNamespaceContext(namespaces);
 
-		Document doc = XMLUnit.buildControlDocument(xmlDoc);
-		NodeList node = engine.getMatchingNodes(xpath, doc);
-		assertEquals(msg, expected, node.item(0).getNodeValue());
+		Source source = Input.fromString(xmlDoc).build();
+		Iterable<Node> nodeList = engine.selectNodes(xpath, source);
+		assertEquals(msg, expected, nodeList.iterator().next().getNodeValue());
 	}
 
 	/**

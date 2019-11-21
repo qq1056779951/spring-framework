@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import com.gargoylesoftware.htmlunit.WebConnection;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -39,6 +40,7 @@ import org.springframework.util.Assert;
  */
 public class WebConnectionHtmlUnitDriver extends HtmlUnitDriver {
 
+	@Nullable
 	private WebClient webClient;
 
 
@@ -93,6 +95,7 @@ public class WebConnectionHtmlUnitDriver extends HtmlUnitDriver {
 	 */
 	@Override
 	public WebClient getWebClient() {
+		Assert.state(this.webClient != null, "No WebClient set");
 		return this.webClient;
 	}
 
@@ -102,7 +105,7 @@ public class WebConnectionHtmlUnitDriver extends HtmlUnitDriver {
 	 */
 	public void setWebConnection(WebConnection webConnection) {
 		Assert.notNull(webConnection, "WebConnection must not be null");
-		this.webClient.setWebConnection(webConnection);
+		getWebClient().setWebConnection(webConnection);
 	}
 
 	/**
@@ -110,7 +113,7 @@ public class WebConnectionHtmlUnitDriver extends HtmlUnitDriver {
 	 * @return the current {@code WebConnection}
 	 */
 	public WebConnection getWebConnection() {
-		return this.webClient.getWebConnection();
+		return getWebClient().getWebConnection();
 	}
 
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.jms.BytesMessage;
 import javax.jms.JMSException;
 import javax.jms.Session;
@@ -56,7 +57,7 @@ public class MappingJackson2MessageConverterTests {
 
 
 	@Before
-	public void setUp() throws Exception {
+	public void setup() {
 		sessionMock = mock(Session.class);
 		converter = new MappingJackson2MessageConverter();
 		converter.setEncodingPropertyName("__encoding__");
@@ -117,7 +118,7 @@ public class MappingJackson2MessageConverterTests {
 	public void toTextMessageWithMap() throws Exception {
 		converter.setTargetType(MessageType.TEXT);
 		TextMessage textMessageMock = mock(TextMessage.class);
-		Map<String, String> toBeMarshalled = new HashMap<String, String>();
+		Map<String, String> toBeMarshalled = new HashMap<>();
 		toBeMarshalled.put("foo", "bar");
 
 		given(sessionMock.createTextMessage(isA(String.class))).willReturn(textMessageMock);
@@ -263,7 +264,10 @@ public class MappingJackson2MessageConverterTests {
 		return new MyAnotherBean();
 	}
 
+
 	public static class MyBean {
+
+		private String foo;
 
 		public MyBean() {
 		}
@@ -271,8 +275,6 @@ public class MappingJackson2MessageConverterTests {
 		public MyBean(String foo) {
 			this.foo = foo;
 		}
-
-		private String foo;
 
 		public String getFoo() {
 			return foo;
@@ -290,13 +292,10 @@ public class MappingJackson2MessageConverterTests {
 			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
-
 			MyBean bean = (MyBean) o;
-
 			if (foo != null ? !foo.equals(bean.foo) : bean.foo != null) {
 				return false;
 			}
-
 			return true;
 		}
 
@@ -306,8 +305,11 @@ public class MappingJackson2MessageConverterTests {
 		}
 	}
 
+
 	private interface Summary {};
+
 	private interface Full extends Summary {};
+
 
 	private static class MyAnotherBean {
 

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,7 @@
 package org.springframework.http.converter.xml;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -65,7 +65,14 @@ public class MappingJackson2XmlHttpMessageConverterTests {
 
 	@Test
 	public void read() throws IOException {
-		String body = "<MyBean><string>Foo</string><number>42</number><fraction>42.0</fraction><array><array>Foo</array><array>Bar</array></array><bool>true</bool><bytes>AQI=</bytes></MyBean>";
+		String body = "<MyBean>" +
+				"<string>Foo</string>" +
+				"<number>42</number>" +
+				"<fraction>42.0</fraction>" +
+				"<array><array>Foo</array>" +
+				"<array>Bar</array></array>" +
+				"<bool>true</bool>" +
+				"<bytes>AQI=</bytes></MyBean>";
 		MockHttpInputMessage inputMessage = new MockHttpInputMessage(body.getBytes("UTF-8"));
 		inputMessage.getHeaders().setContentType(new MediaType("application", "xml"));
 		MyBean result = (MyBean) converter.read(MyBean.class, inputMessage);
@@ -88,23 +95,23 @@ public class MappingJackson2XmlHttpMessageConverterTests {
 		body.setBool(true);
 		body.setBytes(new byte[]{0x1, 0x2});
 		converter.write(body, null, outputMessage);
-		Charset utf8 = Charset.forName("UTF-8");
-		String result = outputMessage.getBodyAsString(utf8);
+		String result = outputMessage.getBodyAsString(StandardCharsets.UTF_8);
 		assertTrue(result.contains("<string>Foo</string>"));
 		assertTrue(result.contains("<number>42</number>"));
 		assertTrue(result.contains("<fraction>42.0</fraction>"));
 		assertTrue(result.contains("<array><array>Foo</array><array>Bar</array></array>"));
 		assertTrue(result.contains("<bool>true</bool>"));
 		assertTrue(result.contains("<bytes>AQI=</bytes>"));
-		assertEquals("Invalid content-type", new MediaType("application", "xml", utf8),
+		assertEquals("Invalid content-type", new MediaType("application", "xml", StandardCharsets.UTF_8),
 				outputMessage.getHeaders().getContentType());
 	}
 
-	@Test(expected = HttpMessageNotReadableException.class)
+	@Test
 	public void readInvalidXml() throws IOException {
 		String body = "FooBar";
 		MockHttpInputMessage inputMessage = new MockHttpInputMessage(body.getBytes("UTF-8"));
 		inputMessage.getHeaders().setContentType(new MediaType("application", "xml"));
+		this.thrown.expect(HttpMessageNotReadableException.class);
 		converter.read(MyBean.class, inputMessage);
 	}
 
@@ -129,7 +136,7 @@ public class MappingJackson2XmlHttpMessageConverterTests {
 		jacksonValue.setSerializationView(MyJacksonView1.class);
 		this.converter.write(jacksonValue, null, outputMessage);
 
-		String result = outputMessage.getBodyAsString(Charset.forName("UTF-8"));
+		String result = outputMessage.getBodyAsString(StandardCharsets.UTF_8);
 		assertThat(result, containsString("<withView1>with</withView1>"));
 		assertThat(result, not(containsString("<withView2>with</withView2>")));
 		assertThat(result, not(containsString("<withoutView>without</withoutView>")));
@@ -143,7 +150,7 @@ public class MappingJackson2XmlHttpMessageConverterTests {
 
 	@Test
 	public void readWithExternalReference() throws IOException {
-		String body = "<!DOCTYPE MyBean SYSTEM \"http://192.168.28.42/1.jsp\" [" +
+		String body = "<!DOCTYPE MyBean SYSTEM \"https://192.168.28.42/1.jsp\" [" +
 				"  <!ELEMENT root ANY >\n" +
 				"  <!ENTITY ext SYSTEM \"" +
 				new ClassPathResource("external.txt", getClass()).getURI() +

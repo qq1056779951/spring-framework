@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,11 +21,13 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.servlet.ServletContext;
 
 import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.Ordered;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.accept.ContentNegotiationManager;
@@ -57,11 +59,13 @@ public class ResourceHandlerRegistry {
 
 	private final ApplicationContext applicationContext;
 
+	@Nullable
 	private final ContentNegotiationManager contentNegotiationManager;
 
+	@Nullable
 	private final UrlPathHelper pathHelper;
 
-	private final List<ResourceHandlerRegistration> registrations = new ArrayList<ResourceHandlerRegistration>();
+	private final List<ResourceHandlerRegistration> registrations = new ArrayList<>();
 
 	private int order = Ordered.LOWEST_PRECEDENCE - 1;
 
@@ -83,7 +87,7 @@ public class ResourceHandlerRegistry {
 	 * @since 4.3
 	 */
 	public ResourceHandlerRegistry(ApplicationContext applicationContext, ServletContext servletContext,
-			ContentNegotiationManager contentNegotiationManager) {
+			@Nullable ContentNegotiationManager contentNegotiationManager) {
 
 		this(applicationContext, servletContext, contentNegotiationManager, null);
 	}
@@ -95,7 +99,7 @@ public class ResourceHandlerRegistry {
 	 * @since 4.3.13
 	 */
 	public ResourceHandlerRegistry(ApplicationContext applicationContext, ServletContext servletContext,
-			ContentNegotiationManager contentNegotiationManager, UrlPathHelper pathHelper) {
+			@Nullable ContentNegotiationManager contentNegotiationManager, @Nullable UrlPathHelper pathHelper) {
 
 		Assert.notNull(applicationContext, "ApplicationContext is required");
 		this.applicationContext = applicationContext;
@@ -133,7 +137,7 @@ public class ResourceHandlerRegistry {
 	}
 
 	/**
-	 * Specify the order to use for resource handling relative to other {@link HandlerMapping}s
+	 * Specify the order to use for resource handling relative to other {@link HandlerMapping HandlerMappings}
 	 * configured in the Spring MVC application context.
 	 * <p>The default value used is {@code Integer.MAX_VALUE-1}.
 	 */
@@ -146,12 +150,13 @@ public class ResourceHandlerRegistry {
 	 * Return a handler mapping with the mapped resource handlers; or {@code null} in case
 	 * of no registrations.
 	 */
+	@Nullable
 	protected AbstractHandlerMapping getHandlerMapping() {
 		if (this.registrations.isEmpty()) {
 			return null;
 		}
 
-		Map<String, HttpRequestHandler> urlMap = new LinkedHashMap<String, HttpRequestHandler>();
+		Map<String, HttpRequestHandler> urlMap = new LinkedHashMap<>();
 		for (ResourceHandlerRegistration registration : this.registrations) {
 			for (String pathPattern : registration.getPathPatterns()) {
 				ResourceHttpRequestHandler handler = registration.getRequestHandler();
@@ -174,7 +179,7 @@ public class ResourceHandlerRegistry {
 		}
 
 		SimpleUrlHandlerMapping handlerMapping = new SimpleUrlHandlerMapping();
-		handlerMapping.setOrder(order);
+		handlerMapping.setOrder(this.order);
 		handlerMapping.setUrlMap(urlMap);
 		return handlerMapping;
 	}

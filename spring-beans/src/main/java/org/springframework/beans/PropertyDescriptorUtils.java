@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2014 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -29,14 +30,12 @@ import org.springframework.util.ObjectUtils;
  * @author Chris Beams
  * @author Juergen Hoeller
  */
-class PropertyDescriptorUtils {
+abstract class PropertyDescriptorUtils {
 
 	/**
 	 * See {@link java.beans.FeatureDescriptor}.
 	 */
-	public static void copyNonMethodProperties(PropertyDescriptor source, PropertyDescriptor target)
-			throws IntrospectionException {
-
+	public static void copyNonMethodProperties(PropertyDescriptor source, PropertyDescriptor target) {
 		target.setExpert(source.isExpert());
 		target.setHidden(source.isHidden());
 		target.setPreferred(source.isPreferred());
@@ -60,12 +59,14 @@ class PropertyDescriptorUtils {
 	/**
 	 * See {@link java.beans.PropertyDescriptor#findPropertyType}.
 	 */
-	public static Class<?> findPropertyType(Method readMethod, Method writeMethod) throws IntrospectionException {
+	@Nullable
+	public static Class<?> findPropertyType(@Nullable Method readMethod, @Nullable Method writeMethod)
+			throws IntrospectionException {
+
 		Class<?> propertyType = null;
 
 		if (readMethod != null) {
-			Class<?>[] params = readMethod.getParameterTypes();
-			if (params.length != 0) {
+			if (readMethod.getParameterCount() != 0) {
 				throw new IntrospectionException("Bad read method arg count: " + readMethod);
 			}
 			propertyType = readMethod.getReturnType();
@@ -103,8 +104,9 @@ class PropertyDescriptorUtils {
 	/**
 	 * See {@link java.beans.IndexedPropertyDescriptor#findIndexedPropertyType}.
 	 */
-	public static Class<?> findIndexedPropertyType(String name, Class<?> propertyType,
-			Method indexedReadMethod, Method indexedWriteMethod) throws IntrospectionException {
+	@Nullable
+	public static Class<?> findIndexedPropertyType(String name, @Nullable Class<?> propertyType,
+			@Nullable Method indexedReadMethod, @Nullable Method indexedWriteMethod) throws IntrospectionException {
 
 		Class<?> indexedPropertyType = null;
 

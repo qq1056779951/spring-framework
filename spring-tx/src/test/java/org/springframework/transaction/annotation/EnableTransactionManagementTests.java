@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +19,6 @@ package org.springframework.transaction.annotation;
 import java.util.Collection;
 import java.util.Map;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.springframework.aop.support.AopUtils;
@@ -121,7 +120,7 @@ public class EnableTransactionManagementTests {
 					"Do you actually have org.springframework.aspects on the classpath?");
 		}
 		catch (Exception ex) {
-			assertThat(ex.getMessage(), containsString("AspectJTransactionManagementConfiguration"));
+			assertThat(ex.getMessage(), containsString("AspectJJtaTransactionManagementConfiguration"));
 		}
 	}
 
@@ -159,22 +158,24 @@ public class EnableTransactionManagementTests {
 		CallCountingTransactionManager txManager = ctx.getBean(CallCountingTransactionManager.class);
 
 		bean.saveFoo();
-		assertThat(txManager.begun, equalTo(1));
-		assertThat(txManager.commits, equalTo(1));
+		bean.saveBar();
+		assertThat(txManager.begun, equalTo(2));
+		assertThat(txManager.commits, equalTo(2));
 		assertThat(txManager.rollbacks, equalTo(0));
 
 		ctx.close();
 	}
 
-	@Test @Ignore  // TODO
+	@Test
 	public void spr14322FindsOnInterfaceWithCglibProxy() {
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(Spr14322ConfigB.class);
 		TransactionalTestInterface bean = ctx.getBean(TransactionalTestInterface.class);
 		CallCountingTransactionManager txManager = ctx.getBean(CallCountingTransactionManager.class);
 
 		bean.saveFoo();
-		assertThat(txManager.begun, equalTo(1));
-		assertThat(txManager.commits, equalTo(1));
+		bean.saveBar();
+		assertThat(txManager.begun, equalTo(2));
+		assertThat(txManager.commits, equalTo(2));
 		assertThat(txManager.rollbacks, equalTo(0));
 
 		ctx.close();
@@ -299,7 +300,15 @@ public class EnableTransactionManagementTests {
 	}
 
 
-	public interface TransactionalTestInterface {
+	public interface BaseTransactionalInterface {
+
+		@Transactional
+		default void saveBar() {
+		}
+	}
+
+
+	public interface TransactionalTestInterface extends BaseTransactionalInterface {
 
 		@Transactional
 		void saveFoo();

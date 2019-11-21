@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,6 +31,7 @@ import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.springframework.web.socket.server.support.OriginHandshakeInterceptor;
@@ -42,7 +43,7 @@ import org.springframework.web.socket.sockjs.support.SockJsHttpRequestHandler;
  * Parses the configuration for the {@code <websocket:handlers/>} namespace element.
  * Registers a Spring MVC {@code SimpleUrlHandlerMapping} to map HTTP WebSocket
  * handshake (or SockJS) requests to
- * {@link org.springframework.web.socket.WebSocketHandler WebSocketHandler}s.
+ * {@link org.springframework.web.socket.WebSocketHandler WebSocketHandlers}.
  *
  * @author Brian Clozel
  * @author Rossen Stoyanchev
@@ -56,6 +57,7 @@ class HandlersBeanDefinitionParser implements BeanDefinitionParser {
 
 
 	@Override
+	@Nullable
 	public BeanDefinition parse(Element element, ParserContext context) {
 		Object source = context.extractSource(element);
 		CompositeComponentDefinition compDefinition = new CompositeComponentDefinition(element.getTagName(), source);
@@ -87,7 +89,7 @@ class HandlersBeanDefinitionParser implements BeanDefinitionParser {
 			strategy = new WebSocketHandlerMappingStrategy(handler, interceptors);
 		}
 
-		ManagedMap<String, Object> urlMap = new ManagedMap<String, Object>();
+		ManagedMap<String, Object> urlMap = new ManagedMap<>();
 		urlMap.setSource(source);
 		for (Element mappingElement : DomUtils.getChildElementsByTagName(element, "mapping")) {
 			strategy.addMapping(mappingElement, urlMap, context);

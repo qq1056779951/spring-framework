@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,10 +16,6 @@
 
 package org.springframework.aop.framework.autoproxy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -27,11 +23,13 @@ import java.util.List;
 import javax.servlet.ServletException;
 
 import org.junit.Test;
+
 import org.springframework.aop.support.AopUtils;
 import org.springframework.aop.support.StaticMethodMatcherPointcutAdvisor;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.tests.aop.advice.CountingBeforeAdvice;
 import org.springframework.tests.aop.advice.MethodCounter;
 import org.springframework.tests.aop.interceptor.NopInterceptor;
@@ -39,6 +37,8 @@ import org.springframework.tests.sample.beans.ITestBean;
 import org.springframework.tests.transaction.CallCountingTransactionManager;
 import org.springframework.transaction.NoTransactionException;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
+
+import static org.junit.Assert.*;
 
 /**
  * Integration tests for auto proxy creation by advisor recognition working in
@@ -207,7 +207,7 @@ class NeverMatchAdvisor extends StaticMethodMatcherPointcutAdvisor {
 	 * @see org.springframework.aop.MethodMatcher#matches(java.lang.reflect.Method, java.lang.Class)
 	 */
 	@Override
-	public boolean matches(Method m, Class<?> targetClass) {
+	public boolean matches(Method m, @Nullable Class<?> targetClass) {
 		return false;
 	}
 
@@ -255,7 +255,7 @@ class OrderedTxCheckAdvisor extends StaticMethodMatcherPointcutAdvisor implement
 	}
 
 	@Override
-	public boolean matches(Method method, Class<?> targetClass) {
+	public boolean matches(Method method, @Nullable Class<?> targetClass) {
 		return method.getName().startsWith("setAge");
 	}
 

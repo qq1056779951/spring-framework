@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,8 +21,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
 import java.time.MonthDay;
 import java.time.Period;
+import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -391,6 +393,33 @@ public class DateTimeFormattingTests {
 	}
 
 	@Test
+	public void testBindYear() {
+		MutablePropertyValues propertyValues = new MutablePropertyValues();
+		propertyValues.add("year", "2007");
+		binder.bind(propertyValues);
+		assertEquals(0, binder.getBindingResult().getErrorCount());
+		assertTrue(binder.getBindingResult().getFieldValue("year").toString().equals("2007"));
+	}
+
+	@Test
+	public void testBindMonth() {
+		MutablePropertyValues propertyValues = new MutablePropertyValues();
+		propertyValues.add("month", "JULY");
+		binder.bind(propertyValues);
+		assertEquals(0, binder.getBindingResult().getErrorCount());
+		assertTrue(binder.getBindingResult().getFieldValue("month").toString().equals("JULY"));
+	}
+
+	@Test
+	public void testBindMonthInAnyCase() {
+		MutablePropertyValues propertyValues = new MutablePropertyValues();
+		propertyValues.add("month", "July");
+		binder.bind(propertyValues);
+		assertEquals(0, binder.getBindingResult().getErrorCount());
+		assertTrue(binder.getBindingResult().getFieldValue("month").toString().equals("JULY"));
+	}
+
+	@Test
 	public void testBindYearMonth() {
 		MutablePropertyValues propertyValues = new MutablePropertyValues();
 		propertyValues.add("yearMonth", "2007-12");
@@ -443,6 +472,10 @@ public class DateTimeFormattingTests {
 		private Period period;
 
 		private Duration duration;
+
+		private Year year;
+
+		private Month month;
 
 		private YearMonth yearMonth;
 
@@ -552,6 +585,22 @@ public class DateTimeFormattingTests {
 
 		public void setDuration(Duration duration) {
 			this.duration = duration;
+		}
+
+		public Year getYear() {
+			return year;
+		}
+
+		public void setYear(Year year) {
+			this.year = year;
+		}
+
+		public Month getMonth() {
+			return month;
+		}
+
+		public void setMonth(Month month) {
+			this.month = month;
 		}
 
 		public YearMonth getYearMonth() {

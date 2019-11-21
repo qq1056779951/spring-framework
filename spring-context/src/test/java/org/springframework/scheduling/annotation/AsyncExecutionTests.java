@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,9 +24,11 @@ import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.awaitility.Awaitility;
 import org.junit.Test;
 
 import org.springframework.aop.framework.ProxyFactory;
@@ -365,19 +367,26 @@ public class AsyncExecutionTests {
 
 	@Test
 	public void asyncMethodListener() throws Exception {
+		// Arrange
 		originalThreadName = Thread.currentThread().getName();
 		listenerCalled = 0;
 		GenericApplicationContext context = new GenericApplicationContext();
 		context.registerBeanDefinition("asyncTest", new RootBeanDefinition(AsyncMethodListener.class));
 		context.registerBeanDefinition("autoProxyCreator", new RootBeanDefinition(DefaultAdvisorAutoProxyCreator.class));
 		context.registerBeanDefinition("asyncAdvisor", new RootBeanDefinition(AsyncAnnotationAdvisor.class));
+		// Act
 		context.refresh();
-		Thread.sleep(1000);
-		assertEquals(1, listenerCalled);
+		// Assert
+		Awaitility.await()
+					.atMost(1, TimeUnit.SECONDS)
+					.pollInterval(10, TimeUnit.MILLISECONDS)
+					.until(() -> listenerCalled == 1);
+		context.close();
 	}
 
 	@Test
 	public void asyncClassListener() throws Exception {
+		// Arrange
 		originalThreadName = Thread.currentThread().getName();
 		listenerCalled = 0;
 		listenerConstructed = 0;
@@ -385,15 +394,20 @@ public class AsyncExecutionTests {
 		context.registerBeanDefinition("asyncTest", new RootBeanDefinition(AsyncClassListener.class));
 		context.registerBeanDefinition("autoProxyCreator", new RootBeanDefinition(DefaultAdvisorAutoProxyCreator.class));
 		context.registerBeanDefinition("asyncAdvisor", new RootBeanDefinition(AsyncAnnotationAdvisor.class));
+		// Act
 		context.refresh();
 		context.close();
-		Thread.sleep(1000);
-		assertEquals(2, listenerCalled);
+		// Assert
+		Awaitility.await()
+					.atMost(1, TimeUnit.SECONDS)
+					.pollInterval(10, TimeUnit.MILLISECONDS)
+					.until(() -> listenerCalled == 2);
 		assertEquals(1, listenerConstructed);
 	}
 
 	@Test
 	public void asyncPrototypeClassListener() throws Exception {
+		// Arrange
 		originalThreadName = Thread.currentThread().getName();
 		listenerCalled = 0;
 		listenerConstructed = 0;
@@ -403,10 +417,14 @@ public class AsyncExecutionTests {
 		context.registerBeanDefinition("asyncTest", listenerDef);
 		context.registerBeanDefinition("autoProxyCreator", new RootBeanDefinition(DefaultAdvisorAutoProxyCreator.class));
 		context.registerBeanDefinition("asyncAdvisor", new RootBeanDefinition(AsyncAnnotationAdvisor.class));
+		// Act
 		context.refresh();
 		context.close();
-		Thread.sleep(1000);
-		assertEquals(2, listenerCalled);
+		// Assert
+		Awaitility.await()
+					.atMost(1, TimeUnit.SECONDS)
+					.pollInterval(10, TimeUnit.MILLISECONDS)
+					.until(() -> listenerCalled == 2);
 		assertEquals(2, listenerConstructed);
 	}
 
@@ -455,7 +473,7 @@ public class AsyncExecutionTests {
 			else if (i < 0) {
 				return AsyncResult.forExecutionException(new IOException());
 			}
-			return new AsyncResult<String>(Integer.toString(i));
+			return new AsyncResult<>(Integer.toString(i));
 		}
 
 		@Async
@@ -495,13 +513,13 @@ public class AsyncExecutionTests {
 		public Future<String> returnSomething(int i) {
 			assertTrue(!Thread.currentThread().getName().equals(originalThreadName));
 			assertTrue(Thread.currentThread().getName().startsWith("e2-"));
-			return new AsyncResult<String>(Integer.toString(i));
+			return new AsyncResult<>(Integer.toString(i));
 		}
 
 		public Future<String> returnSomething2(int i) {
 			assertTrue(!Thread.currentThread().getName().equals(originalThreadName));
 			assertTrue(Thread.currentThread().getName().startsWith("e0-"));
-			return new AsyncResult<String>(Integer.toString(i));
+			return new AsyncResult<>(Integer.toString(i));
 		}
 	}
 
@@ -529,7 +547,7 @@ public class AsyncExecutionTests {
 			if (i == 0) {
 				throw new IllegalArgumentException();
 			}
-			return new AsyncResult<String>(Integer.toString(i));
+			return new AsyncResult<>(Integer.toString(i));
 		}
 
 		public ListenableFuture<String> returnSomethingListenable(int i) {
@@ -537,7 +555,7 @@ public class AsyncExecutionTests {
 			if (i == 0) {
 				throw new IllegalArgumentException();
 			}
-			return new AsyncResult<String>(Integer.toString(i));
+			return new AsyncResult<>(Integer.toString(i));
 		}
 
 		@Async
@@ -572,7 +590,7 @@ public class AsyncExecutionTests {
 
 		public Future<String> returnSomething(int i) {
 			assertTrue(!Thread.currentThread().getName().equals(originalThreadName));
-			return new AsyncResult<String>(Integer.toString(i));
+			return new AsyncResult<>(Integer.toString(i));
 		}
 	}
 
@@ -596,7 +614,7 @@ public class AsyncExecutionTests {
 		@Override
 		public Future<String> returnSomething(int i) {
 			assertTrue(!Thread.currentThread().getName().equals(originalThreadName));
-			return new AsyncResult<String>(Integer.toString(i));
+			return new AsyncResult<>(Integer.toString(i));
 		}
 	}
 
@@ -612,7 +630,7 @@ public class AsyncExecutionTests {
 				public Object invoke(MethodInvocation invocation) throws Throwable {
 					assertTrue(!Thread.currentThread().getName().equals(originalThreadName));
 					if (Future.class.equals(invocation.getMethod().getReturnType())) {
-						return new AsyncResult<String>(invocation.getArguments()[0].toString());
+						return new AsyncResult<>(invocation.getArguments()[0].toString());
 					}
 					return null;
 				}
@@ -666,7 +684,7 @@ public class AsyncExecutionTests {
 		@Override
 		public Future<String> returnSomething(int i) {
 			assertTrue(!Thread.currentThread().getName().equals(originalThreadName));
-			return new AsyncResult<String>(Integer.toString(i));
+			return new AsyncResult<>(Integer.toString(i));
 		}
 	}
 
@@ -682,7 +700,7 @@ public class AsyncExecutionTests {
 				public Object invoke(MethodInvocation invocation) throws Throwable {
 					assertTrue(!Thread.currentThread().getName().equals(originalThreadName));
 					if (Future.class.equals(invocation.getMethod().getReturnType())) {
-						return new AsyncResult<String>(invocation.getArguments()[0].toString());
+						return new AsyncResult<>(invocation.getArguments()[0].toString());
 					}
 					return null;
 				}

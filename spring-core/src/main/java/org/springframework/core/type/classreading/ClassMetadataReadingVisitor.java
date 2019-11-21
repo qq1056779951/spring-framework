@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,7 @@ import org.springframework.asm.MethodVisitor;
 import org.springframework.asm.Opcodes;
 import org.springframework.asm.SpringAsmInfo;
 import org.springframework.core.type.ClassMetadata;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -44,7 +45,7 @@ import org.springframework.util.StringUtils;
  */
 class ClassMetadataReadingVisitor extends ClassVisitor implements ClassMetadata {
 
-	private String className;
+	private String className = "";
 
 	private boolean isInterface;
 
@@ -54,15 +55,17 @@ class ClassMetadataReadingVisitor extends ClassVisitor implements ClassMetadata 
 
 	private boolean isFinal;
 
+	@Nullable
 	private String enclosingClassName;
 
 	private boolean independentInnerClass;
 
+	@Nullable
 	private String superClassName;
 
-	private String[] interfaces;
+	private String[] interfaces = new String[0];
 
-	private Set<String> memberClassNames = new LinkedHashSet<String>(4);
+	private Set<String> memberClassNames = new LinkedHashSet<>(4);
 
 
 	public ClassMetadataReadingVisitor() {
@@ -71,7 +74,9 @@ class ClassMetadataReadingVisitor extends ClassVisitor implements ClassMetadata 
 
 
 	@Override
-	public void visit(int version, int access, String name, String signature, String supername, String[] interfaces) {
+	public void visit(
+			int version, int access, String name, String signature, @Nullable String supername, String[] interfaces) {
+
 		this.className = ClassUtils.convertResourcePathToClassName(name);
 		this.isInterface = ((access & Opcodes.ACC_INTERFACE) != 0);
 		this.isAnnotation = ((access & Opcodes.ACC_ANNOTATION) != 0);
@@ -92,7 +97,7 @@ class ClassMetadataReadingVisitor extends ClassVisitor implements ClassMetadata 
 	}
 
 	@Override
-	public void visitInnerClass(String name, String outerName, String innerName, int access) {
+	public void visitInnerClass(String name, @Nullable String outerName, String innerName, int access) {
 		if (outerName != null) {
 			String fqName = ClassUtils.convertResourcePathToClassName(name);
 			String fqOuterName = ClassUtils.convertResourcePathToClassName(outerName);
@@ -181,6 +186,7 @@ class ClassMetadataReadingVisitor extends ClassVisitor implements ClassMetadata 
 	}
 
 	@Override
+	@Nullable
 	public String getEnclosingClassName() {
 		return this.enclosingClassName;
 	}
@@ -191,6 +197,7 @@ class ClassMetadataReadingVisitor extends ClassVisitor implements ClassMetadata 
 	}
 
 	@Override
+	@Nullable
 	public String getSuperClassName() {
 		return this.superClassName;
 	}

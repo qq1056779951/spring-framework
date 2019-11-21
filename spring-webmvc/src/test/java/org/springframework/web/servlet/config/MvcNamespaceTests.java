@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -32,6 +31,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
 import javax.servlet.RequestDispatcher;
 import javax.validation.constraints.NotNull;
 
@@ -63,6 +63,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;
 import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
+import org.springframework.lang.Nullable;
 import org.springframework.mock.web.test.MockHttpServletRequest;
 import org.springframework.mock.web.test.MockHttpServletResponse;
 import org.springframework.mock.web.test.MockRequestDispatcher;
@@ -82,11 +83,10 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.async.CallableProcessingInterceptor;
-import org.springframework.web.context.request.async.CallableProcessingInterceptorAdapter;
 import org.springframework.web.context.request.async.DeferredResultProcessingInterceptor;
-import org.springframework.web.context.request.async.DeferredResultProcessingInterceptorAdapter;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.method.support.CompositeUriComponentsContributor;
 import org.springframework.web.method.support.InvocableHandlerMethod;
@@ -101,7 +101,6 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import org.springframework.web.servlet.handler.MappedInterceptor;
 import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
 import org.springframework.web.servlet.handler.UserRoleAuthorizationInterceptor;
-import org.springframework.web.servlet.handler.WebRequestHandlerInterceptorAdapter;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter;
 import org.springframework.web.servlet.mvc.ParameterizableViewController;
@@ -115,8 +114,8 @@ import org.springframework.web.servlet.resource.CachingResourceTransformer;
 import org.springframework.web.servlet.resource.ContentVersionStrategy;
 import org.springframework.web.servlet.resource.CssLinkResourceTransformer;
 import org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler;
+import org.springframework.web.servlet.resource.EncodedResourceResolver;
 import org.springframework.web.servlet.resource.FixedVersionStrategy;
-import org.springframework.web.servlet.resource.GzipResourceResolver;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import org.springframework.web.servlet.resource.ResourceResolver;
@@ -141,20 +140,10 @@ import org.springframework.web.servlet.view.script.ScriptTemplateViewResolver;
 import org.springframework.web.servlet.view.tiles3.SpringBeanPreparerFactory;
 import org.springframework.web.servlet.view.tiles3.TilesConfigurer;
 import org.springframework.web.servlet.view.tiles3.TilesViewResolver;
-import org.springframework.web.servlet.view.velocity.VelocityConfigurer;
-import org.springframework.web.servlet.view.velocity.VelocityViewResolver;
 import org.springframework.web.util.UrlPathHelper;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 /**
  * Tests loading actual MVC namespace configuration.
@@ -181,7 +170,7 @@ public class MvcNamespaceTests {
 
 
 	@Before
-	public void setUp() throws Exception {
+	public void setup() throws Exception {
 		TestMockServletContext servletContext = new TestMockServletContext();
 		appContext = new XmlWebApplicationContext();
 		appContext.setServletContext(servletContext);
@@ -191,8 +180,8 @@ public class MvcNamespaceTests {
 		appContext.getServletContext().setAttribute(attributeName, appContext);
 
 		handler = new TestController();
-		Method method = TestController.class.getMethod("testBind", Date.class, Double.class, TestBean.class, BindingResult.class);
-		handlerMethod = new InvocableHandlerMethod(handler, method);
+		handlerMethod = new InvocableHandlerMethod(handler, TestController.class.getMethod("testBind",
+				Date.class, Double.class, TestBean.class, BindingResult.class));
 	}
 
 
@@ -297,11 +286,6 @@ public class MvcNamespaceTests {
 		doTestCustomValidator("mvc-config-custom-validator.xml");
 	}
 
-	@Test
-	public void testCustomValidator32() throws Exception {
-		doTestCustomValidator("mvc-config-custom-validator-32.xml");
-	}
-
 	private void doTestCustomValidator(String xml) throws Exception {
 		loadBeanDefinitions(xml);
 
@@ -337,29 +321,27 @@ public class MvcNamespaceTests {
 		request.addParameter("theme", "green");
 
 		HandlerExecutionChain chain = mapping.getHandler(request);
-		assertEquals(5, chain.getInterceptors().length);
+		assertEquals(4, chain.getInterceptors().length);
 		assertTrue(chain.getInterceptors()[0] instanceof ConversionServiceExposingInterceptor);
 		assertTrue(chain.getInterceptors()[1] instanceof LocaleChangeInterceptor);
-		assertTrue(chain.getInterceptors()[2] instanceof WebRequestHandlerInterceptorAdapter);
-		assertTrue(chain.getInterceptors()[3] instanceof ThemeChangeInterceptor);
-		assertTrue(chain.getInterceptors()[4] instanceof UserRoleAuthorizationInterceptor);
+		assertTrue(chain.getInterceptors()[2] instanceof ThemeChangeInterceptor);
+		assertTrue(chain.getInterceptors()[3] instanceof UserRoleAuthorizationInterceptor);
 
 		request.setRequestURI("/admin/users");
 		chain = mapping.getHandler(request);
-		assertEquals(3, chain.getInterceptors().length);
+		assertEquals(2, chain.getInterceptors().length);
 
 		request.setRequestURI("/logged/accounts/12345");
 		chain = mapping.getHandler(request);
-		assertEquals(5, chain.getInterceptors().length);
-		assertTrue(chain.getInterceptors()[4] instanceof WebRequestHandlerInterceptorAdapter);
+		assertEquals(3, chain.getInterceptors().length);
 
 		request.setRequestURI("/foo/logged");
 		chain = mapping.getHandler(request);
-		assertEquals(5, chain.getInterceptors().length);
-		assertTrue(chain.getInterceptors()[4] instanceof WebRequestHandlerInterceptorAdapter);
+		assertEquals(3, chain.getInterceptors().length);
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void testResources() throws Exception {
 		loadBeanDefinitions("mvc-config-resources.xml");
 
@@ -486,7 +468,7 @@ public class MvcNamespaceTests {
 		List<ResourceResolver> resolvers = handler.getResourceResolvers();
 		assertThat(resolvers, Matchers.hasSize(3));
 		assertThat(resolvers.get(0), Matchers.instanceOf(VersionResourceResolver.class));
-		assertThat(resolvers.get(1), Matchers.instanceOf(GzipResourceResolver.class));
+		assertThat(resolvers.get(1), Matchers.instanceOf(EncodedResourceResolver.class));
 		assertThat(resolvers.get(2), Matchers.instanceOf(PathResourceResolver.class));
 
 		VersionResourceResolver versionResolver = (VersionResourceResolver) resolvers.get(0);
@@ -770,7 +752,7 @@ public class MvcNamespaceTests {
 
 		ViewResolverComposite compositeResolver = this.appContext.getBean(ViewResolverComposite.class);
 		assertNotNull(compositeResolver);
-		assertEquals("Actual: " + compositeResolver.getViewResolvers(), 9, compositeResolver.getViewResolvers().size());
+		assertEquals("Actual: " + compositeResolver.getViewResolvers(), 8, compositeResolver.getViewResolvers().size());
 		assertEquals(Ordered.LOWEST_PRECEDENCE, compositeResolver.getOrder());
 
 		List<ViewResolver> resolvers = compositeResolver.getViewResolvers();
@@ -792,28 +774,21 @@ public class MvcNamespaceTests {
 		assertEquals(1024, accessor.getPropertyValue("cacheLimit"));
 
 		resolver = resolvers.get(4);
-		assertThat(resolver, instanceOf(VelocityViewResolver.class));
-		accessor = new DirectFieldAccessor(resolver);
-		assertEquals("", accessor.getPropertyValue("prefix"));
-		assertEquals(".vm", accessor.getPropertyValue("suffix"));
-		assertEquals(0, accessor.getPropertyValue("cacheLimit"));
-
-		resolver = resolvers.get(5);
 		assertThat(resolver, instanceOf(GroovyMarkupViewResolver.class));
 		accessor = new DirectFieldAccessor(resolver);
 		assertEquals("", accessor.getPropertyValue("prefix"));
 		assertEquals(".tpl", accessor.getPropertyValue("suffix"));
 		assertEquals(1024, accessor.getPropertyValue("cacheLimit"));
 
-		resolver = resolvers.get(6);
+		resolver = resolvers.get(5);
 		assertThat(resolver, instanceOf(ScriptTemplateViewResolver.class));
 		accessor = new DirectFieldAccessor(resolver);
 		assertEquals("", accessor.getPropertyValue("prefix"));
 		assertEquals("", accessor.getPropertyValue("suffix"));
 		assertEquals(1024, accessor.getPropertyValue("cacheLimit"));
 
+		assertEquals(InternalResourceViewResolver.class, resolvers.get(6).getClass());
 		assertEquals(InternalResourceViewResolver.class, resolvers.get(7).getClass());
-		assertEquals(InternalResourceViewResolver.class, resolvers.get(8).getClass());
 
 		TilesConfigurer tilesConfigurer = appContext.getBean(TilesConfigurer.class);
 		assertNotNull(tilesConfigurer);
@@ -832,11 +807,6 @@ public class MvcNamespaceTests {
 		accessor = new DirectFieldAccessor(freeMarkerConfigurer);
 		assertArrayEquals(new String[] {"/", "/test"}, (String[]) accessor.getPropertyValue("templateLoaderPaths"));
 
-		VelocityConfigurer velocityConfigurer = appContext.getBean(VelocityConfigurer.class);
-		assertNotNull(velocityConfigurer);
-		accessor = new DirectFieldAccessor(velocityConfigurer);
-		assertEquals("/test", accessor.getPropertyValue("resourceLoaderPath"));
-
 		GroovyMarkupConfigurer groovyMarkupConfigurer = appContext.getBean(GroovyMarkupConfigurer.class);
 		assertNotNull(groovyMarkupConfigurer);
 		assertEquals("/test", groovyMarkupConfigurer.getResourceLoaderPath());
@@ -847,7 +817,7 @@ public class MvcNamespaceTests {
 		assertNotNull(scriptTemplateConfigurer);
 		assertEquals("render", scriptTemplateConfigurer.getRenderFunction());
 		assertEquals(MediaType.TEXT_PLAIN_VALUE, scriptTemplateConfigurer.getContentType());
-		assertEquals("ISO-8859-1", scriptTemplateConfigurer.getCharset().name());
+		assertEquals(StandardCharsets.ISO_8859_1, scriptTemplateConfigurer.getCharset());
 		assertEquals("classpath:", scriptTemplateConfigurer.getResourceLoaderPath());
 		assertFalse(scriptTemplateConfigurer.isSharedEngine());
 		String[] scripts = { "org/springframework/web/servlet/view/script/nashorn/render.js" };
@@ -867,7 +837,7 @@ public class MvcNamespaceTests {
 		List<ViewResolver> resolvers = compositeResolver.getViewResolvers();
 		assertEquals(ContentNegotiatingViewResolver.class, resolvers.get(0).getClass());
 		ContentNegotiatingViewResolver cnvr = (ContentNegotiatingViewResolver) resolvers.get(0);
-		assertEquals(7, cnvr.getViewResolvers().size());
+		assertEquals(6, cnvr.getViewResolvers().size());
 		assertEquals(1, cnvr.getDefaultViews().size());
 		assertTrue(cnvr.isUseNotAcceptableStatusCode());
 
@@ -919,7 +889,9 @@ public class MvcNamespaceTests {
 		for (String beanName : beanNames) {
 			AbstractHandlerMapping handlerMapping = (AbstractHandlerMapping)appContext.getBean(beanName);
 			assertNotNull(handlerMapping);
-			Map<String, CorsConfiguration> configs = handlerMapping.getCorsConfigurations();
+			DirectFieldAccessor accessor = new DirectFieldAccessor(handlerMapping);
+			Map<String, CorsConfiguration> configs = ((UrlBasedCorsConfigurationSource) accessor
+					.getPropertyValue("corsConfigurationSource")).getCorsConfigurations();
 			assertNotNull(configs);
 			assertEquals(1, configs.size());
 			CorsConfiguration config = configs.get("/**");
@@ -928,8 +900,8 @@ public class MvcNamespaceTests {
 			assertArrayEquals(new String[]{"GET", "HEAD", "POST"}, config.getAllowedMethods().toArray());
 			assertArrayEquals(new String[]{"*"}, config.getAllowedHeaders().toArray());
 			assertNull(config.getExposedHeaders());
-			assertTrue(config.getAllowCredentials());
-			assertEquals(new Long(1800), config.getMaxAge());
+			assertNull(config.getAllowCredentials());
+			assertEquals(Long.valueOf(1800), config.getMaxAge());
 		}
 	}
 
@@ -942,23 +914,25 @@ public class MvcNamespaceTests {
 		for (String beanName : beanNames) {
 			AbstractHandlerMapping handlerMapping = (AbstractHandlerMapping)appContext.getBean(beanName);
 			assertNotNull(handlerMapping);
-			Map<String, CorsConfiguration> configs = handlerMapping.getCorsConfigurations();
+			DirectFieldAccessor accessor = new DirectFieldAccessor(handlerMapping);
+			Map<String, CorsConfiguration> configs = ((UrlBasedCorsConfigurationSource) accessor
+					.getPropertyValue("corsConfigurationSource")).getCorsConfigurations();
 			assertNotNull(configs);
 			assertEquals(2, configs.size());
 			CorsConfiguration config = configs.get("/api/**");
 			assertNotNull(config);
-			assertArrayEquals(new String[]{"http://domain1.com", "http://domain2.com"}, config.getAllowedOrigins().toArray());
+			assertArrayEquals(new String[]{"https://domain1.com", "https://domain2.com"}, config.getAllowedOrigins().toArray());
 			assertArrayEquals(new String[]{"GET", "PUT"}, config.getAllowedMethods().toArray());
 			assertArrayEquals(new String[]{"header1", "header2", "header3"}, config.getAllowedHeaders().toArray());
 			assertArrayEquals(new String[]{"header1", "header2"}, config.getExposedHeaders().toArray());
 			assertFalse(config.getAllowCredentials());
 			assertEquals(Long.valueOf(123), config.getMaxAge());
 			config = configs.get("/resources/**");
-			assertArrayEquals(new String[]{"http://domain1.com"}, config.getAllowedOrigins().toArray());
+			assertArrayEquals(new String[]{"https://domain1.com"}, config.getAllowedOrigins().toArray());
 			assertArrayEquals(new String[]{"GET", "HEAD", "POST"}, config.getAllowedMethods().toArray());
 			assertArrayEquals(new String[]{"*"}, config.getAllowedHeaders().toArray());
 			assertNull(config.getExposedHeaders());
-			assertTrue(config.getAllowCredentials());
+			assertNull(config.getAllowCredentials());
 			assertEquals(Long.valueOf(1800), config.getMaxAge());
 		}
 	}
@@ -1022,7 +996,7 @@ public class MvcNamespaceTests {
 		}
 
 		@Override
-		public void validate(Object target, Errors errors) {
+		public void validate(@Nullable Object target, Errors errors) {
 			this.validatorInvoked = true;
 		}
 	}
@@ -1061,14 +1035,19 @@ public class MvcNamespaceTests {
 				return null;
 			}
 		}
+
+		@Override
+		public String getVirtualServerName() {
+			return null;
+		}
 	}
 
 
-	public static class TestCallableProcessingInterceptor extends CallableProcessingInterceptorAdapter {
+	public static class TestCallableProcessingInterceptor implements CallableProcessingInterceptor {
 	}
 
 
-	public static class TestDeferredResultProcessingInterceptor extends DeferredResultProcessingInterceptorAdapter {
+	public static class TestDeferredResultProcessingInterceptor implements DeferredResultProcessingInterceptor {
 	}
 
 

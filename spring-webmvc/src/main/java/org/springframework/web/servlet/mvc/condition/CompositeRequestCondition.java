@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,8 +20,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -82,7 +84,7 @@ public class CompositeRequestCondition extends AbstractRequestCondition<Composit
 	}
 
 	private List<RequestCondition<?>> unwrap() {
-		List<RequestCondition<?>> result = new ArrayList<RequestCondition<?>>();
+		List<RequestCondition<?>> result = new ArrayList<>();
 		for (RequestConditionHolder holder : this.requestConditions) {
 			result.add(holder.getCondition());
 		}
@@ -91,7 +93,7 @@ public class CompositeRequestCondition extends AbstractRequestCondition<Composit
 
 	@Override
 	protected Collection<?> getContent() {
-		return (isEmpty()) ? Collections.emptyList() : getConditions();
+		return (!isEmpty() ? getConditions() : Collections.emptyList());
 	}
 
 	@Override
@@ -142,6 +144,7 @@ public class CompositeRequestCondition extends AbstractRequestCondition<Composit
 	 * <p>An empty {@code CompositeRequestCondition} matches to all requests.
 	 */
 	@Override
+	@Nullable
 	public CompositeRequestCondition getMatchingCondition(HttpServletRequest request) {
 		if (isEmpty()) {
 			return this;

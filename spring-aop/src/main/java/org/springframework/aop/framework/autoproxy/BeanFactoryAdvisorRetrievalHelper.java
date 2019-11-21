@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,7 @@ import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanCurrentlyInCreationException;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -43,6 +44,7 @@ public class BeanFactoryAdvisorRetrievalHelper {
 
 	private final ConfigurableListableBeanFactory beanFactory;
 
+	@Nullable
 	private volatile String[] cachedAdvisorBeanNames;
 
 
@@ -73,15 +75,15 @@ public class BeanFactoryAdvisorRetrievalHelper {
 			this.cachedAdvisorBeanNames = advisorNames;
 		}
 		if (advisorNames.length == 0) {
-			return new ArrayList<Advisor>();
+			return new ArrayList<>();
 		}
 
-		List<Advisor> advisors = new ArrayList<Advisor>();
+		List<Advisor> advisors = new ArrayList<>();
 		for (String name : advisorNames) {
 			if (isEligibleBean(name)) {
 				if (this.beanFactory.isCurrentlyInCreation(name)) {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Skipping currently created advisor '" + name + "'");
+					if (logger.isTraceEnabled()) {
+						logger.trace("Skipping currently created advisor '" + name + "'");
 					}
 				}
 				else {
@@ -92,9 +94,10 @@ public class BeanFactoryAdvisorRetrievalHelper {
 						Throwable rootCause = ex.getMostSpecificCause();
 						if (rootCause instanceof BeanCurrentlyInCreationException) {
 							BeanCreationException bce = (BeanCreationException) rootCause;
-							if (this.beanFactory.isCurrentlyInCreation(bce.getBeanName())) {
-								if (logger.isDebugEnabled()) {
-									logger.debug("Skipping advisor '" + name +
+							String bceBeanName = bce.getBeanName();
+							if (bceBeanName != null && this.beanFactory.isCurrentlyInCreation(bceBeanName)) {
+								if (logger.isTraceEnabled()) {
+									logger.trace("Skipping advisor '" + name +
 											"' with dependency on currently created bean: " + ex.getMessage());
 								}
 								// Ignore: indicates a reference back to the bean we're trying to advise.

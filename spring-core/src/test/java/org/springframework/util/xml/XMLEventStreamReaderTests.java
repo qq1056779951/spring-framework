@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.util.xml;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.transform.Transformer;
@@ -27,8 +28,11 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.w3c.dom.Node;
+import org.xmlunit.util.Predicate;
 
-import static org.custommonkey.xmlunit.XMLAssert.*;
+import static org.junit.Assert.*;
+import static org.xmlunit.matchers.CompareMatcher.*;
 
 public class XMLEventStreamReaderTests {
 
@@ -58,7 +62,9 @@ public class XMLEventStreamReaderTests {
 		StAXSource source = new StAXSource(streamReader);
 		StringWriter writer = new StringWriter();
 		transformer.transform(source, new StreamResult(writer));
-		assertXMLEqual(XML, writer.toString());
+		Predicate<Node> nodeFilter = n ->
+				n.getNodeType() != Node.DOCUMENT_TYPE_NODE && n.getNodeType() != Node.PROCESSING_INSTRUCTION_NODE;
+		assertThat(writer.toString(), isSimilarTo(XML).withNodeFilter(nodeFilter));
 	}
 
 }

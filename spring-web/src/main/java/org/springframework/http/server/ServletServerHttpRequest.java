@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,18 +27,21 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 import org.springframework.util.StringUtils;
@@ -48,26 +51,31 @@ import org.springframework.util.StringUtils;
  *
  * @author Arjen Poutsma
  * @author Rossen Stoyanchev
+ * @author Juergen Hoeller
  * @since 3.0
  */
 public class ServletServerHttpRequest implements ServerHttpRequest {
 
 	protected static final String FORM_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
-	protected static final String FORM_CHARSET = "UTF-8";
+	protected static final Charset FORM_CHARSET = StandardCharsets.UTF_8;
 
 
 	private final HttpServletRequest servletRequest;
 
+	@Nullable
 	private URI uri;
 
+	@Nullable
 	private HttpHeaders headers;
 
+	@Nullable
 	private ServerHttpAsyncRequestControl asyncRequestControl;
 
 
 	/**
-	 * Construct a new instance of the ServletServerHttpRequest based on the given {@link HttpServletRequest}.
+	 * Construct a new instance of the ServletServerHttpRequest based on the
+	 * given {@link HttpServletRequest}.
 	 * @param servletRequest the servlet request
 	 */
 	public ServletServerHttpRequest(HttpServletRequest servletRequest) {
@@ -84,8 +92,14 @@ public class ServletServerHttpRequest implements ServerHttpRequest {
 	}
 
 	@Override
+	@Nullable
 	public HttpMethod getMethod() {
 		return HttpMethod.resolve(this.servletRequest.getMethod());
+	}
+
+	@Override
+	public String getMethodValue() {
+		return this.servletRequest.getMethod();
 	}
 
 	@Override
@@ -151,7 +165,7 @@ public class ServletServerHttpRequest implements ServerHttpRequest {
 					String requestEncoding = this.servletRequest.getCharacterEncoding();
 					if (StringUtils.hasLength(requestEncoding)) {
 						Charset charSet = Charset.forName(requestEncoding);
-						Map<String, String> params = new LinkedCaseInsensitiveMap<String>();
+						Map<String, String> params = new LinkedCaseInsensitiveMap<>();
 						params.putAll(contentType.getParameters());
 						params.put("charset", charSet.toString());
 						MediaType mediaType = new MediaType(contentType.getType(), contentType.getSubtype(), params);
@@ -235,10 +249,10 @@ public class ServletServerHttpRequest implements ServerHttpRequest {
 			List<String> values = Arrays.asList(form.get(name));
 			for (Iterator<String> valueIterator = values.iterator(); valueIterator.hasNext();) {
 				String value = valueIterator.next();
-				writer.write(URLEncoder.encode(name, FORM_CHARSET));
+				writer.write(URLEncoder.encode(name, FORM_CHARSET.name()));
 				if (value != null) {
 					writer.write('=');
-					writer.write(URLEncoder.encode(value, FORM_CHARSET));
+					writer.write(URLEncoder.encode(value, FORM_CHARSET.name()));
 					if (valueIterator.hasNext()) {
 						writer.write('&');
 					}

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,7 +45,9 @@ public class ProxyCachingConfiguration extends AbstractCachingConfiguration {
 		BeanFactoryCacheOperationSourceAdvisor advisor = new BeanFactoryCacheOperationSourceAdvisor();
 		advisor.setCacheOperationSource(cacheOperationSource());
 		advisor.setAdvice(cacheInterceptor());
-		advisor.setOrder(this.enableCaching.<Integer>getNumber("order"));
+		if (this.enableCaching != null) {
+			advisor.setOrder(this.enableCaching.<Integer>getNumber("order"));
+		}
 		return advisor;
 	}
 
@@ -59,19 +61,8 @@ public class ProxyCachingConfiguration extends AbstractCachingConfiguration {
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 	public CacheInterceptor cacheInterceptor() {
 		CacheInterceptor interceptor = new CacheInterceptor();
-		interceptor.setCacheOperationSources(cacheOperationSource());
-		if (this.cacheResolver != null) {
-			interceptor.setCacheResolver(this.cacheResolver);
-		}
-		else if (this.cacheManager != null) {
-			interceptor.setCacheManager(this.cacheManager);
-		}
-		if (this.keyGenerator != null) {
-			interceptor.setKeyGenerator(this.keyGenerator);
-		}
-		if (this.errorHandler != null) {
-			interceptor.setErrorHandler(this.errorHandler);
-		}
+		interceptor.configure(this.errorHandler, this.keyGenerator, this.cacheResolver, this.cacheManager);
+		interceptor.setCacheOperationSource(cacheOperationSource());
 		return interceptor;
 	}
 

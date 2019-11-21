@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,9 +46,9 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 
 	private static final Log logger = LogFactory.getLog(ApplicationListenerDetector.class);
 
-	private transient final AbstractApplicationContext applicationContext;
+	private final transient AbstractApplicationContext applicationContext;
 
-	private transient final Map<String, Boolean> singletonNames = new ConcurrentHashMap<String, Boolean>(256);
+	private final transient Map<String, Boolean> singletonNames = new ConcurrentHashMap<>(256);
 
 
 	public ApplicationListenerDetector(AbstractApplicationContext applicationContext) {
@@ -58,9 +58,7 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 
 	@Override
 	public void postProcessMergedBeanDefinition(RootBeanDefinition beanDefinition, Class<?> beanType, String beanName) {
-		if (this.applicationContext != null) {
-			this.singletonNames.put(beanName, beanDefinition.isSingleton());
-		}
+		this.singletonNames.put(beanName, beanDefinition.isSingleton());
 	}
 
 	@Override
@@ -70,7 +68,7 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) {
-		if (this.applicationContext != null && bean instanceof ApplicationListener) {
+		if (bean instanceof ApplicationListener) {
 			// potentially not detected as a listener by getBeanNamesForType retrieval
 			Boolean flag = this.singletonNames.get(beanName);
 			if (Boolean.TRUE.equals(flag)) {
@@ -93,7 +91,7 @@ class ApplicationListenerDetector implements DestructionAwareBeanPostProcessor, 
 
 	@Override
 	public void postProcessBeforeDestruction(Object bean, String beanName) {
-		if (this.applicationContext != null && bean instanceof ApplicationListener) {
+		if (bean instanceof ApplicationListener) {
 			try {
 				ApplicationEventMulticaster multicaster = this.applicationContext.getApplicationEventMulticaster();
 				multicaster.removeApplicationListener((ApplicationListener<?>) bean);

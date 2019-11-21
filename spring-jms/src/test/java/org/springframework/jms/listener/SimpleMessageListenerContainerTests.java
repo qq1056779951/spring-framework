@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.jms.listener;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.ExceptionListener;
@@ -32,6 +33,7 @@ import org.junit.Test;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.jms.StubQueue;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ErrorHandler;
 
 import static org.junit.Assert.*;
@@ -54,7 +56,7 @@ public class SimpleMessageListenerContainerTests {
 	private final SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
 
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testSettingMessageListenerToANullType() {
 		this.container.setMessageListener(null);
 		assertNull(this.container.getMessageListener());
@@ -174,7 +176,7 @@ public class SimpleMessageListenerContainerTests {
 		this.container.setDestinationName(DESTINATION_NAME);
 		this.container.setMessageListener(new SessionAwareMessageListener<Message>() {
 			@Override
-			public void onMessage(Message message, Session sess) {
+			public void onMessage(Message message, @Nullable Session sess) {
 				try {
 					// Check correct Session passed into SessionAwareMessageListener.
 					assertSame(sess, session);
@@ -270,7 +272,7 @@ public class SimpleMessageListenerContainerTests {
 		this.container.setDestinationName(DESTINATION_NAME);
 		this.container.setMessageListener(new SessionAwareMessageListener<Message>() {
 			@Override
-			public void onMessage(Message message, Session session) throws JMSException {
+			public void onMessage(Message message, @Nullable Session session) throws JMSException {
 				throw theException;
 			}
 		});
@@ -320,7 +322,7 @@ public class SimpleMessageListenerContainerTests {
 		this.container.setDestinationName(DESTINATION_NAME);
 		this.container.setMessageListener(new SessionAwareMessageListener<Message>() {
 			@Override
-			public void onMessage(Message message, Session session) throws JMSException {
+			public void onMessage(Message message, @Nullable Session session) throws JMSException {
 				throw theException;
 			}
 		});
@@ -393,7 +395,7 @@ public class SimpleMessageListenerContainerTests {
 		// Queue gets created in order to create MessageConsumer for that Destination...
 		given(session.createQueue(DESTINATION_NAME)).willReturn(QUEUE_DESTINATION);
 		// and then the MessageConsumer gets created...
-		given(session.createConsumer(QUEUE_DESTINATION, null)).willReturn(messageConsumer); // no MessageSelector...
+		given(session.createConsumer(QUEUE_DESTINATION, null)).willReturn(messageConsumer);  // no MessageSelector...
 		// an exception is thrown, so the rollback logic is being applied here...
 		given(session.getTransacted()).willReturn(true);
 

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,10 +19,12 @@ package org.springframework.web.servlet.tags.form;
 import java.beans.PropertyEditor;
 import java.util.Collection;
 import java.util.Map;
+
 import javax.servlet.jsp.JspException;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.servlet.support.BindStatus;
@@ -92,8 +94,10 @@ class OptionWriter {
 
 	private final BindStatus bindStatus;
 
+	@Nullable
 	private final String valueProperty;
 
+	@Nullable
 	private final String labelProperty;
 
 	private final boolean htmlEscape;
@@ -108,8 +112,8 @@ class OptionWriter {
 	 * @param labelProperty the name of the property used to render {@code option} labels
 	 * (optional)
 	 */
-	public OptionWriter(
-			Object optionSource, BindStatus bindStatus, String valueProperty, String labelProperty, boolean htmlEscape) {
+	public OptionWriter(Object optionSource, BindStatus bindStatus,
+			@Nullable String valueProperty, @Nullable String labelProperty, boolean htmlEscape) {
 
 		Assert.notNull(optionSource, "'optionSource' must not be null");
 		Assert.notNull(bindStatus, "'bindStatus' must not be null");
@@ -216,7 +220,9 @@ class OptionWriter {
 	 * Render an HTML '{@code option}' with the supplied value and label. Marks the
 	 * value as 'selected' if either the item itself or its value match the bound value.
 	 */
-	private void renderOption(TagWriter tagWriter, Object item, Object value, Object label) throws JspException {
+	private void renderOption(TagWriter tagWriter, Object item, @Nullable Object value, @Nullable Object label)
+			throws JspException {
+
 		tagWriter.startTag("option");
 		writeCommonAttributes(tagWriter);
 
@@ -242,7 +248,7 @@ class OptionWriter {
 	 * Determine the display value of the supplied {@code Object},
 	 * HTML-escaped as required.
 	 */
-	private String getDisplayString(Object value) {
+	private String getDisplayString(@Nullable Object value) {
 		PropertyEditor editor = (value != null ? this.bindStatus.findEditor(value.getClass()) : null);
 		return ValueFormatter.getDisplayString(value, editor, this.htmlEscape);
 	}
@@ -259,7 +265,7 @@ class OptionWriter {
 	 * Determine whether the supplied values matched the selected value.
 	 * <p>Delegates to {@link SelectedValueComparator#isSelected}.
 	 */
-	private boolean isOptionSelected(Object resolvedValue) {
+	private boolean isOptionSelected(@Nullable Object resolvedValue) {
 		return SelectedValueComparator.isSelected(this.bindStatus, resolvedValue);
 	}
 

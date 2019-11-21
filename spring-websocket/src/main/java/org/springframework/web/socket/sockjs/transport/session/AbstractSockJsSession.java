@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.core.NestedExceptionUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -57,8 +58,8 @@ public abstract class AbstractSockJsSession implements SockJsSession {
 
 	/**
 	 * Log category to use on network IO exceptions after a client has gone away.
-	 * <p>The Servlet API does not provide notifications when a client disconnects;
-	 * see <a href="https://java.net/jira/browse/SERVLET_SPEC-44">SERVLET_SPEC-44</a>.
+	 * <p>Servlet containers dn't expose a a client disconnected callback, see
+	 * <a href="https://github.com/eclipse-ee4j/servlet-api/issues/44">eclipse-ee4j/servlet-api#44</a>.
 	 * Therefore network IO failures may occur simply because a client has gone away,
 	 * and that can fill the logs with unnecessary stack traces.
 	 * <p>We make a best effort to identify such network failures, on a per-server
@@ -73,10 +74,13 @@ public abstract class AbstractSockJsSession implements SockJsSession {
 	 * Tomcat: ClientAbortException or EOFException
 	 * Jetty: EofException
 	 * WildFly, GlassFish: java.io.IOException "Broken pipe" (already covered)
+	 * <p>TODO:
+	 * This definition is currently duplicated between HttpWebHandlerAdapter
+	 * and AbstractSockJsSession. It is a candidate for a common utility class.
 	 * @see #indicatesDisconnectedClient(Throwable)
 	 */
 	private static final Set<String> DISCONNECTED_CLIENT_EXCEPTIONS =
-			new HashSet<String>(Arrays.asList("ClientAbortException", "EOFException", "EofException"));
+			new HashSet<>(Arrays.asList("ClientAbortException", "EOFException", "EofException"));
 
 
 	/**
@@ -95,7 +99,7 @@ public abstract class AbstractSockJsSession implements SockJsSession {
 
 	private final WebSocketHandler handler;
 
-	private final Map<String, Object> attributes = new ConcurrentHashMap<String, Object>();
+	private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
 	private volatile State state = State.NEW;
 
@@ -103,8 +107,10 @@ public abstract class AbstractSockJsSession implements SockJsSession {
 
 	private volatile long timeLastActive = this.timeCreated;
 
+	@Nullable
 	private ScheduledFuture<?> heartbeatFuture;
 
+	@Nullable
 	private HeartbeatTask heartbeatTask;
 
 	private volatile boolean heartbeatDisabled;
@@ -113,13 +119,13 @@ public abstract class AbstractSockJsSession implements SockJsSession {
 	/**
 	 * Create a new instance.
 	 * @param id the session ID
-	 * @param config SockJS service configuration options
+	 * @param config the SockJS service configuration options
 	 * @param handler the recipient of SockJS messages
 	 * @param attributes attributes from the HTTP handshake to associate with the WebSocket
 	 * session; the provided attributes are copied, the original map is not used.
 	 */
 	public AbstractSockJsSession(String id, SockJsServiceConfig config, WebSocketHandler handler,
-			Map<String, Object> attributes) {
+			@Nullable Map<String, Object> attributes) {
 
 		Assert.notNull(id, "Session id must not be null");
 		Assert.notNull(config, "SockJsServiceConfig must not be null");
@@ -245,7 +251,7 @@ public abstract class AbstractSockJsSession implements SockJsSession {
 		cancelHeartbeat();
 	}
 
-	public void sendHeartbeat() throws SockJsTransportFailureException {
+	protected void sendHeartbeat() throws SockJsTransportFailureException {
 		synchronized (this.responseLock) {
 			if (isActive() && !this.heartbeatDisabled) {
 				writeFrame(SockJsFrame.heartbeatFrame());
@@ -370,7 +376,7 @@ public abstract class AbstractSockJsSession implements SockJsSession {
 	}
 
 	public void delegateMessages(String... messages) throws SockJsMessageDeliveryException {
-		List<String> undelivered = new ArrayList<String>(Arrays.asList(messages));
+		List<String> undelivered = new ArrayList<>(Arrays.asList(messages));
 		for (String message : messages) {
 			try {
 				if (isClosed()) {

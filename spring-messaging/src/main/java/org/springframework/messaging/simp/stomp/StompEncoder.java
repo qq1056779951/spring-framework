@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.messaging.simp.stomp;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,9 +28,10 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.simp.SimpLogging;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
@@ -49,13 +51,12 @@ public class StompEncoder  {
 
 	private static final byte COLON = ':';
 
-	private static final Log logger = LogFactory.getLog(StompEncoder.class);
+	private static final Log logger = SimpLogging.forLogName(StompEncoder.class);
 
 	private static final int HEADER_KEY_CACHE_LIMIT = 32;
 
 
-	private final Map<String, byte[]> headerKeyAccessCache =
-			new ConcurrentHashMap<String, byte[]>(HEADER_KEY_CACHE_LIMIT);
+	private final Map<String, byte[]> headerKeyAccessCache = new ConcurrentHashMap<>(HEADER_KEY_CACHE_LIMIT);
 
 	@SuppressWarnings("serial")
 	private final Map<String, byte[]> headerKeyUpdateCache =
@@ -74,7 +75,7 @@ public class StompEncoder  {
 
 
 	/**
-	 * Encodes the given STOMP {@code message} into a {@code byte[]}
+	 * Encodes the given STOMP {@code message} into a {@code byte[]}.
 	 * @param message the message to encode
 	 * @return the encoded message
 	 */
@@ -107,7 +108,7 @@ public class StompEncoder  {
 					throw new IllegalStateException("Missing STOMP command: " + headers);
 				}
 
-				output.write(command.toString().getBytes(StompDecoder.UTF8_CHARSET));
+				output.write(command.toString().getBytes(StandardCharsets.UTF_8));
 				output.write(LF);
 				writeHeaders(command, headers, payload, output);
 				output.write(LF);
@@ -137,7 +138,8 @@ public class StompEncoder  {
 			return;
 		}
 
-		boolean shouldEscape = (command != StompCommand.CONNECT && command != StompCommand.CONNECTED);
+		boolean shouldEscape = (command != StompCommand.CONNECT && command != StompCommand.STOMP
+				&& command != StompCommand.CONNECTED);
 
 		for (Entry<String, List<String>> entry : nativeHeaders.entrySet()) {
 			if (command.requiresContentLength() && "content-length".equals(entry.getKey())) {
@@ -145,7 +147,7 @@ public class StompEncoder  {
 			}
 
 			List<String> values = entry.getValue();
-			if (StompCommand.CONNECT.equals(command) &&
+			if ((StompCommand.CONNECT.equals(command) || StompCommand.STOMP.equals(command)) &&
 					StompHeaderAccessor.STOMP_PASSCODE_HEADER.equals(entry.getKey())) {
 				values = Collections.singletonList(StompHeaderAccessor.getPasscode(headers));
 			}
@@ -161,8 +163,8 @@ public class StompEncoder  {
 
 		if (command.requiresContentLength()) {
 			int contentLength = payload.length;
-			output.write("content-length:".getBytes(StompDecoder.UTF8_CHARSET));
-			output.write(Integer.toString(contentLength).getBytes(StompDecoder.UTF8_CHARSET));
+			output.write("content-length:".getBytes(StandardCharsets.UTF_8));
+			output.write(Integer.toString(contentLength).getBytes(StandardCharsets.UTF_8));
 			output.write(LF);
 		}
 	}
@@ -175,7 +177,7 @@ public class StompEncoder  {
 		synchronized (this.headerKeyUpdateCache) {
 			byte[] bytes = this.headerKeyUpdateCache.get(inputToUse);
 			if (bytes == null) {
-				bytes = inputToUse.getBytes(StompDecoder.UTF8_CHARSET);
+				bytes = inputToUse.getBytes(StandardCharsets.UTF_8);
 				this.headerKeyAccessCache.put(inputToUse, bytes);
 				this.headerKeyUpdateCache.put(inputToUse, bytes);
 			}
@@ -185,12 +187,12 @@ public class StompEncoder  {
 
 	private byte[] encodeHeaderValue(String input, boolean escape) {
 		String inputToUse = (escape ? escape(input) : input);
-		return inputToUse.getBytes(StompDecoder.UTF8_CHARSET);
+		return inputToUse.getBytes(StandardCharsets.UTF_8);
 	}
 
 	/**
 	 * See STOMP Spec 1.2:
-	 * <a href="http://stomp.github.io/stomp-specification-1.2.html#Value_Encoding">"Value Encoding"</a>.
+	 * <a href="https://stomp.github.io/stomp-specification-1.2.html#Value_Encoding">"Value Encoding"</a>.
 	 */
 	private String escape(String inString) {
 		StringBuilder sb = null;
@@ -219,7 +221,7 @@ public class StompEncoder  {
 		return (sb != null ? sb.toString() : inString);
 	}
 
-	private StringBuilder getStringBuilder(StringBuilder sb, String inString, int i) {
+	private StringBuilder getStringBuilder(@Nullable StringBuilder sb, String inString, int i) {
 		if (sb == null) {
 			sb = new StringBuilder(inString.length());
 			sb.append(inString.substring(0, i));

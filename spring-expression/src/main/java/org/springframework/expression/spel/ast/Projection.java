@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,7 @@ import org.springframework.expression.TypedValue;
 import org.springframework.expression.spel.ExpressionState;
 import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.expression.spel.SpelMessage;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
@@ -71,7 +72,7 @@ public class Projection extends SpelNodeImpl {
 		// eg. {'a':'y','b':'n'}.![value=='y'?key:null]" == ['a', null]
 		if (operand instanceof Map) {
 			Map<?, ?> mapData = (Map<?, ?>) operand;
-			List<Object> result = new ArrayList<Object>();
+			List<Object> result = new ArrayList<>();
 			for (Map.Entry<?, ?> entry : mapData.entrySet()) {
 				try {
 					state.pushActiveContextObject(new TypedValue(entry));
@@ -90,7 +91,7 @@ public class Projection extends SpelNodeImpl {
 			Iterable<?> data = (operand instanceof Iterable ?
 					(Iterable<?>) operand : Arrays.asList(ObjectUtils.toObjectArray(operand)));
 
-			List<Object> result = new ArrayList<Object>();
+			List<Object> result = new ArrayList<>();
 			int idx = 0;
 			Class<?> arrayElementType = null;
 			for (Object element : data) {
@@ -138,7 +139,7 @@ public class Projection extends SpelNodeImpl {
 		return "![" + getChild(0).toStringAST() + "]";
 	}
 
-	private Class<?> determineCommonType(Class<?> oldType, Class<?> newType) {
+	private Class<?> determineCommonType(@Nullable Class<?> oldType, Class<?> newType) {
 		if (oldType == null) {
 			return newType;
 		}

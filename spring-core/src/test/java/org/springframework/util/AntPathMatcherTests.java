@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,7 +53,7 @@ public class AntPathMatcherTests {
 		// test exact matching
 		assertTrue(pathMatcher.match("test", "test"));
 		assertTrue(pathMatcher.match("/test", "/test"));
-		assertTrue(pathMatcher.match("http://example.org", "http://example.org")); // SPR-14141
+		assertTrue(pathMatcher.match("https://example.org", "https://example.org")); // SPR-14141
 		assertFalse(pathMatcher.match("/test.jpg", "test.jpg"));
 		assertFalse(pathMatcher.match("test", "/test"));
 		assertFalse(pathMatcher.match("/test", "test"));
@@ -331,7 +331,7 @@ public class AntPathMatcherTests {
 		assertEquals(Collections.singletonMap("hotel", "1"), result);
 
 		result = pathMatcher.extractUriTemplateVariables("/hotels/{hotel}/bookings/{booking}", "/hotels/1/bookings/2");
-		Map<String, String> expected = new LinkedHashMap<String, String>();
+		Map<String, String> expected = new LinkedHashMap<>();
 		expected.put("hotel", "1");
 		expected.put("booking", "2");
 		assertEquals(expected, result);
@@ -349,7 +349,7 @@ public class AntPathMatcherTests {
 		assertEquals(Collections.singletonMap("B", "b"), result);
 
 		result = pathMatcher.extractUriTemplateVariables("/{name}.{extension}", "/test.html");
-		expected = new LinkedHashMap<String, String>();
+		expected = new LinkedHashMap<>();
 		expected.put("name", "test");
 		expected.put("extension", "html");
 		assertEquals(expected, result);
@@ -499,7 +499,7 @@ public class AntPathMatcherTests {
 	@Test
 	public void patternComparatorSort() {
 		Comparator<String> comparator = pathMatcher.getPatternComparator("/hotels/new");
-		List<String> paths = new ArrayList<String>(3);
+		List<String> paths = new ArrayList<>(3);
 
 		paths.add(null);
 		paths.add("/hotels/new");
@@ -679,6 +679,16 @@ public class AntPathMatcherTests {
 		pathMatcher.setPathSeparator(".");
 		assertEquals("Extension mapping should be disabled with \".\" as path separator",
 				"/*.html.hotel.*", pathMatcher.combine("/*.html", "hotel.*"));
+	}
+
+	@Test // gh-22959
+	public void isPattern() {
+		assertTrue(pathMatcher.isPattern("/test/*"));
+		assertTrue(pathMatcher.isPattern("/test/**/name"));
+		assertTrue(pathMatcher.isPattern("/test?"));
+		assertTrue(pathMatcher.isPattern("/test/{name}"));
+		assertFalse(pathMatcher.isPattern("/test/name"));
+		assertFalse(pathMatcher.isPattern("/test/foo{bar"));
 	}
 
 }

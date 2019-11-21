@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.web.client;
 
 import java.io.EOFException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
 import okhttp3.mockwebserver.Dispatcher;
@@ -38,14 +39,10 @@ import static org.junit.Assert.*;
  */
 public class AbstractMockWebServerTestCase {
 
-	private static final Charset UTF_8 = Charset.forName("UTF-8");
-
-	private static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
-
-	protected static final String helloWorld = "H\u00e9llo W\u00f6rld";
-
 	protected static final MediaType textContentType =
 			new MediaType("text", "plain", Collections.singletonMap("charset", "UTF-8"));
+
+	protected static final String helloWorld = "H\u00e9llo W\u00f6rld";
 
 	private MockWebServer server;
 
@@ -93,7 +90,7 @@ public class AbstractMockWebServerTestCase {
 				Integer.parseInt(request.getHeader("Content-Length")) > 0);
 		String requestContentType = request.getHeader("Content-Type");
 		assertNotNull("No content-type", requestContentType);
-		Charset charset = ISO_8859_1;
+		Charset charset = StandardCharsets.ISO_8859_1;
 		if (requestContentType.contains("charset=")) {
 			String charsetName = requestContentType.split("charset=")[1];
 			charset = Charset.forName(charsetName);
@@ -124,9 +121,9 @@ public class AbstractMockWebServerTestCase {
 	}
 
 	private MockResponse multipartRequest(RecordedRequest request) {
-		String contentType = request.getHeader("Content-Type");
-		assertTrue(contentType.startsWith("multipart/form-data"));
-		String boundary = contentType.split("boundary=")[1];
+		MediaType mediaType = MediaType.parseMediaType(request.getHeader("Content-Type"));
+		assertTrue(mediaType.isCompatibleWith(MediaType.MULTIPART_FORM_DATA));
+		String boundary = mediaType.getParameter("boundary");
 		Buffer body = request.getBody();
 		try {
 			assertPart(body, "form-data", boundary, "name 1", "text/plain", "value 1");
@@ -168,7 +165,7 @@ public class AbstractMockWebServerTestCase {
 	}
 
 	private MockResponse formRequest(RecordedRequest request) {
-		assertEquals("application/x-www-form-urlencoded", request.getHeader("Content-Type"));
+		assertEquals("application/x-www-form-urlencoded;charset=UTF-8", request.getHeader("Content-Type"));
 		String body = request.getBody().readUtf8();
 		assertThat(body, Matchers.containsString("name+1=value+1"));
 		assertThat(body, Matchers.containsString("name+2=value+2%2B1"));
@@ -184,7 +181,7 @@ public class AbstractMockWebServerTestCase {
 				Integer.parseInt(request.getHeader("Content-Length")) > 0);
 		String requestContentType = request.getHeader("Content-Type");
 		assertNotNull("No content-type", requestContentType);
-		Charset charset = ISO_8859_1;
+		Charset charset = StandardCharsets.ISO_8859_1;
 		if (requestContentType.contains("charset=")) {
 			String charsetName = requestContentType.split("charset=")[1];
 			charset = Charset.forName(charsetName);
@@ -203,7 +200,7 @@ public class AbstractMockWebServerTestCase {
 				Integer.parseInt(request.getHeader("Content-Length")) > 0);
 		String requestContentType = request.getHeader("Content-Type");
 		assertNotNull("No content-type", requestContentType);
-		Charset charset = ISO_8859_1;
+		Charset charset = StandardCharsets.ISO_8859_1;
 		if (requestContentType.contains("charset=")) {
 			String charsetName = requestContentType.split("charset=")[1];
 			charset = Charset.forName(charsetName);
@@ -218,7 +215,7 @@ public class AbstractMockWebServerTestCase {
 		@Override
 		public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
 			try {
-				byte[] helloWorldBytes = helloWorld.getBytes(UTF_8);
+				byte[] helloWorldBytes = helloWorld.getBytes(StandardCharsets.UTF_8);
 
 				if (request.getPath().equals("/get")) {
 					return getRequest(request, helloWorldBytes, textContentType.toString());
@@ -243,6 +240,9 @@ public class AbstractMockWebServerTestCase {
 				}
 				else if (request.getPath().equals("/status/notfound")) {
 					return new MockResponse().setResponseCode(404);
+				}
+				else if (request.getPath().equals("/status/badrequest")) {
+					return new MockResponse().setResponseCode(400);
 				}
 				else if (request.getPath().equals("/status/server")) {
 					return new MockResponse().setResponseCode(500);

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.websocket.Decoder;
 import javax.websocket.Encoder;
 import javax.websocket.Endpoint;
@@ -30,6 +31,7 @@ import javax.websocket.server.ServerEndpointConfig;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.socket.handler.BeanCreatingHandlerProvider;
 
@@ -57,19 +59,21 @@ public class ServerEndpointRegistration extends ServerEndpointConfig.Configurato
 
 	private final String path;
 
+	@Nullable
 	private final Endpoint endpoint;
 
+	@Nullable
 	private final BeanCreatingHandlerProvider<Endpoint> endpointProvider;
 
-	private List<String> subprotocols = new ArrayList<String>(0);
+	private List<String> subprotocols = new ArrayList<>(0);
 
-	private List<Extension> extensions = new ArrayList<Extension>(0);
+	private List<Extension> extensions = new ArrayList<>(0);
 
-	private List<Class<? extends Encoder>> encoders = new ArrayList<Class<? extends Encoder>>(0);
+	private List<Class<? extends Encoder>> encoders = new ArrayList<>(0);
 
-	private List<Class<? extends Decoder>> decoders = new ArrayList<Class<? extends Decoder>>(0);
+	private List<Class<? extends Decoder>> decoders = new ArrayList<>(0);
 
-	private final Map<String, Object> userProperties = new HashMap<String, Object>(4);
+	private final Map<String, Object> userProperties = new HashMap<>(4);
 
 
 	/**
@@ -97,7 +101,7 @@ public class ServerEndpointRegistration extends ServerEndpointConfig.Configurato
 		Assert.notNull(endpointClass, "Endpoint Class must not be null");
 		this.path = path;
 		this.endpoint = null;
-		this.endpointProvider = new BeanCreatingHandlerProvider<Endpoint>(endpointClass);
+		this.endpointProvider = new BeanCreatingHandlerProvider<>(endpointClass);
 	}
 
 
@@ -110,11 +114,23 @@ public class ServerEndpointRegistration extends ServerEndpointConfig.Configurato
 
 	@Override
 	public Class<? extends Endpoint> getEndpointClass() {
-		return (this.endpoint != null ? this.endpoint.getClass() : this.endpointProvider.getHandlerType());
+		if (this.endpoint != null) {
+			return this.endpoint.getClass();
+		}
+		else {
+			Assert.state(this.endpointProvider != null, "No endpoint set");
+			return this.endpointProvider.getHandlerType();
+		}
 	}
 
 	public Endpoint getEndpoint() {
-		return (this.endpoint != null) ? this.endpoint : this.endpointProvider.getHandler();
+		if (this.endpoint != null) {
+			return this.endpoint;
+		}
+		else {
+			Assert.state(this.endpointProvider != null, "No endpoint set");
+			return this.endpointProvider.getHandler();
+		}
 	}
 
 	public void setSubprotocols(List<String> subprotocols) {

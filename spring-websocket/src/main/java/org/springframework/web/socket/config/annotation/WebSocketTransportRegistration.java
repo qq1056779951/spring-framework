@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.lang.Nullable;
 import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
 
 /**
@@ -30,31 +31,28 @@ import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
  */
 public class WebSocketTransportRegistration {
 
+	@Nullable
 	private Integer messageSizeLimit;
 
+	@Nullable
 	private Integer sendTimeLimit;
 
+	@Nullable
 	private Integer sendBufferSizeLimit;
 
-	private final List<WebSocketHandlerDecoratorFactory> decoratorFactories =
-			new ArrayList<WebSocketHandlerDecoratorFactory>(2);
+	@Nullable
+	private Integer timeToFirstMessage;
+
+	private final List<WebSocketHandlerDecoratorFactory> decoratorFactories = new ArrayList<>(2);
 
 
 	/**
-	 * Configure the maximum size for an incoming sub-protocol message.
-	 * For example a STOMP message may be received as multiple WebSocket messages
-	 * or multiple HTTP POST requests when SockJS fallback options are in use.
-	 * <p>In theory a WebSocket message can be almost unlimited in size.
-	 * In practice WebSocket servers impose limits on incoming message size.
-	 * STOMP clients for example tend to split large messages around 16K
-	 * boundaries. Therefore a server must be able to buffer partial content
-	 * and decode when enough data is received. Use this property to configure
-	 * the max size of the buffer to use.
+	 * Configure the maximum size of an inbound sub-protocol message, such as
+	 * a STOMP frame which may be aggregated from multiple WebSocket messages.
 	 * <p>The default value is 64K (i.e. 64 * 1024).
-	 * <p><strong>NOTE</strong> that the current version 1.2 of the STOMP spec
-	 * does not specifically discuss how to send STOMP messages over WebSocket.
-	 * Version 2 of the spec will but in the mean time existing client libraries
-	 * have already established a practice that servers must handle.
+	 * <p><strong>Note:</strong> This is not the same as the size of an
+	 * individual WebSocket message which needs to be configured at the WebSocket
+	 * server level instead. See the reference documentation for details.
 	 */
 	public WebSocketTransportRegistration setMessageSizeLimit(int messageSizeLimit) {
 		this.messageSizeLimit = messageSizeLimit;
@@ -64,6 +62,7 @@ public class WebSocketTransportRegistration {
 	/**
 	 * Protected accessor for internal use.
 	 */
+	@Nullable
 	protected Integer getMessageSizeLimit() {
 		return this.messageSizeLimit;
 	}
@@ -105,6 +104,7 @@ public class WebSocketTransportRegistration {
 	/**
 	 * Protected accessor for internal use.
 	 */
+	@Nullable
 	protected Integer getSendTimeLimit() {
 		return this.sendTimeLimit;
 	}
@@ -141,8 +141,33 @@ public class WebSocketTransportRegistration {
 	/**
 	 * Protected accessor for internal use.
 	 */
+	@Nullable
 	protected Integer getSendBufferSizeLimit() {
 		return this.sendBufferSizeLimit;
+	}
+
+	/**
+	 * Set the maximum time allowed in milliseconds after the WebSocket connection
+	 * is established and before the first sub-protocol message is received.
+	 * <p>This handler is for WebSocket connections that use a sub-protocol.
+	 * Therefore, we expect the client to send at least one sub-protocol message
+	 * in the beginning, or else we assume the connection isn't doing well, e.g.
+	 * proxy issue, slow network, and can be closed.
+	 * <p>By default this is set to {@code 60,000} (1 minute).
+	 * @param timeToFirstMessage the maximum time allowed in milliseconds
+	 * @since 5.1
+	 */
+	public WebSocketTransportRegistration setTimeToFirstMessage(int timeToFirstMessage) {
+		this.timeToFirstMessage = timeToFirstMessage;
+		return this;
+	}
+
+	/**
+	 * Protected accessor for internal use.
+	 */
+	@Nullable
+	protected Integer getTimeToFirstMessage() {
+		return this.timeToFirstMessage;
 	}
 
 	/**
@@ -153,9 +178,7 @@ public class WebSocketTransportRegistration {
 	 * @since 4.1.2
 	 */
 	public WebSocketTransportRegistration setDecoratorFactories(WebSocketHandlerDecoratorFactory... factories) {
-		if (factories != null) {
-			this.decoratorFactories.addAll(Arrays.asList(factories));
-		}
+		this.decoratorFactories.addAll(Arrays.asList(factories));
 		return this;
 	}
 

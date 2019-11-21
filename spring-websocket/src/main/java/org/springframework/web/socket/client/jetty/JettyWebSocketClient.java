@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,6 +32,7 @@ import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureTask;
 import org.springframework.web.socket.WebSocketExtension;
@@ -60,6 +61,7 @@ public class JettyWebSocketClient extends AbstractWebSocketClient implements Lif
 
 	private final org.eclipse.jetty.websocket.client.WebSocketClient client;
 
+	@Nullable
 	private AsyncListenableTaskExecutor taskExecutor = new SimpleAsyncTaskExecutor();
 
 
@@ -86,13 +88,14 @@ public class JettyWebSocketClient extends AbstractWebSocketClient implements Lif
 	 * {@code doHandshake} methods will block until the connection is established.
 	 * <p>By default an instance of {@code SimpleAsyncTaskExecutor} is used.
 	 */
-	public void setTaskExecutor(AsyncListenableTaskExecutor taskExecutor) {
+	public void setTaskExecutor(@Nullable AsyncListenableTaskExecutor taskExecutor) {
 		this.taskExecutor = taskExecutor;
 	}
 
 	/**
 	 * Return the configured {@link TaskExecutor}.
 	 */
+	@Nullable
 	public AsyncListenableTaskExecutor getTaskExecutor() {
 		return this.taskExecutor;
 	}
@@ -144,37 +147,33 @@ public class JettyWebSocketClient extends AbstractWebSocketClient implements Lif
 			request.addExtensions(new WebSocketToJettyExtensionConfigAdapter(e));
 		}
 
-		for (String header : headers.keySet()) {
-			request.setHeader(header, headers.get(header));
-		}
+		headers.forEach(request::setHeader);
 
 		Principal user = getUser();
 		final JettyWebSocketSession wsSession = new JettyWebSocketSession(attributes, user);
 		final JettyWebSocketHandlerAdapter listener = new JettyWebSocketHandlerAdapter(wsHandler, wsSession);
 
-		Callable<WebSocketSession> connectTask = new Callable<WebSocketSession>() {
-			@Override
-			public WebSocketSession call() throws Exception {
-				Future<Session> future = client.connect(listener, uri, request);
-				future.get();
-				return wsSession;
-			}
+		Callable<WebSocketSession> connectTask = () -> {
+			Future<Session> future = this.client.connect(listener, uri, request);
+			future.get();
+			return wsSession;
 		};
 
 		if (this.taskExecutor != null) {
 			return this.taskExecutor.submitListenable(connectTask);
 		}
 		else {
-			ListenableFutureTask<WebSocketSession> task = new ListenableFutureTask<WebSocketSession>(connectTask);
+			ListenableFutureTask<WebSocketSession> task = new ListenableFutureTask<>(connectTask);
 			task.run();
 			return task;
 		}
 	}
 
 	/**
-	 * @return the user to make available through {@link WebSocketSession#getPrincipal()};
-	 * 	by default this method returns {@code null}
+	 * Return the user to make available through {@link WebSocketSession#getPrincipal()}.
+	 * By default this method returns {@code null}
 	 */
+	@Nullable
 	protected Principal getUser() {
 		return null;
 	}

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.web.context.request;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -92,31 +93,6 @@ public class ServletRequestAttributesTests {
 		attrs.requestCompleted();
 		request.close();
 		attrs.setAttribute(KEY, VALUE, RequestAttributes.SCOPE_SESSION);
-		assertSame(VALUE, session.getAttribute(KEY));
-	}
-
-	@Test
-	public void setGlobalSessionScopedAttribute() throws Exception {
-		MockHttpSession session = new MockHttpSession();
-		session.setAttribute(KEY, VALUE);
-		MockHttpServletRequest request = new MockHttpServletRequest();
-		request.setSession(session);
-		ServletRequestAttributes attrs = new ServletRequestAttributes(request);
-		attrs.setAttribute(KEY, VALUE, RequestAttributes.SCOPE_GLOBAL_SESSION);
-		assertSame(VALUE, session.getAttribute(KEY));
-	}
-
-	@Test
-	public void setGlobalSessionScopedAttributeAfterCompletion() throws Exception {
-		MockHttpSession session = new MockHttpSession();
-		session.setAttribute(KEY, VALUE);
-		MockHttpServletRequest request = new MockHttpServletRequest();
-		request.setSession(session);
-		ServletRequestAttributes attrs = new ServletRequestAttributes(request);
-		assertSame(VALUE, attrs.getAttribute(KEY, RequestAttributes.SCOPE_GLOBAL_SESSION));
-		attrs.requestCompleted();
-		request.close();
-		attrs.setAttribute(KEY, VALUE, RequestAttributes.SCOPE_GLOBAL_SESSION);
 		assertSame(VALUE, session.getAttribute(KEY));
 	}
 

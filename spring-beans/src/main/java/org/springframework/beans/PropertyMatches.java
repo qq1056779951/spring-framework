@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,6 @@
 package org.springframework.beans;
 
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -43,7 +42,7 @@ import org.springframework.util.StringUtils;
  */
 public abstract class PropertyMatches {
 
-	/** Default maximum property distance: 2 */
+	/** Default maximum property distance: 2. */
 	public static final int DEFAULT_MAX_DISTANCE = 2;
 
 
@@ -92,7 +91,7 @@ public abstract class PropertyMatches {
 
 	private final String propertyName;
 
-	private String[] possibleMatches;
+	private final String[] possibleMatches;
 
 
 	/**
@@ -201,7 +200,7 @@ public abstract class PropertyMatches {
 		 * @param maxDistance the maximum distance to accept
 		 */
 		private static String[] calculateMatches(String name, PropertyDescriptor[] descriptors, int maxDistance) {
-			List<String> candidates = new ArrayList<String>();
+			List<String> candidates = new ArrayList<>();
 			for (PropertyDescriptor pd : descriptors) {
 				if (pd.getWriteMethod() != null) {
 					String possibleAlternative = pd.getName();
@@ -237,14 +236,11 @@ public abstract class PropertyMatches {
 		}
 
 		private static String[] calculateMatches(final String name, Class<?> clazz, final int maxDistance) {
-			final List<String> candidates = new ArrayList<String>();
-			ReflectionUtils.doWithFields(clazz, new ReflectionUtils.FieldCallback() {
-				@Override
-				public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
-					String possibleAlternative = field.getName();
-					if (calculateStringDistance(name, possibleAlternative) <= maxDistance) {
-						candidates.add(possibleAlternative);
-					}
+			final List<String> candidates = new ArrayList<>();
+			ReflectionUtils.doWithFields(clazz, field -> {
+				String possibleAlternative = field.getName();
+				if (calculateStringDistance(name, possibleAlternative) <= maxDistance) {
+					candidates.add(possibleAlternative);
 				}
 			});
 			Collections.sort(candidates);

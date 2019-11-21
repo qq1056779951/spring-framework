@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,6 +33,7 @@ import org.springframework.test.context.TestContext;
 import org.springframework.test.context.TestExecutionListener;
 import org.springframework.test.context.support.AbstractTestExecutionListener;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
+import org.springframework.util.Assert;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -191,11 +192,9 @@ public class ServletTestExecutionListener extends AbstractTestExecutionListener 
 		if (context instanceof WebApplicationContext) {
 			WebApplicationContext wac = (WebApplicationContext) context;
 			ServletContext servletContext = wac.getServletContext();
-			if (!(servletContext instanceof MockServletContext)) {
-				throw new IllegalStateException(String.format(
+			Assert.state(servletContext instanceof MockServletContext, () -> String.format(
 						"The WebApplicationContext for test context %s must be configured with a MockServletContext.",
 						testContext));
-			}
 
 			if (logger.isDebugEnabled()) {
 				logger.debug(String.format(

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 package org.springframework.scheduling.concurrent;
 
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -32,8 +33,10 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.core.task.AsyncListenableTaskExecutor;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.core.task.TaskRejectedException;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.SchedulingTaskExecutor;
 import org.springframework.util.Assert;
+import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureTask;
 
@@ -91,9 +94,15 @@ public class ThreadPoolTaskExecutor extends ExecutorConfigurationSupport
 
 	private boolean allowCoreThreadTimeOut = false;
 
+	@Nullable
 	private TaskDecorator taskDecorator;
 
+	@Nullable
 	private ThreadPoolExecutor threadPoolExecutor;
+
+	// Runnable decorator to user-level FutureTask, if different
+	private final Map<Runnable, Object> decoratedTaskMap =
+			new ConcurrentReferenceHashMap<>(16, ConcurrentReferenceHashMap.ReferenceType.WEAK);
 
 
 	/**
@@ -222,7 +231,11 @@ public class ThreadPoolTaskExecutor extends ExecutorConfigurationSupport
 					queue, threadFactory, rejectedExecutionHandler) {
 				@Override
 				public void execute(Runnable command) {
-					super.execute(taskDecorator.decorate(command));
+					Runnable decorated = taskDecorator.decorate(command);
+					if (decorated != command) {
+						decoratedTaskMap.put(decorated, command);
+					}
+					super.execute(decorated);
 				}
 			};
 		}
@@ -252,10 +265,10 @@ public class ThreadPoolTaskExecutor extends ExecutorConfigurationSupport
 	 */
 	protected BlockingQueue<Runnable> createQueue(int queueCapacity) {
 		if (queueCapacity > 0) {
-			return new LinkedBlockingQueue<Runnable>(queueCapacity);
+			return new LinkedBlockingQueue<>(queueCapacity);
 		}
 		else {
-			return new SynchronousQueue<Runnable>();
+			return new SynchronousQueue<>();
 		}
 	}
 
@@ -336,7 +349,7 @@ public class ThreadPoolTaskExecutor extends ExecutorConfigurationSupport
 	public ListenableFuture<?> submitListenable(Runnable task) {
 		ExecutorService executor = getThreadPoolExecutor();
 		try {
-			ListenableFutureTask<Object> future = new ListenableFutureTask<Object>(task, null);
+			ListenableFutureTask<Object> future = new ListenableFutureTask<>(task, null);
 			executor.execute(future);
 			return future;
 		}
@@ -349,7 +362,7 @@ public class ThreadPoolTaskExecutor extends ExecutorConfigurationSupport
 	public <T> ListenableFuture<T> submitListenable(Callable<T> task) {
 		ExecutorService executor = getThreadPoolExecutor();
 		try {
-			ListenableFutureTask<T> future = new ListenableFutureTask<T>(task);
+			ListenableFutureTask<T> future = new ListenableFutureTask<>(task);
 			executor.execute(future);
 			return future;
 		}
@@ -358,12 +371,14 @@ public class ThreadPoolTaskExecutor extends ExecutorConfigurationSupport
 		}
 	}
 
-	/**
-	 * This task executor prefers short-lived work units.
-	 */
 	@Override
-	public boolean prefersShortLivedTasks() {
-		return true;
+	protected void cancelRemainingTask(Runnable task) {
+		super.cancelRemainingTask(task);
+		// Cancel associated user-level Future handle as well
+		Object original = this.decoratedTaskMap.get(task);
+		if (original instanceof Future) {
+			((Future<?>) original).cancel(true);
+		}
 	}
 
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.test.web.client.match;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -100,7 +101,7 @@ public class ContentRequestMatchersTests {
 		String body = "name+1=value+1&name+2=value+A&name+2=value+B&name+3";
 
 		this.request.getHeaders().setContentType(MediaType.parseMediaType(contentType));
-		this.request.getBody().write(body.getBytes(Charset.forName("UTF-8")));
+		this.request.getBody().write(body.getBytes(StandardCharsets.UTF_8));
 
 		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
 		map.add("name 1", "value 1");
@@ -139,6 +140,54 @@ public class ContentRequestMatchersTests {
 		this.request.getBody().write(content.getBytes());
 
 		MockRestRequestMatchers.content().node(hasXPath("/foo/bar/bar")).match(this.request);
+	}
+
+	@Test
+	public void testJsonLenientMatch() throws Exception {
+		String content = "{\n \"foo array\":[\"first\",\"second\"] , \"someExtraProperty\": \"which is allowed\" \n}";
+		this.request.getBody().write(content.getBytes());
+
+		MockRestRequestMatchers.content().json("{\n \"foo array\":[\"second\",\"first\"] \n}")
+				.match(this.request);
+		MockRestRequestMatchers.content().json("{\n \"foo array\":[\"second\",\"first\"] \n}", false)
+				.match(this.request);
+	}
+
+	@Test
+	public void testJsonStrictMatch() throws Exception {
+		String content = "{\n \"foo\": \"bar\", \"foo array\":[\"first\",\"second\"] \n}";
+		this.request.getBody().write(content.getBytes());
+
+		MockRestRequestMatchers
+				.content()
+				.json("{\n \"foo array\":[\"first\",\"second\"] , \"foo\": \"bar\" \n}", true)
+				.match(this.request);
+	}
+
+	@Test(expected = AssertionError.class)
+	public void testJsonLenientNoMatch() throws Exception {
+		String content = "{\n \"bar\" : \"foo\"  \n}";
+		this.request.getBody().write(content.getBytes());
+
+		MockRestRequestMatchers
+				.content()
+				.json("{\n \"foo\" : \"bar\"  \n}")
+				.match(this.request);
+		MockRestRequestMatchers
+				.content()
+				.json("{\n \"foo\" : \"bar\"  \n}", false)
+				.match(this.request);
+	}
+
+	@Test(expected = AssertionError.class)
+	public void testJsonStrictNoMatch() throws Exception {
+		String content = "{\n \"foo array\":[\"first\",\"second\"] , \"someExtraProperty\": \"which is NOT allowed\" \n}";
+		this.request.getBody().write(content.getBytes());
+
+		MockRestRequestMatchers
+				.content()
+				.json("{\n \"foo array\":[\"second\",\"first\"] \n}", true)
+				.match(this.request);
 	}
 
 }

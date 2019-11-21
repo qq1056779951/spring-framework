@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.context.event;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.ResolvableType;
+import org.springframework.lang.Nullable;
 
 /**
  * Interface to be implemented by objects that can manage a number of
@@ -81,6 +82,6 @@ public interface ApplicationEventMulticaster {
 	 * @param eventType the type of event (can be null)
 	 * @since 4.2
 	 */
-	void multicastEvent(ApplicationEvent event, ResolvableType eventType);
+	void multicastEvent(ApplicationEvent event, @Nullable ResolvableType eventType);
 
 }

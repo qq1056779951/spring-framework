@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,8 @@
 package org.springframework.web.context.request.async;
 
 
+import java.util.function.Consumer;
+
 import javax.servlet.AsyncEvent;
 
 import org.junit.Before;
@@ -25,7 +27,6 @@ import org.junit.Test;
 import org.springframework.mock.web.test.MockAsyncContext;
 import org.springframework.mock.web.test.MockHttpServletRequest;
 import org.springframework.mock.web.test.MockHttpServletResponse;
-import org.springframework.web.context.request.async.StandardServletAsyncWebRequest.ErrorHandler;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
@@ -105,7 +106,7 @@ public class StandardServletAsyncWebRequestTests {
 
 	@Test
 	public void startAsyncAfterCompleted() throws Exception {
-		this.asyncRequest.onComplete(new AsyncEvent(null));
+		this.asyncRequest.onComplete(new AsyncEvent(new MockAsyncContext(this.request, this.response)));
 		try {
 			this.asyncRequest.startAsync();
 			fail("expected exception");
@@ -117,7 +118,7 @@ public class StandardServletAsyncWebRequestTests {
 
 	@Test
 	public void onTimeoutDefaultBehavior() throws Exception {
-		this.asyncRequest.onTimeout(new AsyncEvent(null));
+		this.asyncRequest.onTimeout(new AsyncEvent(new MockAsyncContext(this.request, this.response)));
 		assertEquals(200, this.response.getStatus());
 	}
 
@@ -125,11 +126,21 @@ public class StandardServletAsyncWebRequestTests {
 	public void onTimeoutHandler() throws Exception {
 		Runnable timeoutHandler = mock(Runnable.class);
 		this.asyncRequest.addTimeoutHandler(timeoutHandler);
-		this.asyncRequest.onTimeout(new AsyncEvent(null));
+		this.asyncRequest.onTimeout(new AsyncEvent(new MockAsyncContext(this.request, this.response)));
 		verify(timeoutHandler).run();
 	}
 
-	@Test(expected=IllegalStateException.class)
+	@SuppressWarnings("unchecked")
+	@Test
+	public void onErrorHandler() throws Exception {
+		Consumer<Throwable> errorHandler = mock(Consumer.class);
+		this.asyncRequest.addErrorHandler(errorHandler);
+		Exception e = new Exception();
+		this.asyncRequest.onError(new AsyncEvent(new MockAsyncContext(this.request, this.response), e));
+		verify(errorHandler).accept(e);
+	}
+
+	@Test(expected = IllegalStateException.class)
 	public void setTimeoutDuringConcurrentHandling() {
 		this.asyncRequest.startAsync();
 		this.asyncRequest.setTimeout(25L);
@@ -141,7 +152,7 @@ public class StandardServletAsyncWebRequestTests {
 		this.asyncRequest.addCompletionHandler(handler);
 
 		this.asyncRequest.startAsync();
-		this.asyncRequest.onComplete(new AsyncEvent(null));
+		this.asyncRequest.onComplete(new AsyncEvent(this.request.getAsyncContext()));
 
 		verify(handler).run();
 		assertTrue(this.asyncRequest.isAsyncComplete());
@@ -152,14 +163,14 @@ public class StandardServletAsyncWebRequestTests {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void onErrorHandlerAfterOnErrorEvent() throws Exception {
-		ErrorHandler handler = mock(ErrorHandler.class);
-		this.asyncRequest.setErrorHandler(handler);
+		Consumer<Throwable> handler = mock(Consumer.class);
+		this.asyncRequest.addErrorHandler(handler);
 
 		this.asyncRequest.startAsync();
 		Exception e = new Exception();
 		this.asyncRequest.onError(new AsyncEvent(this.request.getAsyncContext(), e));
 
-		verify(handler).handle(e);
+		verify(handler).accept(e);
 	}
 
 	@Test

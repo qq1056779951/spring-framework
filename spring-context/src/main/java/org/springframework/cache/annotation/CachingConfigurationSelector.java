@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,11 +50,15 @@ public class CachingConfigurationSelector extends AdviceModeImportSelector<Enabl
 			"org.springframework.cache.aspectj.AspectJJCacheConfiguration";
 
 
-	private static final boolean jsr107Present = ClassUtils.isPresent(
-			"javax.cache.Cache", CachingConfigurationSelector.class.getClassLoader());
+	private static final boolean jsr107Present;
 
-	private static final boolean jcacheImplPresent = ClassUtils.isPresent(
-			PROXY_JCACHE_CONFIGURATION_CLASS, CachingConfigurationSelector.class.getClassLoader());
+	private static final boolean jcacheImplPresent;
+
+	static {
+		ClassLoader classLoader = CachingConfigurationSelector.class.getClassLoader();
+		jsr107Present = ClassUtils.isPresent("javax.cache.Cache", classLoader);
+		jcacheImplPresent = ClassUtils.isPresent(PROXY_JCACHE_CONFIGURATION_CLASS, classLoader);
+	}
 
 
 	/**
@@ -79,7 +83,7 @@ public class CachingConfigurationSelector extends AdviceModeImportSelector<Enabl
 	 * <p>Take care of adding the necessary JSR-107 import if it is available.
 	 */
 	private String[] getProxyImports() {
-		List<String> result = new ArrayList<String>(3);
+		List<String> result = new ArrayList<>(3);
 		result.add(AutoProxyRegistrar.class.getName());
 		result.add(ProxyCachingConfiguration.class.getName());
 		if (jsr107Present && jcacheImplPresent) {
@@ -93,7 +97,7 @@ public class CachingConfigurationSelector extends AdviceModeImportSelector<Enabl
 	 * <p>Take care of adding the necessary JSR-107 import if it is available.
 	 */
 	private String[] getAspectJImports() {
-		List<String> result = new ArrayList<String>(2);
+		List<String> result = new ArrayList<>(2);
 		result.add(CACHE_ASPECT_CONFIGURATION_CLASS_NAME);
 		if (jsr107Present && jcacheImplPresent) {
 			result.add(JCACHE_ASPECT_CONFIGURATION_CLASS_NAME);

@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2014 the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.web.servlet.view.xml;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamResult;
@@ -73,7 +74,7 @@ public class MarshallingViewTests {
 		Object toBeMarshalled = new Object();
 		String modelKey = "key";
 		view.setModelKey(modelKey);
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put(modelKey, toBeMarshalled);
 
 		MockHttpServletRequest request = new MockHttpServletRequest();
@@ -92,8 +93,8 @@ public class MarshallingViewTests {
 		String toBeMarshalled = "value";
 		String modelKey = "key";
 		view.setModelKey(modelKey);
-		Map<String, Object> model = new HashMap<String, Object>();
-		model.put(modelKey, new JAXBElement<String>(new QName("model"), String.class, toBeMarshalled));
+		Map<String, Object> model = new HashMap<>();
+		model.put(modelKey, new JAXBElement<>(new QName("model"), String.class, toBeMarshalled));
 
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		MockHttpServletResponse response = new MockHttpServletResponse();
@@ -111,7 +112,7 @@ public class MarshallingViewTests {
 		Object toBeMarshalled = new Object();
 		String modelKey = "key";
 		view.setModelKey("invalidKey");
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put(modelKey, toBeMarshalled);
 
 		MockHttpServletRequest request = new MockHttpServletRequest();
@@ -130,7 +131,7 @@ public class MarshallingViewTests {
 	@Test
 	public void renderNullModelValue() throws Exception {
 		String modelKey = "key";
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put(modelKey, null);
 
 		MockHttpServletRequest request = new MockHttpServletRequest();
@@ -151,7 +152,7 @@ public class MarshallingViewTests {
 		Object toBeMarshalled = new Object();
 		String modelKey = "key";
 		view.setModelKey(modelKey);
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put(modelKey, toBeMarshalled);
 
 		MockHttpServletRequest request = new MockHttpServletRequest();
@@ -172,7 +173,7 @@ public class MarshallingViewTests {
 	public void renderNoModelKey() throws Exception {
 		Object toBeMarshalled = new Object();
 		String modelKey = "key";
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put(modelKey, toBeMarshalled);
 
 		MockHttpServletRequest request = new MockHttpServletRequest();
@@ -190,7 +191,7 @@ public class MarshallingViewTests {
 	public void renderNoModelKeyAndBindingResultFirst() throws Exception {
 		Object toBeMarshalled = new Object();
 		String modelKey = "key";
-		Map<String, Object> model = new LinkedHashMap<String, Object>();
+		Map<String, Object> model = new LinkedHashMap<>();
 		model.put(BindingResult.MODEL_KEY_PREFIX + modelKey, new BeanPropertyBindingResult(toBeMarshalled, modelKey));
 		model.put(modelKey, toBeMarshalled);
 
@@ -210,7 +211,7 @@ public class MarshallingViewTests {
 	public void testRenderUnsupportedModel() throws Exception {
 		Object toBeMarshalled = new Object();
 		String modelKey = "key";
-		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> model = new HashMap<>();
 		model.put(modelKey, toBeMarshalled);
 
 		MockHttpServletRequest request = new MockHttpServletRequest();

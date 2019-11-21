@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.jdbc.datasource.lookup;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.sql.DataSource;
 
 import org.junit.Rule;
@@ -30,7 +31,7 @@ import static org.junit.Assert.*;
  * @author Rick Evans
  * @author Chris Beams
  */
-public final class MapDataSourceLookupTests {
+public class MapDataSourceLookupTests {
 
 	private static final String DATA_SOURCE_NAME = "dataSource";
 
@@ -50,7 +51,7 @@ public final class MapDataSourceLookupTests {
 
 	@Test
 	public void lookupSunnyDay() throws Exception {
-		Map<String, DataSource> dataSources = new HashMap<String, DataSource>();
+		Map<String, DataSource> dataSources = new HashMap<>();
 		StubDataSource expectedDataSource = new StubDataSource();
 		dataSources.put(DATA_SOURCE_NAME, expectedDataSource);
 		MapDataSourceLookup lookup = new MapDataSourceLookup();
@@ -62,7 +63,7 @@ public final class MapDataSourceLookupTests {
 
 	@Test
 	public void setDataSourcesIsAnIdempotentOperation() throws Exception {
-		Map<String, DataSource> dataSources = new HashMap<String, DataSource>();
+		Map<String, DataSource> dataSources = new HashMap<>();
 		StubDataSource expectedDataSource = new StubDataSource();
 		dataSources.put(DATA_SOURCE_NAME, expectedDataSource);
 		MapDataSourceLookup lookup = new MapDataSourceLookup();
@@ -75,7 +76,7 @@ public final class MapDataSourceLookupTests {
 
 	@Test
 	public void addingDataSourcePermitsOverride() throws Exception {
-		Map<String, DataSource> dataSources = new HashMap<String, DataSource>();
+		Map<String, DataSource> dataSources = new HashMap<>();
 		StubDataSource overridenDataSource = new StubDataSource();
 		StubDataSource expectedDataSource = new StubDataSource();
 		dataSources.put(DATA_SOURCE_NAME, overridenDataSource);

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.cache.annotation;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -26,6 +27,7 @@ import java.util.Set;
 
 import org.springframework.cache.interceptor.AbstractFallbackCacheOperationSource;
 import org.springframework.cache.interceptor.CacheOperation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -67,8 +69,7 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 	 */
 	public AnnotationCacheOperationSource(boolean publicMethodsOnly) {
 		this.publicMethodsOnly = publicMethodsOnly;
-		this.annotationParsers = new LinkedHashSet<CacheAnnotationParser>(1);
-		this.annotationParsers.add(new SpringCacheAnnotationParser());
+		this.annotationParsers = Collections.singleton(new SpringCacheAnnotationParser());
 	}
 
 	/**
@@ -88,9 +89,7 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 	public AnnotationCacheOperationSource(CacheAnnotationParser... annotationParsers) {
 		this.publicMethodsOnly = true;
 		Assert.notEmpty(annotationParsers, "At least one CacheAnnotationParser needs to be specified");
-		Set<CacheAnnotationParser> parsers = new LinkedHashSet<CacheAnnotationParser>(annotationParsers.length);
-		Collections.addAll(parsers, annotationParsers);
-		this.annotationParsers = parsers;
+		this.annotationParsers = new LinkedHashSet<>(Arrays.asList(annotationParsers));
 	}
 
 	/**
@@ -105,24 +104,15 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 
 
 	@Override
-	protected Collection<CacheOperation> findCacheOperations(final Class<?> clazz) {
-		return determineCacheOperations(new CacheOperationProvider() {
-			@Override
-			public Collection<CacheOperation> getCacheOperations(CacheAnnotationParser parser) {
-				return parser.parseCacheAnnotations(clazz);
-			}
-		});
-
+	@Nullable
+	protected Collection<CacheOperation> findCacheOperations(Class<?> clazz) {
+		return determineCacheOperations(parser -> parser.parseCacheAnnotations(clazz));
 	}
 
 	@Override
-	protected Collection<CacheOperation> findCacheOperations(final Method method) {
-		return determineCacheOperations(new CacheOperationProvider() {
-			@Override
-			public Collection<CacheOperation> getCacheOperations(CacheAnnotationParser parser) {
-				return parser.parseCacheAnnotations(method);
-			}
-		});
+	@Nullable
+	protected Collection<CacheOperation> findCacheOperations(Method method) {
+		return determineCacheOperations(parser -> parser.parseCacheAnnotations(method));
 	}
 
 	/**
@@ -134,15 +124,21 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 	 * @param provider the cache operation provider to use
 	 * @return the configured caching operations, or {@code null} if none found
 	 */
+	@Nullable
 	protected Collection<CacheOperation> determineCacheOperations(CacheOperationProvider provider) {
 		Collection<CacheOperation> ops = null;
 		for (CacheAnnotationParser annotationParser : this.annotationParsers) {
 			Collection<CacheOperation> annOps = provider.getCacheOperations(annotationParser);
 			if (annOps != null) {
 				if (ops == null) {
-					ops = new ArrayList<CacheOperation>();
+					ops = annOps;
 				}
-				ops.addAll(annOps);
+				else {
+					Collection<CacheOperation> combined = new ArrayList<>(ops.size() + annOps.size());
+					combined.addAll(ops);
+					combined.addAll(annOps);
+					ops = combined;
+				}
 			}
 		}
 		return ops;
@@ -180,6 +176,7 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 	 * Callback interface providing {@link CacheOperation} instance(s) based on
 	 * a given {@link CacheAnnotationParser}.
 	 */
+	@FunctionalInterface
 	protected interface CacheOperationProvider {
 
 		/**
@@ -187,6 +184,7 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 		 * @param parser the parser to use
 		 * @return the cache operations, or {@code null} if none found
 		 */
+		@Nullable
 		Collection<CacheOperation> getCacheOperations(CacheAnnotationParser parser);
 	}
 

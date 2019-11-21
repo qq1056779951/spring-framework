@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,12 +16,17 @@
 
 package org.springframework.util;
 
+import java.util.Iterator;
+
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 /**
+ * Tests for {@link LinkedCaseInsensitiveMap}.
+ *
  * @author Juergen Hoeller
+ * @author Phillip Webb
  */
 public class LinkedCaseInsensitiveMapTests {
 
@@ -30,9 +35,9 @@ public class LinkedCaseInsensitiveMapTests {
 
 	@Test
 	public void putAndGet() {
-		map.put("key", "value1");
-		map.put("key", "value2");
-		map.put("key", "value3");
+		assertNull(map.put("key", "value1"));
+		assertEquals("value1", map.put("key", "value2"));
+		assertEquals("value2", map.put("key", "value3"));
 		assertEquals(1, map.size());
 		assertEquals("value3", map.get("key"));
 		assertEquals("value3", map.get("KEY"));
@@ -47,9 +52,9 @@ public class LinkedCaseInsensitiveMapTests {
 
 	@Test
 	public void putWithOverlappingKeys() {
-		map.put("key", "value1");
-		map.put("KEY", "value2");
-		map.put("Key", "value3");
+		assertNull(map.put("key", "value1"));
+		assertEquals("value1", map.put("KEY", "value2"));
+		assertEquals("value2", map.put("Key", "value3"));
 		assertEquals(1, map.size());
 		assertEquals("value3", map.get("key"));
 		assertEquals("value3", map.get("KEY"));
@@ -64,9 +69,9 @@ public class LinkedCaseInsensitiveMapTests {
 
 	@Test
 	public void getOrDefault() {
-		map.put("key", "value1");
-		map.put("KEY", "value2");
-		map.put("Key", "value3");
+		assertNull(map.put("key", "value1"));
+		assertEquals("value1", map.put("KEY", "value2"));
+		assertEquals("value2", map.put("Key", "value3"));
 		assertEquals("value3", map.getOrDefault("key", "N"));
 		assertEquals("value3", map.getOrDefault("KEY", "N"));
 		assertEquals("value3", map.getOrDefault("Key", "N"));
@@ -76,9 +81,9 @@ public class LinkedCaseInsensitiveMapTests {
 
 	@Test
 	public void getOrDefaultWithNullValue() {
-		map.put("key", null);
-		map.put("KEY", null);
-		map.put("Key", null);
+		assertNull(map.put("key", null));
+		assertNull(map.put("KEY", null));
+		assertNull(map.put("Key", null));
 		assertNull(map.getOrDefault("key", "N"));
 		assertNull(map.getOrDefault("KEY", "N"));
 		assertNull(map.getOrDefault("Key", "N"));
@@ -88,9 +93,9 @@ public class LinkedCaseInsensitiveMapTests {
 
 	@Test
 	public void computeIfAbsentWithExistingValue() {
-		map.put("key", "value1");
-		map.put("KEY", "value2");
-		map.put("Key", "value3");
+		assertNull(map.putIfAbsent("key", "value1"));
+		assertEquals("value1", map.putIfAbsent("KEY", "value2"));
+		assertEquals("value1", map.put("Key", "value3"));
 		assertEquals("value3", map.computeIfAbsent("key", key -> "value1"));
 		assertEquals("value3", map.computeIfAbsent("KEY", key -> "value2"));
 		assertEquals("value3", map.computeIfAbsent("Key", key -> "value3"));
@@ -104,9 +109,8 @@ public class LinkedCaseInsensitiveMapTests {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void mapClone() {
-		map.put("key", "value1");
+		assertNull(map.put("key", "value1"));
 		LinkedCaseInsensitiveMap<String> copy = map.clone();
 
 		assertEquals(map.getLocale(), copy.getLocale());
@@ -126,6 +130,91 @@ public class LinkedCaseInsensitiveMapTests {
 		assertEquals("value2", copy.get("key"));
 		assertEquals("value2", copy.get("KEY"));
 		assertEquals("value2", copy.get("Key"));
+	}
+
+
+	@Test
+	public void clearFromKeySet() {
+		map.put("key", "value");
+		map.keySet().clear();
+		map.computeIfAbsent("key", k -> "newvalue");
+		assertEquals("newvalue", map.get("key"));
+	}
+
+	@Test
+	public void removeFromKeySet() {
+		map.put("key", "value");
+		map.keySet().remove("key");
+		map.computeIfAbsent("key", k -> "newvalue");
+		assertEquals("newvalue", map.get("key"));
+	}
+
+	@Test
+	public void removeFromKeySetViaIterator() {
+		map.put("key", "value");
+		nextAndRemove(map.keySet().iterator());
+		assertEquals(0, map.size());
+		map.computeIfAbsent("key", k -> "newvalue");
+		assertEquals("newvalue", map.get("key"));
+	}
+
+	@Test
+	public void clearFromValues() {
+		map.put("key", "value");
+		map.values().clear();
+		assertEquals(0, map.size());
+		map.computeIfAbsent("key", k -> "newvalue");
+		assertEquals("newvalue", map.get("key"));
+	}
+
+	@Test
+	public void removeFromValues() {
+		map.put("key", "value");
+		map.values().remove("value");
+		assertEquals(0, map.size());
+		map.computeIfAbsent("key", k -> "newvalue");
+		assertEquals("newvalue", map.get("key"));
+	}
+
+	@Test
+	public void removeFromValuesViaIterator() {
+		map.put("key", "value");
+		nextAndRemove(map.values().iterator());
+		assertEquals(0, map.size());
+		map.computeIfAbsent("key", k -> "newvalue");
+		assertEquals("newvalue", map.get("key"));
+	}
+
+	@Test
+	public void clearFromEntrySet() {
+		map.put("key", "value");
+		map.entrySet().clear();
+		assertEquals(0, map.size());
+		map.computeIfAbsent("key", k -> "newvalue");
+		assertEquals("newvalue", map.get("key"));
+	}
+
+	@Test
+	public void removeFromEntrySet() {
+		map.put("key", "value");
+		map.entrySet().remove(map.entrySet().iterator().next());
+		assertEquals(0, map.size());
+		map.computeIfAbsent("key", k -> "newvalue");
+		assertEquals("newvalue", map.get("key"));
+	}
+
+	@Test
+	public void removeFromEntrySetViaIterator() {
+		map.put("key", "value");
+		nextAndRemove(map.entrySet().iterator());
+		assertEquals(0, map.size());
+		map.computeIfAbsent("key", k -> "newvalue");
+		assertEquals("newvalue", map.get("key"));
+	}
+
+	private void nextAndRemove(Iterator<?> iterator) {
+		iterator.next();
+		iterator.remove();
 	}
 
 }

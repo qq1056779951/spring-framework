@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import java.sql.Savepoint;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.transaction.NestedTransactionNotSupportedException;
 import org.springframework.transaction.SavepointManager;
@@ -29,6 +30,7 @@ import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.TransactionUsageException;
 import org.springframework.transaction.support.SmartTransactionObject;
+import org.springframework.util.Assert;
 
 /**
  * Convenient base class for JDBC-aware transaction objects. Can contain a
@@ -49,18 +51,21 @@ public abstract class JdbcTransactionObjectSupport implements SavepointManager, 
 	private static final Log logger = LogFactory.getLog(JdbcTransactionObjectSupport.class);
 
 
+	@Nullable
 	private ConnectionHolder connectionHolder;
 
+	@Nullable
 	private Integer previousIsolationLevel;
 
 	private boolean savepointAllowed = false;
 
 
-	public void setConnectionHolder(ConnectionHolder connectionHolder) {
+	public void setConnectionHolder(@Nullable ConnectionHolder connectionHolder) {
 		this.connectionHolder = connectionHolder;
 	}
 
 	public ConnectionHolder getConnectionHolder() {
+		Assert.state(this.connectionHolder != null, "No ConnectionHolder available");
 		return this.connectionHolder;
 	}
 
@@ -68,10 +73,11 @@ public abstract class JdbcTransactionObjectSupport implements SavepointManager, 
 		return (this.connectionHolder != null);
 	}
 
-	public void setPreviousIsolationLevel(Integer previousIsolationLevel) {
+	public void setPreviousIsolationLevel(@Nullable Integer previousIsolationLevel) {
 		this.previousIsolationLevel = previousIsolationLevel;
 	}
 
+	@Nullable
 	public Integer getPreviousIsolationLevel() {
 		return this.previousIsolationLevel;
 	}
@@ -106,6 +112,10 @@ public abstract class JdbcTransactionObjectSupport implements SavepointManager, 
 				throw new NestedTransactionNotSupportedException(
 						"Cannot create a nested transaction because savepoints are not supported by your JDBC driver");
 			}
+			if (conHolder.isRollbackOnly()) {
+				throw new CannotCreateTransactionException(
+						"Cannot create savepoint for transaction which is already marked as rollback-only");
+			}
 			return conHolder.createSavepoint();
 		}
 		catch (SQLException ex) {
@@ -122,6 +132,7 @@ public abstract class JdbcTransactionObjectSupport implements SavepointManager, 
 		ConnectionHolder conHolder = getConnectionHolderForSavepoint();
 		try {
 			conHolder.getConnection().rollback((Savepoint) savepoint);
+			conHolder.resetRollbackOnly();
 		}
 		catch (Throwable ex) {
 			throw new TransactionSystemException("Could not roll back to JDBC savepoint", ex);

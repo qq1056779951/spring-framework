@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,13 +53,13 @@ public class InterceptingClientHttpRequestFactoryTests {
 
 	@Test
 	public void basic() throws Exception {
-		List<ClientHttpRequestInterceptor> interceptors = new ArrayList<ClientHttpRequestInterceptor>();
+		List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>();
 		interceptors.add(new NoOpInterceptor());
 		interceptors.add(new NoOpInterceptor());
 		interceptors.add(new NoOpInterceptor());
 		requestFactory = new InterceptingClientHttpRequestFactory(requestFactoryMock, interceptors);
 
-		ClientHttpRequest request = requestFactory.createRequest(new URI("http://example.com"), HttpMethod.GET);
+		ClientHttpRequest request = requestFactory.createRequest(new URI("https://example.com"), HttpMethod.GET);
 		ClientHttpResponse response = request.execute();
 
 		assertTrue(((NoOpInterceptor) interceptors.get(0)).invoked);
@@ -71,8 +71,7 @@ public class InterceptingClientHttpRequestFactoryTests {
 
 	@Test
 	public void noExecution() throws Exception {
-		List<ClientHttpRequestInterceptor> interceptors = new ArrayList<ClientHttpRequestInterceptor>();
-
+		List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>();
 		interceptors.add(new ClientHttpRequestInterceptor() {
 			@Override
 			public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
@@ -84,7 +83,7 @@ public class InterceptingClientHttpRequestFactoryTests {
 		interceptors.add(new NoOpInterceptor());
 		requestFactory = new InterceptingClientHttpRequestFactory(requestFactoryMock, interceptors);
 
-		ClientHttpRequest request = requestFactory.createRequest(new URI("http://example.com"), HttpMethod.GET);
+		ClientHttpRequest request = requestFactory.createRequest(new URI("https://example.com"), HttpMethod.GET);
 		ClientHttpResponse response = request.execute();
 
 		assertFalse(((NoOpInterceptor) interceptors.get(1)).invoked);
@@ -123,13 +122,13 @@ public class InterceptingClientHttpRequestFactoryTests {
 		requestFactory =
 				new InterceptingClientHttpRequestFactory(requestFactoryMock, Collections.singletonList(interceptor));
 
-		ClientHttpRequest request = requestFactory.createRequest(new URI("http://example.com"), HttpMethod.GET);
+		ClientHttpRequest request = requestFactory.createRequest(new URI("https://example.com"), HttpMethod.GET);
 		request.execute();
 	}
 
 	@Test
 	public void changeURI() throws Exception {
-		final URI changedUri = new URI("http://example.com/2");
+		final URI changedUri = new URI("https://example.com/2");
 
 		ClientHttpRequestInterceptor interceptor = new ClientHttpRequestInterceptor() {
 			@Override
@@ -156,7 +155,7 @@ public class InterceptingClientHttpRequestFactoryTests {
 		requestFactory =
 				new InterceptingClientHttpRequestFactory(requestFactoryMock, Collections.singletonList(interceptor));
 
-		ClientHttpRequest request = requestFactory.createRequest(new URI("http://example.com"), HttpMethod.GET);
+		ClientHttpRequest request = requestFactory.createRequest(new URI("https://example.com"), HttpMethod.GET);
 		request.execute();
 	}
 
@@ -189,7 +188,7 @@ public class InterceptingClientHttpRequestFactoryTests {
 		requestFactory =
 				new InterceptingClientHttpRequestFactory(requestFactoryMock, Collections.singletonList(interceptor));
 
-		ClientHttpRequest request = requestFactory.createRequest(new URI("http://example.com"), HttpMethod.GET);
+		ClientHttpRequest request = requestFactory.createRequest(new URI("https://example.com"), HttpMethod.GET);
 		request.execute();
 	}
 
@@ -208,7 +207,7 @@ public class InterceptingClientHttpRequestFactoryTests {
 		requestFactory =
 				new InterceptingClientHttpRequestFactory(requestFactoryMock, Collections.singletonList(interceptor));
 
-		ClientHttpRequest request = requestFactory.createRequest(new URI("http://example.com"), HttpMethod.GET);
+		ClientHttpRequest request = requestFactory.createRequest(new URI("https://example.com"), HttpMethod.GET);
 		request.execute();
 		assertTrue(Arrays.equals(changedBody, requestMock.body.toByteArray()));
 	}
@@ -266,6 +265,11 @@ public class InterceptingClientHttpRequestFactoryTests {
 		@Override
 		public HttpMethod getMethod() {
 			return method;
+		}
+
+		@Override
+		public String getMethodValue() {
+			return method.name();
 		}
 
 		public void setMethod(HttpMethod method) {

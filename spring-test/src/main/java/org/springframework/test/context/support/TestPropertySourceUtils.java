@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,12 +39,12 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.util.TestContextResourceUtils;
-import org.springframework.test.util.MetaAnnotationUtils.*;
+import org.springframework.test.util.MetaAnnotationUtils.AnnotationDescriptor;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import static org.springframework.test.util.MetaAnnotationUtils.*;
+import static org.springframework.test.util.MetaAnnotationUtils.findAnnotationDescriptor;
 
 /**
  * Utility methods for working with {@link TestPropertySource @TestPropertySource}
@@ -83,7 +83,7 @@ public abstract class TestPropertySourceUtils {
 
 	private static List<TestPropertySourceAttributes> resolveTestPropertySourceAttributes(Class<?> testClass) {
 		Assert.notNull(testClass, "Class must not be null");
-		List<TestPropertySourceAttributes> attributesList = new ArrayList<TestPropertySourceAttributes>();
+		List<TestPropertySourceAttributes> attributesList = new ArrayList<>();
 		Class<TestPropertySource> annotationType = TestPropertySource.class;
 
 		AnnotationDescriptor<TestPropertySource> descriptor = findAnnotationDescriptor(testClass, annotationType);
@@ -111,14 +111,14 @@ public abstract class TestPropertySourceUtils {
 	}
 
 	private static String[] mergeLocations(List<TestPropertySourceAttributes> attributesList) {
-		final List<String> locations = new ArrayList<String>();
+		List<String> locations = new ArrayList<>();
 		for (TestPropertySourceAttributes attrs : attributesList) {
 			if (logger.isTraceEnabled()) {
 				logger.trace(String.format("Processing locations for TestPropertySource attributes %s", attrs));
 			}
 			String[] locationsArray = TestContextResourceUtils.convertToClasspathResourcePaths(
 					attrs.getDeclaringClass(), attrs.getLocations());
-			locations.addAll(0, Arrays.<String> asList(locationsArray));
+			locations.addAll(0, Arrays.asList(locationsArray));
 			if (!attrs.isInheritLocations()) {
 				break;
 			}
@@ -127,12 +127,15 @@ public abstract class TestPropertySourceUtils {
 	}
 
 	private static String[] mergeProperties(List<TestPropertySourceAttributes> attributesList) {
-		final List<String> properties = new ArrayList<String>();
+		List<String> properties = new ArrayList<>();
 		for (TestPropertySourceAttributes attrs : attributesList) {
 			if (logger.isTraceEnabled()) {
 				logger.trace(String.format("Processing inlined properties for TestPropertySource attributes %s", attrs));
 			}
-			properties.addAll(0, Arrays.<String>asList(attrs.getProperties()));
+			String[] attrProps = attrs.getProperties();
+			if (attrProps != null) {
+				properties.addAll(0, Arrays.asList(attrProps));
+			}
 			if (!attrs.isInheritProperties()) {
 				break;
 			}
@@ -149,11 +152,11 @@ public abstract class TestPropertySourceUtils {
 	 * never {@code null}
 	 * @param locations the resource locations of {@code Properties} files to add
 	 * to the environment; potentially empty but never {@code null}
+	 * @throws IllegalStateException if an error occurs while processing a properties file
 	 * @since 4.1.5
 	 * @see ResourcePropertySource
 	 * @see TestPropertySource#locations
 	 * @see #addPropertiesFilesToEnvironment(ConfigurableEnvironment, ResourceLoader, String...)
-	 * @throws IllegalStateException if an error occurs while processing a properties file
 	 */
 	public static void addPropertiesFilesToEnvironment(ConfigurableApplicationContext context, String... locations) {
 		Assert.notNull(context, "'context' must not be null");
@@ -175,11 +178,11 @@ public abstract class TestPropertySourceUtils {
 	 * never {@code null}
 	 * @param locations the resource locations of {@code Properties} files to add
 	 * to the environment; potentially empty but never {@code null}
+	 * @throws IllegalStateException if an error occurs while processing a properties file
 	 * @since 4.3
 	 * @see ResourcePropertySource
 	 * @see TestPropertySource#locations
 	 * @see #addPropertiesFilesToEnvironment(ConfigurableApplicationContext, String...)
-	 * @throws IllegalStateException if an error occurs while processing a properties file
 	 */
 	public static void addPropertiesFilesToEnvironment(ConfigurableEnvironment environment,
 			ResourceLoader resourceLoader, String... locations) {
@@ -245,8 +248,7 @@ public abstract class TestPropertySourceUtils {
 			MapPropertySource ps = (MapPropertySource)
 					environment.getPropertySources().get(INLINED_PROPERTIES_PROPERTY_SOURCE_NAME);
 			if (ps == null) {
-				ps = new MapPropertySource(INLINED_PROPERTIES_PROPERTY_SOURCE_NAME,
-						new LinkedHashMap<String, Object>());
+				ps = new MapPropertySource(INLINED_PROPERTIES_PROPERTY_SOURCE_NAME, new LinkedHashMap<>());
 				environment.getPropertySources().addFirst(ps);
 			}
 			ps.getSource().putAll(convertInlinedPropertiesToMap(inlinedProperties));
@@ -265,14 +267,14 @@ public abstract class TestPropertySourceUtils {
 	 * @param inlinedProperties the inlined properties to convert; potentially empty
 	 * but never {@code null}
 	 * @return a new, ordered map containing the converted properties
-	 * @since 4.1.5
 	 * @throws IllegalStateException if a given key-value pair cannot be parsed, or if
 	 * a given inlined property contains multiple key-value pairs
+	 * @since 4.1.5
 	 * @see #addInlinedPropertiesToEnvironment(ConfigurableEnvironment, String[])
 	 */
 	public static Map<String, Object> convertInlinedPropertiesToMap(String... inlinedProperties) {
 		Assert.notNull(inlinedProperties, "'inlinedProperties' must not be null");
-		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		Map<String, Object> map = new LinkedHashMap<>();
 		Properties props = new Properties();
 
 		for (String pair : inlinedProperties) {
@@ -285,7 +287,7 @@ public abstract class TestPropertySourceUtils {
 			catch (Exception ex) {
 				throw new IllegalStateException("Failed to load test environment property from [" + pair + "]", ex);
 			}
-			Assert.state(props.size() == 1, "Failed to load exactly one test environment property from [" + pair + "]");
+			Assert.state(props.size() == 1, () -> "Failed to load exactly one test environment property from [" + pair + "]");
 			for (String name : props.stringPropertyNames()) {
 				map.put(name, props.getProperty(name));
 			}

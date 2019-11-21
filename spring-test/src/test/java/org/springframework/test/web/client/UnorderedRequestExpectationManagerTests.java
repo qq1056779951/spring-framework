@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +25,6 @@ import org.junit.rules.ExpectedException;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpRequest;
-import org.springframework.mock.http.client.MockAsyncClientHttpRequest;
 
 import static org.junit.Assert.*;
 import static org.springframework.http.HttpMethod.*;
@@ -74,8 +73,8 @@ public class UnorderedRequestExpectationManagerTests {
 
 	@Test
 	public void repeatedRequests() throws Exception {
-		this.manager.expectRequest(times(2), requestTo("/foo")).andExpect(method(GET)).andRespond(withSuccess());
-		this.manager.expectRequest(times(2), requestTo("/bar")).andExpect(method(GET)).andRespond(withSuccess());
+		this.manager.expectRequest(twice(), requestTo("/foo")).andExpect(method(GET)).andRespond(withSuccess());
+		this.manager.expectRequest(twice(), requestTo("/bar")).andExpect(method(GET)).andRespond(withSuccess());
 
 		this.manager.validateRequest(createRequest(GET, "/bar"));
 		this.manager.validateRequest(createRequest(GET, "/foo"));
@@ -120,12 +119,14 @@ public class UnorderedRequestExpectationManagerTests {
 	}
 
 
+	@SuppressWarnings("deprecation")
 	private ClientHttpRequest createRequest(HttpMethod method, String url) {
 		try {
-			return new MockAsyncClientHttpRequest(method,  new URI(url));
+			return new org.springframework.mock.http.client.MockAsyncClientHttpRequest(method,  new URI(url));
 		}
 		catch (URISyntaxException ex) {
 			throw new IllegalStateException(ex);
 		}
 	}
+
 }

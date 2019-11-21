@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.web.servlet.handler;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Test;
@@ -83,7 +84,6 @@ public class HandlerMappingIntrospectorTests {
 		assertEquals(expected, actual);
 	}
 
-	@Test @SuppressWarnings("deprecation")
 	public void defaultHandlerMappings() throws Exception {
 		StaticWebApplicationContext cxt = new StaticWebApplicationContext();
 		cxt.refresh();
@@ -91,8 +91,7 @@ public class HandlerMappingIntrospectorTests {
 		List<HandlerMapping> actual = getIntrospector(cxt).getHandlerMappings();
 		assertEquals(2, actual.size());
 		assertEquals(BeanNameUrlHandlerMapping.class, actual.get(0).getClass());
-		assertEquals(org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping.class,
-				actual.get(1).getClass());
+		assertEquals(RequestMappingHandlerMapping.class, actual.get(1).getClass());
 	}
 
 	@Test
@@ -171,7 +170,8 @@ public class HandlerMappingIntrospectorTests {
 	}
 
 
-	@Configuration @SuppressWarnings({"WeakerAccess", "unused"})
+	@Configuration
+	@SuppressWarnings({"WeakerAccess", "unused"})
 	static class TestConfig {
 
 		@Bean

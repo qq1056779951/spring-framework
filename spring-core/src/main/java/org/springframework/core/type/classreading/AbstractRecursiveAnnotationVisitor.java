@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,9 +26,13 @@ import org.springframework.asm.AnnotationVisitor;
 import org.springframework.asm.SpringAsmInfo;
 import org.springframework.asm.Type;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
 /**
+ * {@link AnnotationVisitor} to recursively visit annotations.
+ *
  * @author Chris Beams
  * @author Juergen Hoeller
  * @author Phillip Webb
@@ -41,10 +45,11 @@ abstract class AbstractRecursiveAnnotationVisitor extends AnnotationVisitor {
 
 	protected final AnnotationAttributes attributes;
 
+	@Nullable
 	protected final ClassLoader classLoader;
 
 
-	public AbstractRecursiveAnnotationVisitor(ClassLoader classLoader, AnnotationAttributes attributes) {
+	public AbstractRecursiveAnnotationVisitor(@Nullable ClassLoader classLoader, AnnotationAttributes attributes) {
 		super(SpringAsmInfo.ASM_VERSION);
 		this.classLoader = classLoader;
 		this.attributes = attributes;
@@ -78,23 +83,17 @@ abstract class AbstractRecursiveAnnotationVisitor extends AnnotationVisitor {
 	protected Object getEnumValue(String asmTypeDescriptor, String attributeValue) {
 		Object valueToUse = attributeValue;
 		try {
-			Class<?> enumType = this.classLoader.loadClass(Type.getType(asmTypeDescriptor).getClassName());
+			Class<?> enumType = ClassUtils.forName(Type.getType(asmTypeDescriptor).getClassName(), this.classLoader);
 			Field enumConstant = ReflectionUtils.findField(enumType, attributeValue);
 			if (enumConstant != null) {
 				ReflectionUtils.makeAccessible(enumConstant);
 				valueToUse = enumConstant.get(null);
 			}
 		}
-		catch (ClassNotFoundException ex) {
+		catch (ClassNotFoundException | NoClassDefFoundError ex) {
 			logger.debug("Failed to classload enum type while reading annotation metadata", ex);
 		}
-		catch (NoClassDefFoundError ex) {
-			logger.debug("Failed to classload enum type while reading annotation metadata", ex);
-		}
-		catch (IllegalAccessException ex) {
-			logger.debug("Could not access enum value while reading annotation metadata", ex);
-		}
-		catch (AccessControlException ex) {
+		catch (IllegalAccessException | AccessControlException ex) {
 			logger.debug("Could not access enum value while reading annotation metadata", ex);
 		}
 		return valueToUse;

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,7 +42,7 @@ public class OperatorMatches extends Operator {
 
 	private static final int PATTERN_ACCESS_THRESHOLD = 1000000;
 
-	private final ConcurrentMap<String, Pattern> patternCache = new ConcurrentHashMap<String, Pattern>();
+	private final ConcurrentMap<String, Pattern> patternCache = new ConcurrentHashMap<>();
 
 
 	public OperatorMatches(int pos, SpelNodeImpl... operands) {
@@ -67,7 +67,7 @@ public class OperatorMatches extends Operator {
 
 		if (left == null) {
 			throw new SpelEvaluationException(leftOp.getStartPosition(),
-					SpelMessage.INVALID_FIRST_OPERAND_FOR_MATCHES_OPERATOR, left);
+					SpelMessage.INVALID_FIRST_OPERAND_FOR_MATCHES_OPERATOR, (Object) null);
 		}
 		if (!(right instanceof String)) {
 			throw new SpelEvaluationException(rightOp.getStartPosition(),

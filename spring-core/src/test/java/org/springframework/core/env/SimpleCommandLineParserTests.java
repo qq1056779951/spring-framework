@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -60,25 +60,25 @@ public class SimpleCommandLineParserTests {
 		assertThat(args.getOptionValues("o3"), nullValue());
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void withEmptyOptionText() {
 		SimpleCommandLineArgsParser parser = new SimpleCommandLineArgsParser();
 		parser.parse("--");
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void withEmptyOptionName() {
 		SimpleCommandLineArgsParser parser = new SimpleCommandLineArgsParser();
 		parser.parse("--=v1");
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void withEmptyOptionValue() {
 		SimpleCommandLineArgsParser parser = new SimpleCommandLineArgsParser();
 		parser.parse("--o1=");
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void withEmptyOptionNameAndEmptyOptionValue() {
 		SimpleCommandLineArgsParser parser = new SimpleCommandLineArgsParser();
 		parser.parse("--=");
@@ -97,13 +97,13 @@ public class SimpleCommandLineParserTests {
 		assertThat(nonOptions.size(), equalTo(2));
 	}
 
-	@Test(expected=UnsupportedOperationException.class)
+	@Test(expected = UnsupportedOperationException.class)
 	public void assertOptionNamesIsUnmodifiable() {
 		CommandLineArgs args = new SimpleCommandLineArgsParser().parse();
 		args.getOptionNames().add("bogus");
 	}
 
-	@Test(expected=UnsupportedOperationException.class)
+	@Test(expected = UnsupportedOperationException.class)
 	public void assertNonOptionArgsIsUnmodifiable() {
 		CommandLineArgs args = new SimpleCommandLineArgsParser().parse();
 		args.getNonOptionArgs().add("foo");

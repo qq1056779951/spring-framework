@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2012 the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
 
@@ -40,12 +40,12 @@ public class HttpStatusCodeExceptionTests {
 	/**
 	 * Corners bug SPR-9273, which reported the fact that following the changes made in
 	 * SPR-7591, {@link HttpStatusCodeException} and subtypes became no longer
-	 * serializable due to the addition of a non-serializable {@link Charset} field.
+	 * serializable due to the addition of a non-serializable {@code Charset} field.
 	 */
 	@Test
 	public void testSerializability() throws IOException, ClassNotFoundException {
 		HttpStatusCodeException ex1 = new HttpClientErrorException(
-				HttpStatus.BAD_REQUEST, null, null, Charset.forName("US-ASCII"));
+				HttpStatus.BAD_REQUEST, null, null, StandardCharsets.US_ASCII);
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		new ObjectOutputStream(out).writeObject(ex1);
 		ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());

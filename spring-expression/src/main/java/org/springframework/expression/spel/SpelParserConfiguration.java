@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
 package org.springframework.expression.spel;
 
 import org.springframework.core.SpringProperties;
+import org.springframework.lang.Nullable;
 
 /**
  * Configuration object for the SpEL expression parser.
@@ -40,6 +41,7 @@ public class SpelParserConfiguration {
 
 	private final SpelCompilerMode compilerMode;
 
+	@Nullable
 	private final ClassLoader compilerClassLoader;
 
 	private final boolean autoGrowNullReferences;
@@ -61,7 +63,7 @@ public class SpelParserConfiguration {
 	 * @param compilerMode the compiler mode for the parser
 	 * @param compilerClassLoader the ClassLoader to use as the basis for expression compilation
 	 */
-	public SpelParserConfiguration(SpelCompilerMode compilerMode, ClassLoader compilerClassLoader) {
+	public SpelParserConfiguration(@Nullable SpelCompilerMode compilerMode, @Nullable ClassLoader compilerClassLoader) {
 		this(compilerMode, compilerClassLoader, false, false, Integer.MAX_VALUE);
 	}
 
@@ -93,7 +95,7 @@ public class SpelParserConfiguration {
 	 * @param autoGrowCollections if collections should automatically grow
 	 * @param maximumAutoGrowSize the maximum size that the collection can auto grow
 	 */
-	public SpelParserConfiguration(SpelCompilerMode compilerMode, ClassLoader compilerClassLoader,
+	public SpelParserConfiguration(@Nullable SpelCompilerMode compilerMode, @Nullable ClassLoader compilerClassLoader,
 			boolean autoGrowNullReferences, boolean autoGrowCollections, int maximumAutoGrowSize) {
 
 		this.compilerMode = (compilerMode != null ? compilerMode : defaultCompilerMode);
@@ -114,6 +116,7 @@ public class SpelParserConfiguration {
 	/**
 	 * Return the ClassLoader to use as the basis for expression compilation.
 	 */
+	@Nullable
 	public ClassLoader getCompilerClassLoader() {
 		return this.compilerClassLoader;
 	}

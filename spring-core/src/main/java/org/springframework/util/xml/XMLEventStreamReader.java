@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
 package org.springframework.util.xml;
 
 import java.util.Iterator;
+
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.stream.Location;
@@ -28,6 +29,8 @@ import javax.xml.stream.events.Namespace;
 import javax.xml.stream.events.ProcessingInstruction;
 import javax.xml.stream.events.StartDocument;
 import javax.xml.stream.events.XMLEvent;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Implementation of the {@link javax.xml.stream.XMLStreamReader} interface that wraps a
@@ -75,6 +78,7 @@ class XMLEventStreamReader extends AbstractXMLStreamReader {
 	}
 
 	@Override
+	@Nullable
 	public String getVersion() {
 		if (this.event.isStartDocument()) {
 			return ((StartDocument) this.event).getVersion();
@@ -110,11 +114,13 @@ class XMLEventStreamReader extends AbstractXMLStreamReader {
 	}
 
 	@Override
+	@Nullable
 	public String getEncoding() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public String getCharacterEncodingScheme() {
 		return null;
 	}

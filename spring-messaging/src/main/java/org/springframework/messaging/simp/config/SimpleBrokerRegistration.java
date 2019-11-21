@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 package org.springframework.messaging.simp.config;
 
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.SubscribableChannel;
 import org.springframework.messaging.simp.broker.SimpleBrokerMessageHandler;
@@ -29,10 +30,13 @@ import org.springframework.scheduling.TaskScheduler;
  */
 public class SimpleBrokerRegistration extends AbstractBrokerRegistration {
 
+	@Nullable
 	private TaskScheduler taskScheduler;
 
+	@Nullable
 	private long[] heartbeat;
 
+	@Nullable
 	private String selectorHeaderName = "selector";
 
 
@@ -81,7 +85,7 @@ public class SimpleBrokerRegistration extends AbstractBrokerRegistration {
 	 * @param selectorHeaderName the name to use for a selector header
 	 * @since 4.3.17
 	 */
-	public void setSelectorHeaderName(String selectorHeaderName) {
+	public void setSelectorHeaderName(@Nullable String selectorHeaderName) {
 		this.selectorHeaderName = selectorHeaderName;
 	}
 

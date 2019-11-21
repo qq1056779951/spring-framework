@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.MethodInvoker;
@@ -84,7 +85,7 @@ public abstract class ReflectionTestUtils {
 	 * @param name the name of the field to set; never {@code null}
 	 * @param value the value to set
 	 */
-	public static void setField(Object targetObject, String name, Object value) {
+	public static void setField(Object targetObject, String name, @Nullable Object value) {
 		setField(targetObject, name, value, null);
 	}
 
@@ -100,7 +101,7 @@ public abstract class ReflectionTestUtils {
 	 * @param type the type of the field to set; may be {@code null} if
 	 * {@code name} is specified
 	 */
-	public static void setField(Object targetObject, String name, Object value, Class<?> type) {
+	public static void setField(Object targetObject, @Nullable String name, @Nullable Object value, @Nullable Class<?> type) {
 		setField(targetObject, null, name, value, type);
 	}
 
@@ -115,7 +116,7 @@ public abstract class ReflectionTestUtils {
 	 * @param value the value to set
 	 * @since 4.2
 	 */
-	public static void setField(Class<?> targetClass, String name, Object value) {
+	public static void setField(Class<?> targetClass, String name, @Nullable Object value) {
 		setField(null, targetClass, name, value, null);
 	}
 
@@ -134,7 +135,9 @@ public abstract class ReflectionTestUtils {
 	 * {@code name} is specified
 	 * @since 4.2
 	 */
-	public static void setField(Class<?> targetClass, String name, Object value, Class<?> type) {
+	public static void setField(
+			Class<?> targetClass, @Nullable String name, @Nullable Object value, @Nullable Class<?> type) {
+
 		setField(null, targetClass, name, value, type);
 	}
 
@@ -164,9 +167,11 @@ public abstract class ReflectionTestUtils {
 	 * @see ReflectionUtils#setField(Field, Object, Object)
 	 * @see AopTestUtils#getUltimateTargetObject(Object)
 	 */
-	public static void setField(Object targetObject, Class<?> targetClass, String name, Object value, Class<?> type) {
+	public static void setField(@Nullable Object targetObject, @Nullable Class<?> targetClass,
+			@Nullable String name, @Nullable Object value, @Nullable Class<?> type) {
+
 		Assert.isTrue(targetObject != null || targetClass != null,
-			"Either targetObject or targetClass for the field must be specified");
+				"Either targetObject or targetClass for the field must be specified");
 
 		if (targetObject != null && springAopPresent) {
 			targetObject = AopTestUtils.getUltimateTargetObject(targetObject);
@@ -202,6 +207,7 @@ public abstract class ReflectionTestUtils {
 	 * @return the field's current value
 	 * @see #getField(Class, String)
 	 */
+	@Nullable
 	public static Object getField(Object targetObject, String name) {
 		return getField(targetObject, null, name);
 	}
@@ -218,6 +224,7 @@ public abstract class ReflectionTestUtils {
 	 * @since 4.2
 	 * @see #getField(Object, String)
 	 */
+	@Nullable
 	public static Object getField(Class<?> targetClass, String name) {
 		return getField(null, targetClass, name);
 	}
@@ -246,7 +253,8 @@ public abstract class ReflectionTestUtils {
 	 * @see ReflectionUtils#getField(Field, Object)
 	 * @see AopTestUtils#getUltimateTargetObject(Object)
 	 */
-	public static Object getField(Object targetObject, Class<?> targetClass, String name) {
+	@Nullable
+	public static Object getField(@Nullable Object targetObject, @Nullable Class<?> targetClass, String name) {
 		Assert.isTrue(targetObject != null || targetClass != null,
 			"Either targetObject or targetClass for the field must be specified");
 
@@ -316,7 +324,7 @@ public abstract class ReflectionTestUtils {
 	 * @see ReflectionUtils#makeAccessible(Method)
 	 * @see ReflectionUtils#invokeMethod(Method, Object, Object[])
 	 */
-	public static void invokeSetterMethod(Object target, String name, Object value, Class<?> type) {
+	public static void invokeSetterMethod(Object target, String name, @Nullable Object value, @Nullable Class<?> type) {
 		Assert.notNull(target, "Target object must not be null");
 		Assert.hasText(name, "Method name must not be empty");
 		Class<?>[] paramTypes = (type != null ? new Class<?>[] {type} : null);
@@ -366,6 +374,7 @@ public abstract class ReflectionTestUtils {
 	 * @see ReflectionUtils#makeAccessible(Method)
 	 * @see ReflectionUtils#invokeMethod(Method, Object, Object[])
 	 */
+	@Nullable
 	public static Object invokeGetterMethod(Object target, String name) {
 		Assert.notNull(target, "Target object must not be null");
 		Assert.hasText(name, "Method name must not be empty");
@@ -408,6 +417,7 @@ public abstract class ReflectionTestUtils {
 	 * @see ReflectionUtils#handleReflectionException(Exception)
 	 */
 	@SuppressWarnings("unchecked")
+	@Nullable
 	public static <T> T invokeMethod(Object target, String name, Object... args) {
 		Assert.notNull(target, "Target object must not be null");
 		Assert.hasText(name, "Method name must not be empty");
@@ -432,13 +442,13 @@ public abstract class ReflectionTestUtils {
 		}
 	}
 
-	private static String safeToString(Object target) {
+	private static String safeToString(@Nullable Object target) {
 		try {
 			return String.format("target object [%s]", target);
 		}
 		catch (Exception ex) {
 			return String.format("target of type [%s] whose toString() method threw [%s]",
-				(target != null ? target.getClass().getName() : "unknown"), ex);
+					(target != null ? target.getClass().getName() : "unknown"), ex);
 		}
 	}
 

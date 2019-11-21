@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.concurrent.SettableListenableFuture;
 import org.springframework.web.socket.CloseStatus;
@@ -56,10 +57,12 @@ public abstract class AbstractClientSockJsSession implements WebSocketSession {
 
 	private final SettableListenableFuture<WebSocketSession> connectFuture;
 
-	private final Map<String, Object> attributes = new ConcurrentHashMap<String, Object>();
+	private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
+	@Nullable
 	private volatile State state = State.NEW;
 
+	@Nullable
 	private volatile CloseStatus closeStatus;
 
 
@@ -177,7 +180,7 @@ public abstract class AbstractClientSockJsSession implements WebSocketSession {
 		closeInternal(status);
 	}
 
-	private boolean isUserSetStatus(CloseStatus status) {
+	private boolean isUserSetStatus(@Nullable CloseStatus status) {
 		return (status != null && (status.getCode() == 1000 ||
 				(status.getCode() >= 3000 && status.getCode() <= 4999)));
 	}
@@ -264,15 +267,21 @@ public abstract class AbstractClientSockJsSession implements WebSocketSession {
 			return;
 		}
 
-		String[] messages;
-		try {
-			messages = getMessageCodec().decode(frame.getFrameData());
-		}
-		catch (IOException ex) {
-			if (logger.isErrorEnabled()) {
-				logger.error("Failed to decode data for SockJS \"message\" frame: " + frame + " in " + this, ex);
+		String[] messages = null;
+		String frameData = frame.getFrameData();
+		if (frameData != null) {
+			try {
+				messages = getMessageCodec().decode(frameData);
 			}
-			silentClose(CloseStatus.BAD_DATA);
+			catch (IOException ex) {
+				if (logger.isErrorEnabled()) {
+					logger.error("Failed to decode data for SockJS \"message\" frame: " + frame + " in " + this, ex);
+				}
+				silentClose(CloseStatus.BAD_DATA);
+				return;
+			}
+		}
+		if (messages == null) {
 			return;
 		}
 
@@ -294,12 +303,15 @@ public abstract class AbstractClientSockJsSession implements WebSocketSession {
 	private void handleCloseFrame(SockJsFrame frame) {
 		CloseStatus closeStatus = CloseStatus.NO_STATUS_CODE;
 		try {
-			String[] data = getMessageCodec().decode(frame.getFrameData());
-			if (data.length == 2) {
-				closeStatus = new CloseStatus(Integer.valueOf(data[0]), data[1]);
-			}
-			if (logger.isDebugEnabled()) {
-				logger.debug("Processing SockJS close frame with " + closeStatus + " in " + this);
+			String frameData = frame.getFrameData();
+			if (frameData != null) {
+				String[] data = getMessageCodec().decode(frameData);
+				if (data != null && data.length == 2) {
+					closeStatus = new CloseStatus(Integer.valueOf(data[0]), data[1]);
+				}
+				if (logger.isDebugEnabled()) {
+					logger.debug("Processing SockJS close frame with " + closeStatus + " in " + this);
+				}
 			}
 		}
 		catch (IOException ex) {
@@ -322,7 +334,7 @@ public abstract class AbstractClientSockJsSession implements WebSocketSession {
 		}
 	}
 
-	public void afterTransportClosed(CloseStatus closeStatus) {
+	public void afterTransportClosed(@Nullable CloseStatus closeStatus) {
 		CloseStatus cs = this.closeStatus;
 		if (cs == null) {
 			cs = closeStatus;

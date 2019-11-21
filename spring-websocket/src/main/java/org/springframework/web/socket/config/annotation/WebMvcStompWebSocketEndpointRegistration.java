@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
@@ -50,17 +51,19 @@ public class WebMvcStompWebSocketEndpointRegistration implements StompWebSocketE
 
 	private final TaskScheduler sockJsTaskScheduler;
 
+	@Nullable
 	private HandshakeHandler handshakeHandler;
 
-	private final List<HandshakeInterceptor> interceptors = new ArrayList<HandshakeInterceptor>();
+	private final List<HandshakeInterceptor> interceptors = new ArrayList<>();
 
-	private final List<String> allowedOrigins = new ArrayList<String>();
+	private final List<String> allowedOrigins = new ArrayList<>();
 
+	@Nullable
 	private SockJsServiceRegistration registration;
 
 
-	public WebMvcStompWebSocketEndpointRegistration(String[] paths, WebSocketHandler webSocketHandler,
-			TaskScheduler sockJsTaskScheduler) {
+	public WebMvcStompWebSocketEndpointRegistration(
+			String[] paths, WebSocketHandler webSocketHandler, TaskScheduler sockJsTaskScheduler) {
 
 		Assert.notEmpty(paths, "No paths specified");
 		Assert.notNull(webSocketHandler, "WebSocketHandler must not be null");
@@ -96,7 +99,8 @@ public class WebMvcStompWebSocketEndpointRegistration implements StompWebSocketE
 
 	@Override
 	public SockJsServiceRegistration withSockJS() {
-		this.registration = new SockJsServiceRegistration(this.sockJsTaskScheduler);
+		this.registration = new SockJsServiceRegistration();
+		this.registration.setTaskScheduler(this.sockJsTaskScheduler);
 		HandshakeInterceptor[] interceptors = getInterceptors();
 		if (interceptors.length > 0) {
 			this.registration.setInterceptors(interceptors);
@@ -112,14 +116,14 @@ public class WebMvcStompWebSocketEndpointRegistration implements StompWebSocketE
 	}
 
 	protected HandshakeInterceptor[] getInterceptors() {
-		List<HandshakeInterceptor> interceptors = new ArrayList<HandshakeInterceptor>(this.interceptors.size() + 1);
+		List<HandshakeInterceptor> interceptors = new ArrayList<>(this.interceptors.size() + 1);
 		interceptors.addAll(this.interceptors);
 		interceptors.add(new OriginHandshakeInterceptor(this.allowedOrigins));
-		return interceptors.toArray(new HandshakeInterceptor[interceptors.size()]);
+		return interceptors.toArray(new HandshakeInterceptor[0]);
 	}
 
 	public final MultiValueMap<HttpRequestHandler, String> getMappings() {
-		MultiValueMap<HttpRequestHandler, String> mappings = new LinkedMultiValueMap<HttpRequestHandler, String>();
+		MultiValueMap<HttpRequestHandler, String> mappings = new LinkedMultiValueMap<>();
 		if (this.registration != null) {
 			SockJsService sockJsService = this.registration.getSockJsService();
 			for (String path : this.paths) {

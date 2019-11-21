@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,10 +22,13 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.core.io.AbstractResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 
 /**
  * A {@code ResourceResolver} that delegates to the chain to locate a resource
@@ -38,11 +41,13 @@ import org.springframework.core.io.Resource;
  * @author Rossen Stoyanchev
  * @author Sam Brannen
  * @since 4.1
+ * @deprecated as of 5.1, in favor of using {@link EncodedResourceResolver}
  */
+@Deprecated
 public class GzipResourceResolver extends AbstractResourceResolver {
 
 	@Override
-	protected Resource resolveResourceInternal(HttpServletRequest request, String requestPath,
+	protected Resource resolveResourceInternal(@Nullable HttpServletRequest request, String requestPath,
 			List<? extends Resource> locations, ResourceResolverChain chain) {
 
 		Resource resource = chain.resolveResource(request, requestPath, locations);
@@ -76,7 +81,10 @@ public class GzipResourceResolver extends AbstractResourceResolver {
 	}
 
 
-	private static final class GzippedResource extends AbstractResource implements EncodedResource {
+	/**
+	 * A gzipped {@link HttpResource}.
+	 */
+	static final class GzippedResource extends AbstractResource implements HttpResource {
 
 		private final Resource original;
 
@@ -105,6 +113,11 @@ public class GzipResourceResolver extends AbstractResourceResolver {
 		@Override
 		public boolean isOpen() {
 			return this.gzipped.isOpen();
+		}
+
+		@Override
+		public boolean isFile() {
+			return this.gzipped.isFile();
 		}
 
 		@Override
@@ -138,6 +151,7 @@ public class GzipResourceResolver extends AbstractResourceResolver {
 		}
 
 		@Override
+		@Nullable
 		public String getFilename() {
 			return this.original.getFilename();
 		}
@@ -148,8 +162,12 @@ public class GzipResourceResolver extends AbstractResourceResolver {
 		}
 
 		@Override
-		public String getContentEncoding() {
-			return "gzip";
+		public HttpHeaders getResponseHeaders() {
+			HttpHeaders headers = (this.original instanceof HttpResource ?
+					((HttpResource) this.original).getResponseHeaders() : new HttpHeaders());
+			headers.add(HttpHeaders.CONTENT_ENCODING, "gzip");
+			headers.add(HttpHeaders.VARY, HttpHeaders.ACCEPT_ENCODING);
+			return headers;
 		}
 	}
 

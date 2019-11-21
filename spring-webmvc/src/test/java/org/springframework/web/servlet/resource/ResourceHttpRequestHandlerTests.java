@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,13 +17,11 @@
 package org.springframework.web.servlet.resource;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
+
 import javax.servlet.http.HttpServletResponse;
 
 import org.hamcrest.Matchers;
@@ -58,8 +56,6 @@ import static org.mockito.Mockito.*;
  */
 public class ResourceHttpRequestHandlerTests {
 
-	private SimpleDateFormat dateFormat;
-
 	private ResourceHttpRequestHandler handler;
 
 	private MockHttpServletRequest request;
@@ -69,9 +65,6 @@ public class ResourceHttpRequestHandlerTests {
 
 	@Before
 	public void setup() throws Exception {
-		dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-
 		List<Resource> paths = new ArrayList<>(2);
 		paths.add(new ClassPathResource("test/", getClass()));
 		paths.add(new ClassPathResource("testalternatepath/", getClass()));
@@ -97,7 +90,7 @@ public class ResourceHttpRequestHandlerTests {
 		assertEquals(17, this.response.getContentLength());
 		assertEquals("max-age=3600", this.response.getHeader("Cache-Control"));
 		assertTrue(this.response.containsHeader("Last-Modified"));
-		assertEquals(this.response.getHeader("Last-Modified"), resourceLastModifiedDate("test/foo.css"));
+		assertEquals(resourceLastModified("test/foo.css") / 1000, this.response.getDateHeader("Last-Modified") / 1000);
 		assertEquals("bytes", this.response.getHeader("Accept-Ranges"));
 		assertEquals(1, this.response.getHeaders("Accept-Ranges").size());
 		assertEquals("h1 { color:red; }", this.response.getContentAsString());
@@ -114,7 +107,7 @@ public class ResourceHttpRequestHandlerTests {
 		assertEquals(17, this.response.getContentLength());
 		assertEquals("max-age=3600", this.response.getHeader("Cache-Control"));
 		assertTrue(this.response.containsHeader("Last-Modified"));
-		assertEquals(this.response.getHeader("Last-Modified"), resourceLastModifiedDate("test/foo.css"));
+		assertEquals(resourceLastModified("test/foo.css") / 1000, this.response.getDateHeader("Last-Modified") / 1000);
 		assertEquals("bytes", this.response.getHeader("Accept-Ranges"));
 		assertEquals(1, this.response.getHeaders("Accept-Ranges").size());
 		assertEquals(0, this.response.getContentAsByteArray().length);
@@ -138,7 +131,7 @@ public class ResourceHttpRequestHandlerTests {
 
 		assertEquals("no-store", this.response.getHeader("Cache-Control"));
 		assertTrue(this.response.containsHeader("Last-Modified"));
-		assertEquals(this.response.getHeader("Last-Modified"), resourceLastModifiedDate("test/foo.css"));
+		assertEquals(resourceLastModified("test/foo.css") / 1000, this.response.getDateHeader("Last-Modified") / 1000);
 		assertEquals("bytes", this.response.getHeader("Accept-Ranges"));
 		assertEquals(1, this.response.getHeaders("Accept-Ranges").size());
 	}
@@ -169,9 +162,9 @@ public class ResourceHttpRequestHandlerTests {
 		this.handler.handleRequest(this.request, this.response);
 
 		assertEquals("max-age=3600, must-revalidate", this.response.getHeader("Cache-Control"));
-		assertTrue(dateHeaderAsLong("Expires") >= System.currentTimeMillis() - 1000 + (3600 * 1000));
+		assertTrue(this.response.getDateHeader("Expires") >= System.currentTimeMillis() - 1000 + (3600 * 1000));
 		assertTrue(this.response.containsHeader("Last-Modified"));
-		assertEquals(this.response.getHeader("Last-Modified"), resourceLastModifiedDate("test/foo.css"));
+		assertEquals(resourceLastModified("test/foo.css") / 1000, this.response.getDateHeader("Last-Modified") / 1000);
 		assertEquals("bytes", this.response.getHeader("Accept-Ranges"));
 		assertEquals(1, this.response.getHeaders("Accept-Ranges").size());
 	}
@@ -189,9 +182,9 @@ public class ResourceHttpRequestHandlerTests {
 		assertEquals("no-cache", this.response.getHeader("Pragma"));
 		assertThat(this.response.getHeaderValues("Cache-Control"), Matchers.iterableWithSize(1));
 		assertEquals("no-cache", this.response.getHeader("Cache-Control"));
-		assertTrue(dateHeaderAsLong("Expires") <= System.currentTimeMillis());
+		assertTrue(this.response.getDateHeader("Expires") <= System.currentTimeMillis());
 		assertTrue(this.response.containsHeader("Last-Modified"));
-		assertEquals(dateHeaderAsLong("Last-Modified") / 1000, resourceLastModified("test/foo.css") / 1000);
+		assertEquals(resourceLastModified("test/foo.css") / 1000, this.response.getDateHeader("Last-Modified") / 1000);
 		assertEquals("bytes", this.response.getHeader("Accept-Ranges"));
 		assertEquals(1, this.response.getHeaders("Accept-Ranges").size());
 	}
@@ -204,7 +197,7 @@ public class ResourceHttpRequestHandlerTests {
 		assertEquals("text/html", this.response.getContentType());
 		assertEquals("max-age=3600", this.response.getHeader("Cache-Control"));
 		assertTrue(this.response.containsHeader("Last-Modified"));
-		assertEquals(this.response.getHeader("Last-Modified"), resourceLastModifiedDate("test/foo.html"));
+		assertEquals(resourceLastModified("test/foo.html") / 1000, this.response.getDateHeader("Last-Modified") / 1000);
 		assertEquals("bytes", this.response.getHeader("Accept-Ranges"));
 		assertEquals(1, this.response.getHeaders("Accept-Ranges").size());
 	}
@@ -218,7 +211,8 @@ public class ResourceHttpRequestHandlerTests {
 		assertEquals(17, this.response.getContentLength());
 		assertEquals("max-age=3600", this.response.getHeader("Cache-Control"));
 		assertTrue(this.response.containsHeader("Last-Modified"));
-		assertEquals(this.response.getHeader("Last-Modified"), resourceLastModifiedDate("testalternatepath/baz.css"));
+		assertEquals(resourceLastModified("testalternatepath/baz.css") / 1000,
+				this.response.getDateHeader("Last-Modified") / 1000);
 		assertEquals("bytes", this.response.getHeader("Accept-Ranges"));
 		assertEquals(1, this.response.getHeaders("Accept-Ranges").size());
 		assertEquals("h1 { color:red; }", this.response.getContentAsString());
@@ -245,7 +239,7 @@ public class ResourceHttpRequestHandlerTests {
 	@Test  // SPR-13658
 	public void getResourceWithRegisteredMediaType() throws Exception {
 		ContentNegotiationManagerFactoryBean factory = new ContentNegotiationManagerFactoryBean();
-		factory.addMediaType("css", new MediaType("foo", "bar"));
+		factory.addMediaType("bar", new MediaType("foo", "bar"));
 		factory.afterPropertiesSet();
 		ContentNegotiationManager manager = factory.getObject();
 
@@ -256,7 +250,7 @@ public class ResourceHttpRequestHandlerTests {
 		handler.setContentNegotiationManager(manager);
 		handler.afterPropertiesSet();
 
-		this.request.setAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE, "foo.css");
+		this.request.setAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE, "foo.bar");
 		handler.handleRequest(this.request, this.response);
 
 		assertEquals("foo/bar", this.response.getContentType());
@@ -407,7 +401,8 @@ public class ResourceHttpRequestHandlerTests {
 	}
 
 	@Test
-	public void processPath() throws Exception {
+	public void processPath() {
+		// Unchanged
 		assertSame("/foo/bar", this.handler.processPath("/foo/bar"));
 		assertSame("foo/bar", this.handler.processPath("foo/bar"));
 
@@ -433,10 +428,17 @@ public class ResourceHttpRequestHandlerTests {
 		assertEquals("/", this.handler.processPath("/"));
 		assertEquals("/", this.handler.processPath("///"));
 		assertEquals("/", this.handler.processPath("/ /   / "));
+		assertEquals("/", this.handler.processPath("\\/ \\/   \\/ "));
+
+		// duplicate slash or backslash
+		assertEquals("/foo/ /bar/baz/", this.handler.processPath("//foo/ /bar//baz//"));
+		assertEquals("/foo/ /bar/baz/", this.handler.processPath("\\\\foo\\ \\bar\\\\baz\\\\"));
+		assertEquals("foo/bar", this.handler.processPath("foo\\\\/\\////bar"));
+
 	}
 
 	@Test
-	public void initAllowedLocations() throws Exception {
+	public void initAllowedLocations() {
 		PathResourceResolver resolver = (PathResourceResolver) this.handler.getResourceResolvers().get(0);
 		Resource[] locations = resolver.getAllowedLocations();
 
@@ -493,8 +495,7 @@ public class ResourceHttpRequestHandlerTests {
 	public void directoryInJarFile() throws Exception {
 		this.request.setAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE, "underscorejs/");
 		this.handler.handleRequest(this.request, this.response);
-		assertEquals(200, this.response.getStatus());
-		assertEquals(0, this.response.getContentLength());
+		assertEquals(404, this.response.getStatus());
 	}
 
 	@Test
@@ -662,15 +663,6 @@ public class ResourceHttpRequestHandlerTests {
 
 	private long resourceLastModified(String resourceName) throws IOException {
 		return new ClassPathResource(resourceName, getClass()).getFile().lastModified();
-	}
-
-	private String resourceLastModifiedDate(String resourceName) throws IOException {
-		long lastModified = new ClassPathResource(resourceName, getClass()).getFile().lastModified();
-		return dateFormat.format(lastModified);
-	}
-
-	private long dateHeaderAsLong(String responseHeaderName) throws Exception {
-		return dateFormat.parse(this.response.getHeader(responseHeaderName)).getTime();
 	}
 
 

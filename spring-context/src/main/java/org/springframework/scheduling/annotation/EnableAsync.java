@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -89,9 +89,9 @@ import org.springframework.core.Ordered;
  *     &#064;Override
  *     public Executor getAsyncExecutor() {
  *         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
- *         executor.setCorePoolSize(5);
- *         executor.setMaxPoolSize(10);
- *         executor.setQueueCapacity(25);
+ *         executor.setCorePoolSize(7);
+ *         executor.setMaxPoolSize(42);
+ *         executor.setQueueCapacity(11);
  *         executor.setThreadNamePrefix("MyExecutor-");
  *         executor.initialize();
  *         return executor;
@@ -99,7 +99,7 @@ import org.springframework.core.Ordered;
  *
  *     &#064;Override
  *     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
- *         return MyAsyncUncaughtExceptionHandler();
+ *         return new MyAsyncUncaughtExceptionHandler();
  *     }
  * }</pre>
  *
@@ -117,19 +117,18 @@ import org.springframework.core.Ordered;
  * configuration:
  *
  * <pre class="code">
- * {@code
- * <beans>
+ * &lt;beans&gt;
  *
- *     <task:annotation-driven executor="myExecutor" exception-handler="exceptionHandler"/>
+ *     &lt;task:annotation-driven executor="myExecutor" exception-handler="exceptionHandler"/&gt;
  *
- *     <task:executor id="myExecutor" pool-size="5-10" queue-capacity="25"/>
+ *     &lt;task:executor id="myExecutor" pool-size="7-42" queue-capacity="11"/&gt;
  *
- *     <bean id="asyncBean" class="com.foo.MyAsyncBean"/>
+ *     &lt;bean id="asyncBean" class="com.foo.MyAsyncBean"/&gt;
  *
- *     <bean id="exceptionHandler" class="com.foo.MyAsyncUncaughtExceptionHandler"/>
+ *     &lt;bean id="exceptionHandler" class="com.foo.MyAsyncUncaughtExceptionHandler"/&gt;
  *
- * </beans>
- * }</pre>
+ * &lt;/beans&gt;
+ * </pre>
  *
  * The above XML-based and JavaConfig-based examples are equivalent except for the
  * setting of the <em>thread name prefix</em> of the {@code Executor}; this is because

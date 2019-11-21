@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.web.servlet.handler;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.PathMatcher;
 import org.springframework.web.context.request.WebRequestInterceptor;
@@ -43,12 +44,15 @@ import org.springframework.web.servlet.ModelAndView;
  */
 public final class MappedInterceptor implements HandlerInterceptor {
 
+	@Nullable
 	private final String[] includePatterns;
 
+	@Nullable
 	private final String[] excludePatterns;
 
 	private final HandlerInterceptor interceptor;
 
+	@Nullable
 	private PathMatcher pathMatcher;
 
 
@@ -57,7 +61,7 @@ public final class MappedInterceptor implements HandlerInterceptor {
 	 * @param includePatterns the path patterns to map (empty for matching to all paths)
 	 * @param interceptor the HandlerInterceptor instance to map to the given patterns
 	 */
-	public MappedInterceptor(String[] includePatterns, HandlerInterceptor interceptor) {
+	public MappedInterceptor(@Nullable String[] includePatterns, HandlerInterceptor interceptor) {
 		this(includePatterns, null, interceptor);
 	}
 
@@ -67,7 +71,9 @@ public final class MappedInterceptor implements HandlerInterceptor {
 	 * @param excludePatterns the path patterns to exclude (empty for no specific excludes)
 	 * @param interceptor the HandlerInterceptor instance to map to the given patterns
 	 */
-	public MappedInterceptor(String[] includePatterns, String[] excludePatterns, HandlerInterceptor interceptor) {
+	public MappedInterceptor(@Nullable String[] includePatterns, @Nullable String[] excludePatterns,
+			HandlerInterceptor interceptor) {
+
 		this.includePatterns = includePatterns;
 		this.excludePatterns = excludePatterns;
 		this.interceptor = interceptor;
@@ -79,7 +85,7 @@ public final class MappedInterceptor implements HandlerInterceptor {
 	 * @param includePatterns the path patterns to map (empty for matching to all paths)
 	 * @param interceptor the WebRequestInterceptor instance to map to the given patterns
 	 */
-	public MappedInterceptor(String[] includePatterns, WebRequestInterceptor interceptor) {
+	public MappedInterceptor(@Nullable String[] includePatterns, WebRequestInterceptor interceptor) {
 		this(includePatterns, null, interceptor);
 	}
 
@@ -89,7 +95,9 @@ public final class MappedInterceptor implements HandlerInterceptor {
 	 * @param excludePatterns the path patterns to exclude (empty for no specific excludes)
 	 * @param interceptor the WebRequestInterceptor instance to map to the given patterns
 	 */
-	public MappedInterceptor(String[] includePatterns, String[] excludePatterns, WebRequestInterceptor interceptor) {
+	public MappedInterceptor(@Nullable String[] includePatterns, @Nullable String[] excludePatterns,
+			WebRequestInterceptor interceptor) {
+
 		this(includePatterns, excludePatterns, new WebRequestHandlerInterceptorAdapter(interceptor));
 	}
 
@@ -101,13 +109,14 @@ public final class MappedInterceptor implements HandlerInterceptor {
 	 * implementations that support mapping metadata other than the Ant-style path patterns
 	 * supported by default.
 	 */
-	public void setPathMatcher(PathMatcher pathMatcher) {
+	public void setPathMatcher(@Nullable PathMatcher pathMatcher) {
 		this.pathMatcher = pathMatcher;
 	}
 
 	/**
 	 * The configured PathMatcher, or {@code null} if none.
 	 */
+	@Nullable
 	public PathMatcher getPathMatcher() {
 		return this.pathMatcher;
 	}
@@ -115,6 +124,7 @@ public final class MappedInterceptor implements HandlerInterceptor {
 	/**
 	 * The path into the application the interceptor is mapped to.
 	 */
+	@Nullable
 	public String[] getPathPatterns() {
 		return this.includePatterns;
 	}
@@ -131,6 +141,7 @@ public final class MappedInterceptor implements HandlerInterceptor {
 	 * Determine a match for the given lookup path.
 	 * @param lookupPath the current request path
 	 * @param pathMatcher a path matcher for path pattern matching
+	 * @return {@code true} if the interceptor applies to the given request path
 	 */
 	public boolean matches(String lookupPath, PathMatcher pathMatcher) {
 		PathMatcher pathMatcherToUse = (this.pathMatcher != null ? this.pathMatcher : pathMatcher);
@@ -161,14 +172,14 @@ public final class MappedInterceptor implements HandlerInterceptor {
 
 	@Override
 	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
-			ModelAndView modelAndView) throws Exception {
+			@Nullable ModelAndView modelAndView) throws Exception {
 
 		this.interceptor.postHandle(request, response, handler, modelAndView);
 	}
 
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
-			Exception ex) throws Exception {
+			@Nullable Exception ex) throws Exception {
 
 		this.interceptor.afterCompletion(request, response, handler, ex);
 	}

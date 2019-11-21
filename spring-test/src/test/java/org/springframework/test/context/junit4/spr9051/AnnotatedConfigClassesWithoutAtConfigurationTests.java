@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2012 the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -93,9 +93,9 @@ public class AnnotatedConfigClassesWithoutAtConfigurationTests {
 		assertNotNull(enigma);
 		assertNotNull(lifecycleBean);
 		assertTrue(lifecycleBean.isInitialized());
-		Set<String> names = new HashSet<String>();
+		Set<String> names = new HashSet<>();
 		names.add(enigma.toString());
 		names.add(lifecycleBean.getName());
-		assertEquals(names, new HashSet<String>(Arrays.asList("enigma #1", "enigma #2")));
+		assertEquals(names, new HashSet<>(Arrays.asList("enigma #1", "enigma #2")));
 	}
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,19 +20,20 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
+
 import javax.servlet.DispatcherType;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.cors.CorsUtils;
 
 /**
  * A logical disjunction (' || ') request condition that matches a request
- * against a set of {@link RequestMethod}s.
+ * against a set of {@link RequestMethod RequestMethods}.
  *
  * @author Arjen Poutsma
  * @author Rossen Stoyanchev
@@ -43,7 +44,6 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 	private static final RequestMethodsRequestCondition GET_CONDITION =
 			new RequestMethodsRequestCondition(RequestMethod.GET);
 
-
 	private final Set<RequestMethod> methods;
 
 
@@ -53,21 +53,16 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 	 * if, 0 the condition will match to every request
 	 */
 	public RequestMethodsRequestCondition(RequestMethod... requestMethods) {
-		this(asList(requestMethods));
+		this(Arrays.asList(requestMethods));
 	}
 
 	private RequestMethodsRequestCondition(Collection<RequestMethod> requestMethods) {
-		this.methods = Collections.unmodifiableSet(new LinkedHashSet<RequestMethod>(requestMethods));
-	}
-
-
-	private static List<RequestMethod> asList(RequestMethod... requestMethods) {
-		return (requestMethods != null ? Arrays.asList(requestMethods) : Collections.<RequestMethod>emptyList());
+		this.methods = Collections.unmodifiableSet(new LinkedHashSet<>(requestMethods));
 	}
 
 
 	/**
-	 * Returns all {@link RequestMethod}s contained in this condition.
+	 * Returns all {@link RequestMethod RequestMethods} contained in this condition.
 	 */
 	public Set<RequestMethod> getMethods() {
 		return this.methods;
@@ -89,7 +84,7 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 	 */
 	@Override
 	public RequestMethodsRequestCondition combine(RequestMethodsRequestCondition other) {
-		Set<RequestMethod> set = new LinkedHashSet<RequestMethod>(this.methods);
+		Set<RequestMethod> set = new LinkedHashSet<>(this.methods);
 		set.addAll(other.methods);
 		return new RequestMethodsRequestCondition(set);
 	}
@@ -104,6 +99,7 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 	 * request method is OPTIONS.
 	 */
 	@Override
+	@Nullable
 	public RequestMethodsRequestCondition getMatchingCondition(HttpServletRequest request) {
 		if (CorsUtils.isPreFlightRequest(request)) {
 			return matchPreFlight(request);
@@ -126,6 +122,7 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 	 * Hence empty conditions is a match, otherwise try to match to the HTTP
 	 * method in the "Access-Control-Request-Method" header.
 	 */
+	@Nullable
 	private RequestMethodsRequestCondition matchPreFlight(HttpServletRequest request) {
 		if (getMethods().isEmpty()) {
 			return this;
@@ -134,6 +131,7 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 		return matchRequestMethod(expectedMethod);
 	}
 
+	@Nullable
 	private RequestMethodsRequestCondition matchRequestMethod(String httpMethodValue) {
 		HttpMethod httpMethod = HttpMethod.resolve(httpMethodValue);
 		if (httpMethod != null) {

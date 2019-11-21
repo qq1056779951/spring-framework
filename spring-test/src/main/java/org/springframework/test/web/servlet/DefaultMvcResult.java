@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.springframework.lang.Nullable;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.util.Assert;
@@ -44,16 +45,21 @@ class DefaultMvcResult implements MvcResult {
 
 	private final MockHttpServletResponse mockResponse;
 
+	@Nullable
 	private Object handler;
 
+	@Nullable
 	private HandlerInterceptor[] interceptors;
 
+	@Nullable
 	private ModelAndView modelAndView;
 
+	@Nullable
 	private Exception resolvedException;
 
-	private final AtomicReference<Object> asyncResult = new AtomicReference<Object>(RESULT_NONE);
+	private final AtomicReference<Object> asyncResult = new AtomicReference<>(RESULT_NONE);
 
+	@Nullable
 	private CountDownLatch asyncDispatchLatch;
 
 
@@ -76,20 +82,22 @@ class DefaultMvcResult implements MvcResult {
 		return this.mockResponse;
 	}
 
-	public void setHandler(Object handler) {
+	public void setHandler(@Nullable Object handler) {
 		this.handler = handler;
 	}
 
 	@Override
+	@Nullable
 	public Object getHandler() {
 		return this.handler;
 	}
 
-	public void setInterceptors(HandlerInterceptor... interceptors) {
+	public void setInterceptors(@Nullable HandlerInterceptor... interceptors) {
 		this.interceptors = interceptors;
 	}
 
 	@Override
+	@Nullable
 	public HandlerInterceptor[] getInterceptors() {
 		return this.interceptors;
 	}
@@ -99,15 +107,17 @@ class DefaultMvcResult implements MvcResult {
 	}
 
 	@Override
+	@Nullable
 	public Exception getResolvedException() {
 		return this.resolvedException;
 	}
 
-	public void setModelAndView(ModelAndView mav) {
+	public void setModelAndView(@Nullable ModelAndView mav) {
 		this.modelAndView = mav;
 	}
 
 	@Override
+	@Nullable
 	public ModelAndView getModelAndView() {
 		return this.modelAndView;
 	}
@@ -128,17 +138,16 @@ class DefaultMvcResult implements MvcResult {
 
 	@Override
 	public Object getAsyncResult(long timeToWait) {
-		if (this.mockRequest.getAsyncContext() != null) {
-			timeToWait = (timeToWait == -1 ? this.mockRequest.getAsyncContext().getTimeout() : timeToWait);
+		if (this.mockRequest.getAsyncContext() != null && timeToWait == -1) {
+			long requestTimeout = this.mockRequest.getAsyncContext().getTimeout();
+			timeToWait = requestTimeout == -1 ? Long.MAX_VALUE : requestTimeout;
 		}
 		if (!awaitAsyncDispatch(timeToWait)) {
 			throw new IllegalStateException("Async result for handler [" + this.handler + "]" +
 					" was not set during the specified timeToWait=" + timeToWait);
 		}
 		Object result = this.asyncResult.get();
-		if (result == RESULT_NONE) {
-			throw new IllegalStateException("Async result for handler [" + this.handler + "] was not set");
-		}
+		Assert.state(result != RESULT_NONE, () -> "Async result for handler [" + this.handler + "] was not set");
 		return this.asyncResult.get();
 	}
 

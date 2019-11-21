@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
 package org.springframework.transaction.jta;
 
 import java.util.List;
+
 import javax.naming.NamingException;
 
 import com.ibm.websphere.uow.UOWSynchronizationRegistry;
@@ -26,6 +27,7 @@ import com.ibm.wsspi.uow.UOWException;
 import com.ibm.wsspi.uow.UOWManager;
 import com.ibm.wsspi.uow.UOWManagerFactory;
 
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.IllegalTransactionStateException;
 import org.springframework.transaction.InvalidTimeoutException;
 import org.springframework.transaction.NestedTransactionNotSupportedException;
@@ -40,6 +42,7 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionSynchronizationUtils;
+import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -95,8 +98,10 @@ public class WebSphereUowTransactionManager extends JtaTransactionManager
 	public static final String DEFAULT_UOW_MANAGER_NAME = "java:comp/websphere/UOWManager";
 
 
+	@Nullable
 	private UOWManager uowManager;
 
+	@Nullable
 	private String uowManagerName;
 
 
@@ -193,6 +198,12 @@ public class WebSphereUowTransactionManager extends JtaTransactionManager
 		}
 	}
 
+	private UOWManager obtainUOWManager() {
+		Assert.state(this.uowManager != null, "No UOWManager set");
+		return this.uowManager;
+	}
+
+
 	/**
 	 * Registers the synchronizations as interposed JTA Synchronization on the UOWManager.
 	 */
@@ -200,7 +211,7 @@ public class WebSphereUowTransactionManager extends JtaTransactionManager
 	protected void doRegisterAfterCompletionWithJtaTransaction(
 			JtaTransactionObject txObject, List<TransactionSynchronization> synchronizations) {
 
-		this.uowManager.registerInterposedSynchronization(new JtaAfterCompletionSynchronization(synchronizations));
+		obtainUOWManager().registerInterposedSynchronization(new JtaAfterCompletionSynchronization(synchronizations));
 	}
 
 	/**
@@ -219,7 +230,10 @@ public class WebSphereUowTransactionManager extends JtaTransactionManager
 
 
 	@Override
-	public <T> T execute(TransactionDefinition definition, TransactionCallback<T> callback) throws TransactionException {
+	@Nullable
+	public <T> T execute(@Nullable TransactionDefinition definition, TransactionCallback<T> callback)
+			throws TransactionException {
+
 		if (definition == null) {
 			// Use defaults if no transaction definition given.
 			definition = new DefaultTransactionDefinition();
@@ -228,9 +242,11 @@ public class WebSphereUowTransactionManager extends JtaTransactionManager
 		if (definition.getTimeout() < TransactionDefinition.TIMEOUT_DEFAULT) {
 			throw new InvalidTimeoutException("Invalid transaction timeout", definition.getTimeout());
 		}
+
+		UOWManager uowManager = obtainUOWManager();
 		int pb = definition.getPropagationBehavior();
-		boolean existingTx = (this.uowManager.getUOWStatus() != UOWSynchronizationRegistry.UOW_STATUS_NONE &&
-				this.uowManager.getUOWType() != UOWSynchronizationRegistry.UOW_TYPE_LOCAL_TRANSACTION);
+		boolean existingTx = (uowManager.getUOWStatus() != UOWSynchronizationRegistry.UOW_STATUS_NONE &&
+				uowManager.getUOWType() != UOWSynchronizationRegistry.UOW_TYPE_LOCAL_TRANSACTION);
 
 		int uowType = UOWSynchronizationRegistry.UOW_TYPE_GLOBAL_TRANSACTION;
 		boolean joinTx = false;
@@ -283,32 +299,22 @@ public class WebSphereUowTransactionManager extends JtaTransactionManager
 		UOWActionAdapter<T> action = null;
 		try {
 			if (definition.getTimeout() > TransactionDefinition.TIMEOUT_DEFAULT) {
-				this.uowManager.setUOWTimeout(uowType, definition.getTimeout());
+				uowManager.setUOWTimeout(uowType, definition.getTimeout());
 			}
 			if (debug) {
 				logger.debug("Invoking WebSphere UOW action: type=" + uowType + ", join=" + joinTx);
 			}
-			action = new UOWActionAdapter<T>(
+			action = new UOWActionAdapter<>(
 					definition, callback, (uowType == UOWManager.UOW_TYPE_GLOBAL_TRANSACTION), !joinTx, newSynch, debug);
-			this.uowManager.runUnderUOW(uowType, joinTx, action);
+			uowManager.runUnderUOW(uowType, joinTx, action);
 			if (debug) {
 				logger.debug("Returned from WebSphere UOW action: type=" + uowType + ", join=" + joinTx);
 			}
 			return action.getResult();
 		}
-		catch (UOWException ex) {
+		catch (UOWException | UOWActionException ex) {
 			TransactionSystemException tse =
 					new TransactionSystemException("UOWManager transaction processing failed", ex);
-			Throwable appEx = action.getException();
-			if (appEx != null) {
-				logger.error("Application exception overridden by rollback exception", appEx);
-				tse.initApplicationException(appEx);
-			}
-			throw tse;
-		}
-		catch (UOWActionException ex) {
-			TransactionSystemException tse =
-					new TransactionSystemException("UOWManager threw unexpected UOWActionException", ex);
 			Throwable appEx = action.getException();
 			if (appEx != null) {
 				logger.error("Application exception overridden by rollback exception", appEx);
@@ -341,8 +347,10 @@ public class WebSphereUowTransactionManager extends JtaTransactionManager
 
 		private boolean debug;
 
+		@Nullable
 		private T result;
 
+		@Nullable
 		private Throwable exception;
 
 		public UOWActionAdapter(TransactionDefinition definition, TransactionCallback<T> callback,
@@ -358,6 +366,7 @@ public class WebSphereUowTransactionManager extends JtaTransactionManager
 
 		@Override
 		public void run() {
+			UOWManager uowManager = obtainUOWManager();
 			DefaultTransactionStatus status = prepareTransactionStatus(
 					this.definition, (this.actualTransaction ? this : null),
 					this.newTransaction, this.newSynchronization, this.debug, null);
@@ -390,6 +399,7 @@ public class WebSphereUowTransactionManager extends JtaTransactionManager
 			}
 		}
 
+		@Nullable
 		public T getResult() {
 			if (this.exception != null) {
 				ReflectionUtils.rethrowRuntimeException(this.exception);
@@ -397,13 +407,14 @@ public class WebSphereUowTransactionManager extends JtaTransactionManager
 			return this.result;
 		}
 
+		@Nullable
 		public Throwable getException() {
 			return this.exception;
 		}
 
 		@Override
 		public boolean isRollbackOnly() {
-			return uowManager.getRollbackOnly();
+			return obtainUOWManager().getRollbackOnly();
 		}
 
 		@Override

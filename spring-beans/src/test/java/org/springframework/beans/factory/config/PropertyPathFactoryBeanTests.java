@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,6 +37,7 @@ import static org.springframework.tests.TestResourceUtils.*;
 public class PropertyPathFactoryBeanTests {
 
 	private static final Resource CONTEXT = qualifiedResource(PropertyPathFactoryBeanTests.class, "context.xml");
+
 
 	@Test
 	public void testPropertyPathFactoryBeanWithSingletonResult() {
@@ -78,7 +79,7 @@ public class PropertyPathFactoryBeanTests {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		new XmlBeanDefinitionReader(xbf).loadBeanDefinitions(CONTEXT);
 		assertNull(xbf.getType("tb.spouse.spouse"));
-		assertNull(xbf.getBean("tb.spouse.spouse"));
+		assertEquals("null", xbf.getBean("tb.spouse.spouse").toString());
 	}
 
 	@Test
@@ -90,6 +91,20 @@ public class PropertyPathFactoryBeanTests {
 		assertSame(spouse, tbWithInner.getSpouse());
 		assertTrue(!tbWithInner.getFriends().isEmpty());
 		assertSame(spouse, tbWithInner.getFriends().iterator().next());
+	}
+
+	@Test
+	public void testPropertyPathFactoryBeanAsNullReference() {
+		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
+		new XmlBeanDefinitionReader(xbf).loadBeanDefinitions(CONTEXT);
+		assertNull(xbf.getBean("tbWithNullReference", TestBean.class).getSpouse());
+	}
+
+	@Test
+	public void testPropertyPathFactoryBeanAsInnerNull() {
+		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
+		new XmlBeanDefinitionReader(xbf).loadBeanDefinitions(CONTEXT);
+		assertNull(xbf.getBean("tbWithInnerNull", TestBean.class).getSpouse());
 	}
 
 }

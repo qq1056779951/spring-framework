@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.test.context.jdbc;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
+
 import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
@@ -30,6 +31,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 import org.springframework.test.context.jdbc.SqlConfig.ErrorMode;
@@ -39,11 +41,10 @@ import org.springframework.test.context.transaction.TestContextTransactionUtils;
 import org.springframework.test.context.util.TestContextResourceUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.interceptor.DefaultTransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionAttribute;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
@@ -185,7 +186,7 @@ public class SqlScriptsTestExecutionListener extends AbstractTestExecutionListen
 				scriptResources.add(new ByteArrayResource(stmt.getBytes(), "from inlined SQL statement: " + stmt));
 			}
 		}
-		populator.setScripts(scriptResources.toArray(new Resource[scriptResources.size()]));
+		populator.setScripts(scriptResources.toArray(new Resource[0]));
 		if (logger.isDebugEnabled()) {
 			logger.debug("Executing SQL scripts: " + ObjectUtils.nullSafeToString(scriptResources));
 		}
@@ -197,15 +198,11 @@ public class SqlScriptsTestExecutionListener extends AbstractTestExecutionListen
 		boolean newTxRequired = (mergedSqlConfig.getTransactionMode() == TransactionMode.ISOLATED);
 
 		if (txMgr == null) {
-			if (newTxRequired) {
-				throw new IllegalStateException(String.format("Failed to execute SQL scripts for test context %s: " +
-						"cannot execute SQL scripts using Transaction Mode [%s] without a PlatformTransactionManager.",
-						testContext, TransactionMode.ISOLATED));
-			}
-			if (dataSource == null) {
-				throw new IllegalStateException(String.format("Failed to execute SQL scripts for test context %s: " +
-						"supply at least a DataSource or PlatformTransactionManager.", testContext));
-			}
+			Assert.state(!newTxRequired, () -> String.format("Failed to execute SQL scripts for test context %s: " +
+					"cannot execute SQL scripts using Transaction Mode " +
+					"[%s] without a PlatformTransactionManager.", testContext, TransactionMode.ISOLATED));
+			Assert.state(dataSource != null, () -> String.format("Failed to execute SQL scripts for test context %s: " +
+					"supply at least a DataSource or PlatformTransactionManager.", testContext));
 			// Execute scripts directly against the DataSource
 			populator.execute(dataSource);
 		}
@@ -220,26 +217,23 @@ public class SqlScriptsTestExecutionListener extends AbstractTestExecutionListen
 			}
 			if (dataSource == null) {
 				dataSource = dataSourceFromTxMgr;
-				if (dataSource == null) {
-					throw new IllegalStateException(String.format("Failed to execute SQL scripts for " +
-							"test context %s: could not obtain DataSource from transaction manager [%s] (named '%s').",
-							testContext, txMgr.getClass().getName(), tmName));
-				}
+				Assert.state(dataSource != null, () -> String.format("Failed to execute SQL scripts for " +
+						"test context %s: could not obtain DataSource from transaction manager [%s] (named '%s').",
+						testContext, txMgr.getClass().getName(), tmName));
 			}
 			final DataSource finalDataSource = dataSource;
 			int propagation = (newTxRequired ? TransactionDefinition.PROPAGATION_REQUIRES_NEW :
 					TransactionDefinition.PROPAGATION_REQUIRED);
 			TransactionAttribute txAttr = TestContextTransactionUtils.createDelegatingTransactionAttribute(
 					testContext, new DefaultTransactionAttribute(propagation));
-			new TransactionTemplate(txMgr, txAttr).execute(new TransactionCallbackWithoutResult() {
-				@Override
-				public void doInTransactionWithoutResult(TransactionStatus status) {
-					populator.execute(finalDataSource);
-				}
+			new TransactionTemplate(txMgr, txAttr).execute(status -> {
+				populator.execute(finalDataSource);
+				return null;
 			});
 		}
 	}
 
+	@Nullable
 	private DataSource getDataSourceFromTransactionManager(PlatformTransactionManager transactionManager) {
 		try {
 			Method getDataSourceMethod = transactionManager.getClass().getMethod("getDataSource");

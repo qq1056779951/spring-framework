@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,9 +18,11 @@ package org.springframework.beans.support;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -44,6 +46,7 @@ import org.springframework.util.Assert;
  *
  * @author Juergen Hoeller
  * @since 19.05.2003
+ * @param <E> the element type
  * @see #getPageList()
  * @see org.springframework.beans.support.MutableSortDefinition
  */
@@ -61,12 +64,15 @@ public class PagedListHolder<E> implements Serializable {
 	public static final int DEFAULT_MAX_LINKED_PAGES = 10;
 
 
-	private List<E> source;
+	private List<E> source = Collections.emptyList();
 
+	@Nullable
 	private Date refreshDate;
 
+	@Nullable
 	private SortDefinition sort;
 
+	@Nullable
 	private SortDefinition sortUsed;
 
 	private int pageSize = DEFAULT_PAGE_SIZE;
@@ -84,7 +90,7 @@ public class PagedListHolder<E> implements Serializable {
 	 * @see #setSource
 	 */
 	public PagedListHolder() {
-		this(new ArrayList<E>(0));
+		this(new ArrayList<>(0));
 	}
 
 	/**
@@ -128,6 +134,7 @@ public class PagedListHolder<E> implements Serializable {
 	/**
 	 * Return the last time the list has been fetched from the source provider.
 	 */
+	@Nullable
 	public Date getRefreshDate() {
 		return this.refreshDate;
 	}
@@ -137,13 +144,14 @@ public class PagedListHolder<E> implements Serializable {
 	 * Typically an instance of MutableSortDefinition.
 	 * @see org.springframework.beans.support.MutableSortDefinition
 	 */
-	public void setSort(SortDefinition sort) {
+	public void setSort(@Nullable SortDefinition sort) {
 		this.sort = sort;
 	}
 
 	/**
 	 * Return the sort definition for this holder.
 	 */
+	@Nullable
 	public SortDefinition getSort() {
 		return this.sort;
 	}

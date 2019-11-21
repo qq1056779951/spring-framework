@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,16 +48,6 @@ public class WebSocketHandlerMapping extends SimpleUrlHandlerMapping implements 
 
 
 	@Override
-	public boolean isAutoStartup() {
-		return true;
-	}
-
-	@Override
-	public int getPhase() {
-		return Integer.MAX_VALUE;
-	}
-
-	@Override
 	public void start() {
 		if (!isRunning()) {
 			this.running = true;
@@ -79,12 +69,6 @@ public class WebSocketHandlerMapping extends SimpleUrlHandlerMapping implements 
 				}
 			}
 		}
-	}
-
-	@Override
-	public void stop(Runnable callback) {
-		stop();
-		callback.run();
 	}
 
 	@Override

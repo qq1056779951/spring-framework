@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,8 +16,6 @@
 
 package org.springframework.http.client;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Locale;
@@ -93,14 +91,8 @@ public abstract class AbstractHttpRequestFactoryTestCase extends AbstractMockWeb
 		request.getHeaders().setContentLength(body.length);
 
 		if (request instanceof StreamingHttpOutputMessage) {
-			StreamingHttpOutputMessage streamingRequest =
-					(StreamingHttpOutputMessage) request;
-			streamingRequest.setBody(new StreamingHttpOutputMessage.Body() {
-				@Override
-				public void writeTo(OutputStream outputStream) throws IOException {
-					StreamUtils.copy(body, outputStream);
-				}
-			});
+			StreamingHttpOutputMessage streamingRequest = (StreamingHttpOutputMessage) request;
+			streamingRequest.setBody(outputStream -> StreamUtils.copy(body, outputStream));
 		}
 		else {
 			StreamUtils.copy(body, request.getBody());
@@ -123,16 +115,14 @@ public abstract class AbstractHttpRequestFactoryTestCase extends AbstractMockWeb
 	@Test(expected = IllegalStateException.class)
 	public void multipleWrites() throws Exception {
 		ClientHttpRequest request = factory.createRequest(new URI(baseUrl + "/echo"), HttpMethod.POST);
+
 		final byte[] body = "Hello World".getBytes("UTF-8");
 		if (request instanceof StreamingHttpOutputMessage) {
 			StreamingHttpOutputMessage streamingRequest = (StreamingHttpOutputMessage) request;
-			streamingRequest.setBody(new StreamingHttpOutputMessage.Body() {
-				@Override
-				public void writeTo(OutputStream outputStream) throws IOException {
-					StreamUtils.copy(body, outputStream);
-					outputStream.flush();
-					outputStream.close();
-				}
+			streamingRequest.setBody(outputStream -> {
+				StreamUtils.copy(body, outputStream);
+				outputStream.flush();
+				outputStream.close();
 			});
 		}
 		else {
@@ -145,7 +135,7 @@ public abstract class AbstractHttpRequestFactoryTestCase extends AbstractMockWeb
 
 	@Test(expected = UnsupportedOperationException.class)
 	public void headersAfterExecute() throws Exception {
-		ClientHttpRequest request = factory.createRequest(new URI(baseUrl + "/echo"), HttpMethod.POST);
+		ClientHttpRequest request = factory.createRequest(new URI(baseUrl + "/status/ok"), HttpMethod.POST);
 
 		request.getHeaders().add("MyHeader", "value");
 		byte[] body = "Hello World".getBytes("UTF-8");

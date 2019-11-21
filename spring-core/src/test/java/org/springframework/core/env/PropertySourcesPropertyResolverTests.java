@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +23,6 @@ import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.mock.env.MockPropertySource;
 
@@ -88,7 +87,7 @@ public class PropertySourcesPropertyResolverTests {
 	@Test
 	public void getProperty_withExplicitNullValue() {
 		// java.util.Properties does not allow null values (because Hashtable does not)
-		Map<String, Object> nullableProperties = new HashMap<String, Object>();
+		Map<String, Object> nullableProperties = new HashMap<>();
 		propertySources.addLast(new MapPropertySource("nullableProperties", nullableProperties));
 		nullableProperties.put("foo", null);
 		assertThat(propertyResolver.getProperty("foo"), nullValue());
@@ -128,7 +127,7 @@ public class PropertySourcesPropertyResolverTests {
 		String value1 = "bar";
 		String value2 = "biz";
 
-		HashMap<String, Object> map = new HashMap<String, Object>();
+		HashMap<String, Object> map = new HashMap<>();
 		map.put(key, value1); // before construction
 		MutablePropertySources propertySources = new MutablePropertySources();
 		propertySources.addFirst(new MapPropertySource("testProperties", map));
@@ -140,7 +139,7 @@ public class PropertySourcesPropertyResolverTests {
 
 	@Test
 	public void getProperty_doesNotCache_addNewKeyPostConstruction() {
-		HashMap<String, Object> map = new HashMap<String, Object>();
+		HashMap<String, Object> map = new HashMap<>();
 		MutablePropertySources propertySources = new MutablePropertySources();
 		propertySources.addFirst(new MapPropertySource("testProperties", map));
 		PropertyResolver propertyResolver = new PropertySourcesPropertyResolver(propertySources);
@@ -222,7 +221,7 @@ public class PropertySourcesPropertyResolverTests {
 				equalTo("Replace this value plus defaultValue"));
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void resolvePlaceholders_withNullInput() {
 		new PropertySourcesPropertyResolver(new MutablePropertySources()).resolvePlaceholders(null);
 	}
@@ -235,7 +234,7 @@ public class PropertySourcesPropertyResolverTests {
 		assertThat(resolver.resolveRequiredPlaceholders("Replace this ${key}"), equalTo("Replace this value"));
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void resolveRequiredPlaceholders_withUnresolvable() {
 		MutablePropertySources propertySources = new MutablePropertySources();
 		propertySources.addFirst(new MockPropertySource().withProperty("key", "value"));
@@ -252,81 +251,9 @@ public class PropertySourcesPropertyResolverTests {
 				equalTo("Replace this value plus defaultValue"));
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void resolveRequiredPlaceholders_withNullInput() {
 		new PropertySourcesPropertyResolver(new MutablePropertySources()).resolveRequiredPlaceholders(null);
-	}
-
-	@Test
-	@SuppressWarnings("deprecation")
-	public void getPropertyAsClass() throws ClassNotFoundException, LinkageError {
-		MutablePropertySources propertySources = new MutablePropertySources();
-		propertySources.addFirst(new MockPropertySource().withProperty("some.class", SpecificType.class.getName()));
-		PropertyResolver resolver = new PropertySourcesPropertyResolver(propertySources);
-		assertTrue(resolver.getPropertyAsClass("some.class", SomeType.class).equals(SpecificType.class));
-	}
-
-	@Test
-	@SuppressWarnings("deprecation")
-	public void getPropertyAsClass_withInterfaceAsTarget() throws ClassNotFoundException, LinkageError {
-		MutablePropertySources propertySources = new MutablePropertySources();
-		propertySources.addFirst(new MockPropertySource().withProperty("some.class", SomeType.class.getName()));
-		PropertyResolver resolver = new PropertySourcesPropertyResolver(propertySources);
-		assertTrue(resolver.getPropertyAsClass("some.class", SomeType.class).equals(SomeType.class));
-	}
-
-	@Test(expected = ConversionException.class)
-	@SuppressWarnings("deprecation")
-	public void getPropertyAsClass_withMismatchedTypeForValue() {
-		MutablePropertySources propertySources = new MutablePropertySources();
-		propertySources.addFirst(new MockPropertySource().withProperty("some.class", "java.lang.String"));
-		PropertyResolver resolver = new PropertySourcesPropertyResolver(propertySources);
-		resolver.getPropertyAsClass("some.class", SomeType.class);
-	}
-
-	@Test(expected = ConversionException.class)
-	@SuppressWarnings("deprecation")
-	public void getPropertyAsClass_withNonExistentClassForValue() {
-		MutablePropertySources propertySources = new MutablePropertySources();
-		propertySources.addFirst(new MockPropertySource().withProperty("some.class", "some.bogus.Class"));
-		PropertyResolver resolver = new PropertySourcesPropertyResolver(propertySources);
-		resolver.getPropertyAsClass("some.class", SomeType.class);
-	}
-
-	@Test
-	@SuppressWarnings("deprecation")
-	public void getPropertyAsClass_withObjectForValue() {
-		MutablePropertySources propertySources = new MutablePropertySources();
-		propertySources.addFirst(new MockPropertySource().withProperty("some.class", new SpecificType()));
-		PropertyResolver resolver = new PropertySourcesPropertyResolver(propertySources);
-		assertTrue(resolver.getPropertyAsClass("some.class", SomeType.class).equals(SpecificType.class));
-	}
-
-	@Test(expected = ConversionException.class)
-	@SuppressWarnings("deprecation")
-	public void getPropertyAsClass_withMismatchedObjectForValue() {
-		MutablePropertySources propertySources = new MutablePropertySources();
-		propertySources.addFirst(new MockPropertySource().withProperty("some.class", new Integer(42)));
-		PropertyResolver resolver = new PropertySourcesPropertyResolver(propertySources);
-		resolver.getPropertyAsClass("some.class", SomeType.class);
-	}
-
-	@Test
-	@SuppressWarnings("deprecation")
-	public void getPropertyAsClass_withRealClassForValue() {
-		MutablePropertySources propertySources = new MutablePropertySources();
-		propertySources.addFirst(new MockPropertySource().withProperty("some.class", SpecificType.class));
-		PropertyResolver resolver = new PropertySourcesPropertyResolver(propertySources);
-		assertTrue(resolver.getPropertyAsClass("some.class", SomeType.class).equals(SpecificType.class));
-	}
-
-	@Test(expected = ConversionException.class)
-	@SuppressWarnings("deprecation")
-	public void getPropertyAsClass_withMismatchedRealClassForValue() {
-		MutablePropertySources propertySources = new MutablePropertySources();
-		propertySources.addFirst(new MockPropertySource().withProperty("some.class", Integer.class));
-		PropertyResolver resolver = new PropertySourcesPropertyResolver(propertySources);
-		resolver.getPropertyAsClass("some.class", SomeType.class);
 	}
 
 	@Test
@@ -438,13 +365,6 @@ public class PropertySourcesPropertyResolverTests {
 			assertThat(ex.getMessage(), containsString(
 					"Could not resolve placeholder 'bogus' in value \"${p1}:${p2}:${bogus}\""));
 		}
-	}
-
-
-	interface SomeType {
-	}
-
-	static class SpecificType implements SomeType {
 	}
 
 }

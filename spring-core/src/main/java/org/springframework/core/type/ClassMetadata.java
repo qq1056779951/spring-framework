@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,6 +15,8 @@
  */
 
 package org.springframework.core.type;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Interface that defines abstract metadata of a specific class,
@@ -80,6 +82,7 @@ public interface ClassMetadata {
 	 * Return the name of the enclosing class of the underlying class,
 	 * or {@code null} if the underlying class is a top-level class.
 	 */
+	@Nullable
 	String getEnclosingClassName();
 
 	/**
@@ -91,6 +94,7 @@ public interface ClassMetadata {
 	 * Return the name of the super class of the underlying class,
 	 * or {@code null} if there is no super class defined.
 	 */
+	@Nullable
 	String getSuperClassName();
 
 	/**

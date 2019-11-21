@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,11 +26,14 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.springframework.http.HttpMethod;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link javax.servlet.http.HttpServletRequest} wrapper that caches all content read from
@@ -38,6 +41,7 @@ import org.springframework.http.HttpMethod;
  * and allows this content to be retrieved via a {@link #getContentAsByteArray() byte array}.
  *
  * <p>Used e.g. by {@link org.springframework.web.filter.AbstractRequestLoggingFilter}.
+ * Note: As of Spring Framework 5.0, this wrapper is built on the Servlet 3.1 API.
  *
  * @author Juergen Hoeller
  * @author Brian Clozel
@@ -51,10 +55,13 @@ public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
 
 	private final ByteArrayOutputStream cachedContent;
 
+	@Nullable
 	private final Integer contentCacheLimit;
 
+	@Nullable
 	private ServletInputStream inputStream;
 
+	@Nullable
 	private BufferedReader reader;
 
 
@@ -220,6 +227,55 @@ public class ContentCachingRequestWrapper extends HttpServletRequestWrapper {
 				}
 			}
 			return ch;
+		}
+
+		@Override
+		public int read(byte[] b) throws IOException {
+			int count = this.is.read(b);
+			writeToCache(b, 0, count);
+			return count;
+		}
+
+		private void writeToCache(final byte[] b, final int off, int count) {
+			if (!this.overflow && count > 0) {
+				if (contentCacheLimit != null &&
+						count + cachedContent.size() > contentCacheLimit) {
+					this.overflow = true;
+					cachedContent.write(b, off, contentCacheLimit - cachedContent.size());
+					handleContentOverflow(contentCacheLimit);
+					return;
+				}
+				cachedContent.write(b, off, count);
+			}
+		}
+
+		@Override
+		public int read(final byte[] b, final int off, final int len) throws IOException {
+			int count = this.is.read(b, off, len);
+			writeToCache(b, off, count);
+			return count;
+		}
+
+		@Override
+		public int readLine(final byte[] b, final int off, final int len) throws IOException {
+			int count = this.is.readLine(b, off, len);
+			writeToCache(b, off, count);
+			return count;
+		}
+
+		@Override
+		public boolean isFinished() {
+			return this.is.isFinished();
+		}
+
+		@Override
+		public boolean isReady() {
+			return this.is.isReady();
+		}
+
+		@Override
+		public void setReadListener(ReadListener readListener) {
+			this.is.setReadListener(readListener);
 		}
 	}
 

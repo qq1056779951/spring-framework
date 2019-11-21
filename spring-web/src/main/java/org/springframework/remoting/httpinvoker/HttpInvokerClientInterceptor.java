@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
 import org.springframework.aop.support.AopUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.remoting.RemoteAccessException;
 import org.springframework.remoting.RemoteConnectFailureException;
 import org.springframework.remoting.RemoteInvocationFailureException;
@@ -38,7 +39,7 @@ import org.springframework.remoting.support.RemoteInvocationResult;
  *
  * <p>Serializes remote invocation objects and deserializes remote invocation
  * result objects. Uses Java serialization just like RMI, but provides the
- * same ease of setup as Caucho's HTTP-based Hessian and Burlap protocols.
+ * same ease of setup as Caucho's HTTP-based Hessian protocol.
  *
  * <P>HTTP invoker is a very extensible and customizable protocol.
  * It supports the RemoteInvocationFactory mechanism, like RMI invoker,
@@ -72,8 +73,10 @@ import org.springframework.remoting.support.RemoteInvocationResult;
 public class HttpInvokerClientInterceptor extends RemoteInvocationBasedAccessor
 		implements MethodInterceptor, HttpInvokerClientConfiguration {
 
+	@Nullable
 	private String codebaseUrl;
 
+	@Nullable
 	private HttpInvokerRequestExecutor httpInvokerRequestExecutor;
 
 
@@ -89,7 +92,7 @@ public class HttpInvokerClientInterceptor extends RemoteInvocationBasedAccessor
 	 * @see org.springframework.remoting.rmi.CodebaseAwareObjectInputStream
 	 * @see java.rmi.server.RMIClassLoader
 	 */
-	public void setCodebaseUrl(String codebaseUrl) {
+	public void setCodebaseUrl(@Nullable String codebaseUrl) {
 		this.codebaseUrl = codebaseUrl;
 	}
 
@@ -97,6 +100,7 @@ public class HttpInvokerClientInterceptor extends RemoteInvocationBasedAccessor
 	 * Return the codebase URL to download classes from if not found locally.
 	 */
 	@Override
+	@Nullable
 	public String getCodebaseUrl() {
 		return this.codebaseUrl;
 	}
@@ -209,6 +213,7 @@ public class HttpInvokerClientInterceptor extends RemoteInvocationBasedAccessor
 	 * @return the RemoteAccessException to throw, or {@code null} to have the
 	 * original exception propagated to the caller
 	 */
+	@Nullable
 	protected RemoteAccessException convertHttpInvokerAccessException(Throwable ex) {
 		if (ex instanceof ConnectException) {
 			return new RemoteConnectFailureException(

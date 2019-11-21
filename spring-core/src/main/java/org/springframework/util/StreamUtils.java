@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,6 +28,8 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 
+import org.springframework.lang.Nullable;
+
 /**
  * Simple utility methods for dealing with streams. The copy methods of this class are
  * similar to those defined in {@link FileCopyUtils} except that all affected streams are
@@ -43,6 +45,9 @@ import java.nio.charset.Charset;
  */
 public abstract class StreamUtils {
 
+	/**
+	 * The default buffer size used why copying bytes.
+	 */
 	public static final int BUFFER_SIZE = 4096;
 
 	private static final byte[] EMPTY_CONTENT = new byte[0];
@@ -55,7 +60,7 @@ public abstract class StreamUtils {
 	 * @return the new byte array that has been copied to (possibly empty)
 	 * @throws IOException in case of I/O errors
 	 */
-	public static byte[] copyToByteArray(InputStream in) throws IOException {
+	public static byte[] copyToByteArray(@Nullable InputStream in) throws IOException {
 		if (in == null) {
 			return new byte[0];
 		}
@@ -72,7 +77,7 @@ public abstract class StreamUtils {
 	 * @return the String that has been copied to (possibly empty)
 	 * @throws IOException in case of I/O errors
 	 */
-	public static String copyToString(InputStream in, Charset charset) throws IOException {
+	public static String copyToString(@Nullable InputStream in, Charset charset) throws IOException {
 		if (in == null) {
 			return "";
 		}
@@ -255,7 +260,7 @@ public abstract class StreamUtils {
 		@Override
 		public void write(byte[] b, int off, int let) throws IOException {
 			// It is critical that we override this method for performance
-			out.write(b, off, let);
+			this.out.write(b, off, let);
 		}
 
 		@Override

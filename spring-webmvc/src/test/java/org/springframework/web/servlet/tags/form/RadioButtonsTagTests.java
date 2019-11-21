@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;
 
@@ -52,7 +53,7 @@ import static org.junit.Assert.*;
  * @author Jeremy Grelle
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public final class RadioButtonsTagTests extends AbstractFormTagTests {
+public class RadioButtonsTagTests extends AbstractFormTagTests {
 
 	private RadioButtonsTag tag;
 
@@ -495,8 +496,10 @@ public final class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals(2, rootElement.elements().size());
 		Node value1 = rootElement.selectSingleNode("//input[@value = 'VALUE_1']");
 		Node value2 = rootElement.selectSingleNode("//input[@value = 'VALUE_2']");
-		assertEquals("TestEnum: VALUE_1", rootElement.selectSingleNode("//label[@for = '" + value1.valueOf("@id") + "']").getText());
-		assertEquals("TestEnum: VALUE_2", rootElement.selectSingleNode("//label[@for = '" + value2.valueOf("@id") + "']").getText());
+		assertEquals("TestEnum: VALUE_1",
+				rootElement.selectSingleNode("//label[@for = '" + value1.valueOf("@id") + "']").getText());
+		assertEquals("TestEnum: VALUE_2",
+				rootElement.selectSingleNode("//label[@for = '" + value2.valueOf("@id") + "']").getText());
 		assertEquals(value2, rootElement.selectSingleNode("//input[@checked]"));
 	}
 
@@ -520,8 +523,10 @@ public final class RadioButtonsTagTests extends AbstractFormTagTests {
 		assertEquals(2, rootElement.elements().size());
 		Node value1 = rootElement.selectSingleNode("//input[@value = 'Value: VALUE_1']");
 		Node value2 = rootElement.selectSingleNode("//input[@value = 'Value: VALUE_2']");
-		assertEquals("Label: VALUE_1", rootElement.selectSingleNode("//label[@for = '" + value1.valueOf("@id") + "']").getText());
-		assertEquals("Label: VALUE_2", rootElement.selectSingleNode("//label[@for = '" + value2.valueOf("@id") + "']").getText());
+		assertEquals("Label: VALUE_1",
+				rootElement.selectSingleNode("//label[@for = '" + value1.valueOf("@id") + "']").getText());
+		assertEquals("Label: VALUE_2",
+				rootElement.selectSingleNode("//label[@for = '" + value2.valueOf("@id") + "']").getText());
 		assertEquals(value2, rootElement.selectSingleNode("//input[@checked]"));
 	}
 

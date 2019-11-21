@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -62,7 +62,7 @@ public class MethodArgumentResolutionException extends MessagingException {
 
 	private static String getMethodParameterMessage(MethodParameter parameter) {
 		return "Could not resolve method parameter at index " + parameter.getParameterIndex() +
-				" in " + parameter.getMethod().toGenericString();
+				" in " + parameter.getExecutable().toGenericString();
 	}
 
 }

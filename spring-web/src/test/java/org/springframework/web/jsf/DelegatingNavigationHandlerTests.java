@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
+import org.springframework.lang.Nullable;
 
 import static org.junit.Assert.*;
 
@@ -90,8 +91,9 @@ public class DelegatingNavigationHandlerTests {
 		private String lastOutcome;
 
 		@Override
-		public void handleNavigation(
-				FacesContext facesContext, String fromAction, String outcome, NavigationHandler originalNavigationHandler) {
+		public void handleNavigation(FacesContext facesContext, @Nullable String fromAction,
+				@Nullable String outcome, @Nullable NavigationHandler originalNavigationHandler) {
+
 			lastFromAction = fromAction;
 			lastOutcome = outcome;
 			if (originalNavigationHandler != null) {

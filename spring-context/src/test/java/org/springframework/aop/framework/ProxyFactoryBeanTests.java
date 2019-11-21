@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,6 +49,7 @@ import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.TestListener;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.lang.Nullable;
 import org.springframework.tests.TimeStamped;
 import org.springframework.tests.aop.advice.CountingBeforeAdvice;
 import org.springframework.tests.aop.advice.MyThrowsHandler;
@@ -144,7 +145,7 @@ public class ProxyFactoryBeanTests {
 		catch (BeanCreationException ex) {
 			// Root cause of the problem must be an AOP exception
 			AopConfigException aex = (AopConfigException) ex.getCause();
-			assertTrue(aex.getMessage().indexOf("TargetSource") != -1);
+			assertTrue(aex.getMessage().contains("TargetSource"));
 		}
 	}
 
@@ -730,7 +731,7 @@ public class ProxyFactoryBeanTests {
 			});
 			setPointcut(new DynamicMethodMatcherPointcut() {
 				@Override
-				public boolean matches(Method m, Class<?> targetClass, Object... args) {
+				public boolean matches(Method m, @Nullable Class<?> targetClass, Object... args) {
 					return m.getReturnType() == Void.TYPE;
 				}
 			});

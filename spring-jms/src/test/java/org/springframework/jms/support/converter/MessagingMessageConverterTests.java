@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
 package org.springframework.jms.support.converter;
 
 import java.io.Serializable;
+
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
@@ -38,10 +39,11 @@ import static org.mockito.BDDMockito.*;
  */
 public class MessagingMessageConverterTests {
 
+	private final MessagingMessageConverter converter = new MessagingMessageConverter();
+
 	@Rule
 	public final ExpectedException thrown = ExpectedException.none();
 
-	private final MessagingMessageConverter converter = new MessagingMessageConverter();
 
 	@Test
 	public void onlyHandlesMessage() throws JMSException {
@@ -61,11 +63,6 @@ public class MessagingMessageConverterTests {
 	}
 
 	@Test
-	public void fromNull() throws JMSException {
-		assertNull(this.converter.fromMessage(null));
-	}
-
-	@Test
 	public void customPayloadConverter() throws JMSException {
 		TextMessage jmsMsg = new StubTextMessage("1224");
 
@@ -73,6 +70,7 @@ public class MessagingMessageConverterTests {
 		Message<?> msg = (Message<?>) this.converter.fromMessage(jmsMsg);
 		assertEquals(1224L, msg.getPayload());
 	}
+
 
 	static class TestMessageConverter extends SimpleMessageConverter {
 
@@ -87,7 +85,6 @@ public class MessagingMessageConverterTests {
 			TextMessage textMessage = (TextMessage) message;
 			return Long.parseLong(textMessage.getText());
 		}
-
 	}
 
 }

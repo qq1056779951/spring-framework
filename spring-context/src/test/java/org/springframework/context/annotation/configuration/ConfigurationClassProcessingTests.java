@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+
+import javax.annotation.Resource;
 import javax.inject.Provider;
 
 import org.junit.Rule;
@@ -35,8 +37,6 @@ import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Required;
-import org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
@@ -58,6 +58,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.tests.sample.beans.ITestBean;
+import org.springframework.tests.sample.beans.NestedTestBean;
 import org.springframework.tests.sample.beans.TestBean;
 
 import static org.junit.Assert.*;
@@ -153,7 +154,7 @@ public class ConfigurationClassProcessingTests {
 	public void simplestPossibleConfig() {
 		BeanFactory factory = initBeanFactory(SimplestPossibleConfig.class);
 		String stringBean = factory.getBean("stringBean", String.class);
-		assertEquals(stringBean, "foo");
+		assertEquals("foo", stringBean);
 	}
 
 	@Test
@@ -162,7 +163,7 @@ public class ConfigurationClassProcessingTests {
 		assertEquals(Object.class, factory.getType("stringBean"));
 		assertFalse(factory.isTypeMatch("stringBean", String.class));
 		String stringBean = factory.getBean("stringBean", String.class);
-		assertEquals(stringBean, "foo");
+		assertEquals("foo", stringBean);
 	}
 
 	@Test
@@ -205,41 +206,76 @@ public class ConfigurationClassProcessingTests {
 	}
 
 	@Test
+	public void configurationWithNullReference() {
+		BeanFactory factory = initBeanFactory(ConfigWithNullReference.class);
+
+		TestBean foo = factory.getBean("foo", TestBean.class);
+		assertTrue(factory.getBean("bar").equals(null));
+		assertNull(foo.getSpouse());
+	}
+
+	@Test
 	public void configurationWithAdaptivePrototypes() {
-		AnnotationConfigApplicationContext factory = new AnnotationConfigApplicationContext();
-		factory.register(ConfigWithPrototypeBean.class, AdaptiveInjectionPoints.class);
-		factory.refresh();
+		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+		ctx.register(ConfigWithPrototypeBean.class, AdaptiveInjectionPoints.class);
+		ctx.refresh();
 
-		AdaptiveInjectionPoints adaptive = factory.getBean(AdaptiveInjectionPoints.class);
+		AdaptiveInjectionPoints adaptive = ctx.getBean(AdaptiveInjectionPoints.class);
 		assertEquals("adaptiveInjectionPoint1", adaptive.adaptiveInjectionPoint1.getName());
 		assertEquals("setAdaptiveInjectionPoint2", adaptive.adaptiveInjectionPoint2.getName());
 
-		adaptive = factory.getBean(AdaptiveInjectionPoints.class);
+		adaptive = ctx.getBean(AdaptiveInjectionPoints.class);
 		assertEquals("adaptiveInjectionPoint1", adaptive.adaptiveInjectionPoint1.getName());
 		assertEquals("setAdaptiveInjectionPoint2", adaptive.adaptiveInjectionPoint2.getName());
-		factory.close();
+		ctx.close();
+	}
+
+	@Test
+	public void configurationWithAdaptiveResourcePrototypes() {
+		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+		ctx.register(ConfigWithPrototypeBean.class, AdaptiveResourceInjectionPoints.class);
+		ctx.refresh();
+
+		AdaptiveResourceInjectionPoints adaptive = ctx.getBean(AdaptiveResourceInjectionPoints.class);
+		assertEquals("adaptiveInjectionPoint1", adaptive.adaptiveInjectionPoint1.getName());
+		assertEquals("setAdaptiveInjectionPoint2", adaptive.adaptiveInjectionPoint2.getName());
+
+		adaptive = ctx.getBean(AdaptiveResourceInjectionPoints.class);
+		assertEquals("adaptiveInjectionPoint1", adaptive.adaptiveInjectionPoint1.getName());
+		assertEquals("setAdaptiveInjectionPoint2", adaptive.adaptiveInjectionPoint2.getName());
+		ctx.close();
 	}
 
 	@Test
 	public void configurationWithPostProcessor() {
-		AnnotationConfigApplicationContext factory = new AnnotationConfigApplicationContext();
-		factory.register(ConfigWithPostProcessor.class);
+		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+		ctx.register(ConfigWithPostProcessor.class);
 		RootBeanDefinition placeholderConfigurer = new RootBeanDefinition(PropertyPlaceholderConfigurer.class);
 		placeholderConfigurer.getPropertyValues().add("properties", "myProp=myValue");
-		factory.registerBeanDefinition("placeholderConfigurer", placeholderConfigurer);
-		factory.refresh();
+		ctx.registerBeanDefinition("placeholderConfigurer", placeholderConfigurer);
+		ctx.refresh();
 
-		TestBean foo = factory.getBean("foo", TestBean.class);
-		ITestBean bar = factory.getBean("bar", ITestBean.class);
-		ITestBean baz = factory.getBean("baz", ITestBean.class);
+		TestBean foo = ctx.getBean("foo", TestBean.class);
+		ITestBean bar = ctx.getBean("bar", ITestBean.class);
+		ITestBean baz = ctx.getBean("baz", ITestBean.class);
 
 		assertEquals("foo-processed-myValue", foo.getName());
 		assertEquals("bar-processed-myValue", bar.getName());
 		assertEquals("baz-processed-myValue", baz.getName());
 
-		SpousyTestBean listener = factory.getBean("listenerTestBean", SpousyTestBean.class);
+		SpousyTestBean listener = ctx.getBean("listenerTestBean", SpousyTestBean.class);
 		assertTrue(listener.refreshed);
-		factory.close();
+		ctx.close();
+	}
+
+	@Test
+	public void configurationWithFunctionalRegistration() {
+		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+		ctx.register(ConfigWithFunctionalRegistration.class);
+		ctx.refresh();
+
+		assertSame(ctx.getBean("spouse"), ctx.getBean(TestBean.class).getSpouse());
+		assertEquals("functional", ctx.getBean(NestedTestBean.class).getCompany());
 	}
 
 
@@ -259,9 +295,6 @@ public class ConfigurationClassProcessingTests {
 		ConfigurationClassPostProcessor ccpp = new ConfigurationClassPostProcessor();
 		ccpp.postProcessBeanDefinitionRegistry(factory);
 		ccpp.postProcessBeanFactory(factory);
-		RequiredAnnotationBeanPostProcessor rapp = new RequiredAnnotationBeanPostProcessor();
-		rapp.setBeanFactory(factory);
-		factory.addBeanPostProcessor(rapp);
 		factory.freezeConfiguration();
 		return factory;
 	}
@@ -296,7 +329,7 @@ public class ConfigurationClassProcessingTests {
 
 		static TestBean testBean = new TestBean(ConfigWithBeanWithAliases.class.getSimpleName());
 
-		@Bean(name = { "name1", "alias1", "alias2", "alias3" })
+		@Bean(name = {"name1", "alias1", "alias2", "alias3"})
 		public TestBean methodName() {
 			return testBean;
 		}
@@ -308,7 +341,7 @@ public class ConfigurationClassProcessingTests {
 
 		static TestBean testBean = new TestBean(ConfigWithBeanWithAliasesConfiguredViaValueAttribute.class.getSimpleName());
 
-		@Bean({ "enigma", "alias1", "alias2", "alias3" })
+		@Bean({"enigma", "alias1", "alias2", "alias3"})
 		public TestBean methodName() {
 			return testBean;
 		}
@@ -404,6 +437,16 @@ public class ConfigurationClassProcessingTests {
 	}
 
 
+	@Configuration
+	static class ConfigWithNullReference extends ConfigWithPrototypeBean {
+
+		@Override
+		public TestBean bar() {
+			return null;
+		}
+	}
+
+
 	@Scope("prototype")
 	static class AdaptiveInjectionPoints {
 
@@ -419,7 +462,21 @@ public class ConfigurationClassProcessingTests {
 	}
 
 
-	@SuppressWarnings("unused")
+	@Scope("prototype")
+	static class AdaptiveResourceInjectionPoints {
+
+		@Resource(name = "adaptive1")
+		public TestBean adaptiveInjectionPoint1;
+
+		public TestBean adaptiveInjectionPoint2;
+
+		@Resource(name = "adaptive2")
+		public void setAdaptiveInjectionPoint2(TestBean adaptiveInjectionPoint2) {
+			this.adaptiveInjectionPoint2 = adaptiveInjectionPoint2;
+		}
+	}
+
+
 	static class ConfigWithPostProcessor extends ConfigWithPrototypeBean {
 
 		@Value("${myProp}")
@@ -485,7 +542,6 @@ public class ConfigurationClassProcessingTests {
 		}
 
 		@Override
-		@Required
 		public void setSpouse(ITestBean spouse) {
 			super.setSpouse(spouse);
 		}
@@ -493,6 +549,26 @@ public class ConfigurationClassProcessingTests {
 		@Override
 		public void onApplicationEvent(ContextRefreshedEvent event) {
 			this.refreshed = true;
+		}
+	}
+
+
+	@Configuration
+	static class ConfigWithFunctionalRegistration {
+
+		@Autowired
+		void register(GenericApplicationContext ctx) {
+			ctx.registerBean("spouse", TestBean.class,
+					() -> new TestBean("functional"));
+			Supplier<TestBean> testBeanSupplier = () -> new TestBean(ctx.getBean("spouse", TestBean.class));
+			ctx.registerBean(TestBean.class,
+					testBeanSupplier,
+					bd -> bd.setPrimary(true));
+		}
+
+		@Bean
+		public NestedTestBean nestedTestBean(TestBean testBean) {
+			return new NestedTestBean(testBean.getSpouse().getName());
 		}
 	}
 

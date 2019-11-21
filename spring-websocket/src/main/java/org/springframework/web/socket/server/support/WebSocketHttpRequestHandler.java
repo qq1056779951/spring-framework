@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -34,6 +35,7 @@ import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.http.server.ServletServerHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.context.ServletContextAware;
@@ -57,13 +59,13 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
  */
 public class WebSocketHttpRequestHandler implements HttpRequestHandler, Lifecycle, ServletContextAware {
 
-	private final Log logger = LogFactory.getLog(WebSocketHttpRequestHandler.class);
+	private static final Log logger = LogFactory.getLog(WebSocketHttpRequestHandler.class);
 
 	private final WebSocketHandler wsHandler;
 
 	private final HandshakeHandler handshakeHandler;
 
-	private final List<HandshakeInterceptor> interceptors = new ArrayList<HandshakeInterceptor>();
+	private final List<HandshakeInterceptor> interceptors = new ArrayList<>();
 
 	private volatile boolean running = false;
 
@@ -97,7 +99,7 @@ public class WebSocketHttpRequestHandler implements HttpRequestHandler, Lifecycl
 	/**
 	 * Configure one or more WebSocket handshake request interceptors.
 	 */
-	public void setHandshakeInterceptors(List<HandshakeInterceptor> interceptors) {
+	public void setHandshakeInterceptors(@Nullable List<HandshakeInterceptor> interceptors) {
 		this.interceptors.clear();
 		if (interceptors != null) {
 			this.interceptors.addAll(interceptors);
@@ -159,13 +161,12 @@ public class WebSocketHttpRequestHandler implements HttpRequestHandler, Lifecycl
 			if (logger.isDebugEnabled()) {
 				logger.debug(servletRequest.getMethod() + " " + servletRequest.getRequestURI());
 			}
-			Map<String, Object> attributes = new HashMap<String, Object>();
+			Map<String, Object> attributes = new HashMap<>();
 			if (!chain.applyBeforeHandshake(request, response, attributes)) {
 				return;
 			}
 			this.handshakeHandler.doHandshake(request, response, this.wsHandler, attributes);
 			chain.applyAfterHandshake(request, response, null);
-			response.close();
 		}
 		catch (HandshakeFailureException ex) {
 			failure = ex;
@@ -176,8 +177,10 @@ public class WebSocketHttpRequestHandler implements HttpRequestHandler, Lifecycl
 		finally {
 			if (failure != null) {
 				chain.applyAfterHandshake(request, response, failure);
+				response.close();
 				throw failure;
 			}
+			response.close();
 		}
 	}
 

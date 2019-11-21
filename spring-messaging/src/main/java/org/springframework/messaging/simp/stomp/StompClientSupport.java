@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,10 +17,9 @@
 package org.springframework.messaging.simp.stomp;
 
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.converter.SimpleMessageConverter;
 import org.springframework.scheduling.TaskScheduler;
@@ -43,15 +42,14 @@ import org.springframework.util.Assert;
  */
 public abstract class StompClientSupport {
 
-	protected Log logger = LogFactory.getLog(getClass());
-
 	private MessageConverter messageConverter = new SimpleMessageConverter();
 
+	@Nullable
 	private TaskScheduler taskScheduler;
 
 	private long[] defaultHeartbeat = new long[] {10000, 10000};
 
-	private long receiptTimeLimit = 15 * 1000;
+	private long receiptTimeLimit = TimeUnit.SECONDS.toMillis(15);
 
 
 	/**
@@ -80,13 +78,14 @@ public abstract class StompClientSupport {
 	 * Receipts however, if needed, do require a TaskScheduler to be configured.
 	 * <p>By default, this is not set.
 	 */
-	public void setTaskScheduler(TaskScheduler taskScheduler) {
+	public void setTaskScheduler(@Nullable TaskScheduler taskScheduler) {
 		this.taskScheduler = taskScheduler;
 	}
 
 	/**
 	 * The configured TaskScheduler.
 	 */
+	@Nullable
 	public TaskScheduler getTaskScheduler() {
 		return this.taskScheduler;
 	}
@@ -100,11 +99,11 @@ public abstract class StompClientSupport {
 	 * that default and for example set it to "0,0" if they require a
 	 * TaskScheduler to be configured first.
 	 * @param heartbeat the value for the CONNECT "heart-beat" header
-	 * @see <a href="http://stomp.github.io/stomp-specification-1.2.html#Heart-beating">
-	 * http://stomp.github.io/stomp-specification-1.2.html#Heart-beating</a>
+	 * @see <a href="https://stomp.github.io/stomp-specification-1.2.html#Heart-beating">
+	 * https://stomp.github.io/stomp-specification-1.2.html#Heart-beating</a>
 	 */
 	public void setDefaultHeartbeat(long[] heartbeat) {
-		if (heartbeat == null || heartbeat.length != 2 || heartbeat[0] < 0 || heartbeat[1] < 0) {
+		if (heartbeat.length != 2 || heartbeat[0] < 0 || heartbeat[1] < 0) {
 			throw new IllegalArgumentException("Invalid heart-beat: " + Arrays.toString(heartbeat));
 		}
 		this.defaultHeartbeat = heartbeat;
@@ -150,7 +149,9 @@ public abstract class StompClientSupport {
 	 * @param handler the handler for the STOMP session
 	 * @return the created session
 	 */
-	protected ConnectionHandlingStompSession createSession(StompHeaders connectHeaders, StompSessionHandler handler) {
+	protected ConnectionHandlingStompSession createSession(
+			@Nullable StompHeaders connectHeaders, StompSessionHandler handler) {
+
 		connectHeaders = processConnectHeaders(connectHeaders);
 		DefaultStompSession session = new DefaultStompSession(handler, connectHeaders);
 		session.setMessageConverter(getMessageConverter());
@@ -165,7 +166,7 @@ public abstract class StompClientSupport {
 	 * @param connectHeaders the headers to modify
 	 * @return the modified headers
 	 */
-	protected StompHeaders processConnectHeaders(StompHeaders connectHeaders) {
+	protected StompHeaders processConnectHeaders(@Nullable StompHeaders connectHeaders) {
 		connectHeaders = (connectHeaders != null ? connectHeaders : new StompHeaders());
 		if (connectHeaders.getHeartbeat() == null) {
 			connectHeaders.setHeartbeat(getDefaultHeartbeat());

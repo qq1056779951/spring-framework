@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,9 +28,9 @@ import static org.mockito.BDDMockito.*;
  * @author Juergen Hoeller
  * @author Chris Beams
  */
-public final class FailFastProblemReporterTests {
+public class FailFastProblemReporterTests {
 
-	@Test(expected=BeanDefinitionParsingException.class)
+	@Test(expected = BeanDefinitionParsingException.class)
 	public void testError() throws Exception {
 		FailFastProblemReporter reporter = new FailFastProblemReporter();
 		reporter.error(new Problem("VGER", new Location(new DescriptiveResource("here")),

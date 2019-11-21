@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,7 @@ package org.springframework.http.converter;
 
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,6 +64,7 @@ public class ResourceRegionHttpMessageConverterTests {
 	public void canWriteResource() {
 		assertTrue(converter.canWrite(ResourceRegion.class, null, MediaType.APPLICATION_OCTET_STREAM));
 		assertTrue(converter.canWrite(ResourceRegion.class, null, MediaType.ALL));
+		assertFalse(converter.canWrite(Object.class, null, MediaType.ALL));
 	}
 
 	@Test
@@ -74,6 +75,8 @@ public class ResourceRegionHttpMessageConverterTests {
 
 		assertFalse(converter.canWrite(List.class, MediaType.APPLICATION_OCTET_STREAM));
 		assertFalse(converter.canWrite(List.class, MediaType.ALL));
+		Type resourceObjectList = new ParameterizedTypeReference<List<Object>>() {}.getType();
+		assertFalse(converter.canWrite(resourceObjectList, null, MediaType.ALL));
 	}
 
 	@Test
@@ -88,7 +91,7 @@ public class ResourceRegionHttpMessageConverterTests {
 		assertThat(headers.getContentLength(), is(6L));
 		assertThat(headers.get(HttpHeaders.CONTENT_RANGE).size(), is(1));
 		assertThat(headers.get(HttpHeaders.CONTENT_RANGE).get(0), is("bytes 0-5/39"));
-		assertThat(outputMessage.getBodyAsString(Charset.forName("UTF-8")), is("Spring"));
+		assertThat(outputMessage.getBodyAsString(StandardCharsets.UTF_8), is("Spring"));
 	}
 
 	@Test
@@ -103,7 +106,7 @@ public class ResourceRegionHttpMessageConverterTests {
 		assertThat(headers.getContentLength(), is(32L));
 		assertThat(headers.get(HttpHeaders.CONTENT_RANGE).size(), is(1));
 		assertThat(headers.get(HttpHeaders.CONTENT_RANGE).get(0), is("bytes 7-38/39"));
-		assertThat(outputMessage.getBodyAsString(Charset.forName("UTF-8")), is("Framework test resource content."));
+		assertThat(outputMessage.getBodyAsString(StandardCharsets.UTF_8), is("Framework test resource content."));
 	}
 
 	@Test
@@ -111,7 +114,7 @@ public class ResourceRegionHttpMessageConverterTests {
 		MockHttpOutputMessage outputMessage = new MockHttpOutputMessage();
 		Resource body = new ClassPathResource("byterangeresource.txt", getClass());
 		List<HttpRange> rangeList = HttpRange.parseRanges("bytes=0-5,7-15,17-20,22-38");
-		List<ResourceRegion> regions = new ArrayList<ResourceRegion>();
+		List<ResourceRegion> regions = new ArrayList<>();
 		for(HttpRange range : rangeList) {
 			regions.add(range.toResourceRegion(body));
 		}
@@ -121,7 +124,7 @@ public class ResourceRegionHttpMessageConverterTests {
 		HttpHeaders headers = outputMessage.getHeaders();
 		assertThat(headers.getContentType().toString(), Matchers.startsWith("multipart/byteranges;boundary="));
 		String boundary = "--" + headers.getContentType().toString().substring(30);
-		String content = outputMessage.getBodyAsString(Charset.forName("UTF-8"));
+		String content = outputMessage.getBodyAsString(StandardCharsets.UTF_8);
 		String[] ranges = StringUtils.tokenizeToStringArray(content, "\r\n", false, true);
 
 		assertThat(ranges[0], is(boundary));
@@ -159,7 +162,7 @@ public class ResourceRegionHttpMessageConverterTests {
 
 		assertThat(outputMessage.getHeaders().getContentType(), is(MediaType.APPLICATION_OCTET_STREAM));
 		assertThat(outputMessage.getHeaders().getFirst(HttpHeaders.CONTENT_RANGE), is("bytes 0-5/12"));
-		assertThat(outputMessage.getBodyAsString(Charset.forName("UTF-8")), is("Spring"));
+		assertThat(outputMessage.getBodyAsString(StandardCharsets.UTF_8), is("Spring"));
 	}
 
 }

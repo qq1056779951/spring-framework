@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,6 +25,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -98,12 +99,7 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 	 */
 	@Override
 	protected Comparator<RequestMappingInfo> getMappingComparator(final HttpServletRequest request) {
-		return new Comparator<RequestMappingInfo>() {
-			@Override
-			public int compare(RequestMappingInfo info1, RequestMappingInfo info2) {
-				return info1.compareTo(info2, request);
-			}
-		};
+		return (info1, info2) -> info1.compareTo(info2, request);
 	}
 
 	/**
@@ -118,27 +114,26 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 
 		String bestPattern;
 		Map<String, String> uriVariables;
-		Map<String, String> decodedUriVariables;
 
 		Set<String> patterns = info.getPatternsCondition().getPatterns();
 		if (patterns.isEmpty()) {
 			bestPattern = lookupPath;
 			uriVariables = Collections.emptyMap();
-			decodedUriVariables = Collections.emptyMap();
 		}
 		else {
 			bestPattern = patterns.iterator().next();
 			uriVariables = getPathMatcher().extractUriTemplateVariables(bestPattern, lookupPath);
-			decodedUriVariables = getUrlPathHelper().decodePathVariables(request, uriVariables);
 		}
 
 		request.setAttribute(BEST_MATCHING_PATTERN_ATTRIBUTE, bestPattern);
-		request.setAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE, decodedUriVariables);
 
 		if (isMatrixVariableContentAvailable()) {
 			Map<String, MultiValueMap<String, String>> matrixVars = extractMatrixVariables(request, uriVariables);
 			request.setAttribute(HandlerMapping.MATRIX_VARIABLES_ATTRIBUTE, matrixVars);
 		}
+
+		Map<String, String> decodedUriVariables = getUrlPathHelper().decodePathVariables(request, uriVariables);
+		request.setAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE, decodedUriVariables);
 
 		if (!info.getProducesCondition().getProducibleMediaTypes().isEmpty()) {
 			Set<MediaType> mediaTypes = info.getProducesCondition().getProducibleMediaTypes();
@@ -153,29 +148,30 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 	private Map<String, MultiValueMap<String, String>> extractMatrixVariables(
 			HttpServletRequest request, Map<String, String> uriVariables) {
 
-		Map<String, MultiValueMap<String, String>> result = new LinkedHashMap<String, MultiValueMap<String, String>>();
-		for (Map.Entry<String, String> uriVar : uriVariables.entrySet()) {
-			String uriVarValue = uriVar.getValue();
+		Map<String, MultiValueMap<String, String>> result = new LinkedHashMap<>();
+		uriVariables.forEach((uriVarKey, uriVarValue) -> {
 
 			int equalsIndex = uriVarValue.indexOf('=');
 			if (equalsIndex == -1) {
-				continue;
+				return;
+			}
+
+			int semicolonIndex = uriVarValue.indexOf(';');
+			if (semicolonIndex != -1 && semicolonIndex != 0) {
+				uriVariables.put(uriVarKey, uriVarValue.substring(0, semicolonIndex));
 			}
 
 			String matrixVariables;
-
-			int semicolonIndex = uriVarValue.indexOf(';');
-			if ((semicolonIndex == -1) || (semicolonIndex == 0) || (equalsIndex < semicolonIndex)) {
+			if (semicolonIndex == -1 || semicolonIndex == 0 || equalsIndex < semicolonIndex) {
 				matrixVariables = uriVarValue;
 			}
 			else {
 				matrixVariables = uriVarValue.substring(semicolonIndex + 1);
-				uriVariables.put(uriVar.getKey(), uriVarValue.substring(0, semicolonIndex));
 			}
 
 			MultiValueMap<String, String> vars = WebUtils.parseMatrixVariables(matrixVariables);
-			result.put(uriVar.getKey(), getUrlPathHelper().decodeMatrixVariables(request, vars));
-		}
+			result.put(uriVarKey, getUrlPathHelper().decodeMatrixVariables(request, vars));
+		});
 		return result;
 	}
 
@@ -216,12 +212,12 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 					throw new HttpMediaTypeNotSupportedException(ex.getMessage());
 				}
 			}
-			throw new HttpMediaTypeNotSupportedException(contentType, new ArrayList<MediaType>(mediaTypes));
+			throw new HttpMediaTypeNotSupportedException(contentType, new ArrayList<>(mediaTypes));
 		}
 
 		if (helper.hasProducesMismatch()) {
 			Set<MediaType> mediaTypes = helper.getProducibleMediaTypes();
-			throw new HttpMediaTypeNotAcceptableException(new ArrayList<MediaType>(mediaTypes));
+			throw new HttpMediaTypeNotAcceptableException(new ArrayList<>(mediaTypes));
 		}
 
 		if (helper.hasParamsMismatch()) {
@@ -238,7 +234,7 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 	 */
 	private static class PartialMatchHelper {
 
-		private final List<PartialMatch> partialMatches = new ArrayList<PartialMatch>();
+		private final List<PartialMatch> partialMatches = new ArrayList<>();
 
 		public PartialMatchHelper(Set<RequestMappingInfo> infos, HttpServletRequest request) {
 			for (RequestMappingInfo info : infos) {
@@ -307,7 +303,7 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 		 * Return declared HTTP methods.
 		 */
 		public Set<String> getAllowedMethods() {
-			Set<String> result = new LinkedHashSet<String>();
+			Set<String> result = new LinkedHashSet<>();
 			for (PartialMatch match : this.partialMatches) {
 				for (RequestMethod method : match.getInfo().getMethodsCondition().getMethods()) {
 					result.add(method.name());
@@ -321,7 +317,7 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 		 * match the "methods" condition.
 		 */
 		public Set<MediaType> getConsumableMediaTypes() {
-			Set<MediaType> result = new LinkedHashSet<MediaType>();
+			Set<MediaType> result = new LinkedHashSet<>();
 			for (PartialMatch match : this.partialMatches) {
 				if (match.hasMethodsMatch()) {
 					result.addAll(match.getInfo().getConsumesCondition().getConsumableMediaTypes());
@@ -335,7 +331,7 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 		 * match the "methods" and "consumes" conditions.
 		 */
 		public Set<MediaType> getProducibleMediaTypes() {
-			Set<MediaType> result = new LinkedHashSet<MediaType>();
+			Set<MediaType> result = new LinkedHashSet<>();
 			for (PartialMatch match : this.partialMatches) {
 				if (match.hasConsumesMatch()) {
 					result.addAll(match.getInfo().getProducesCondition().getProducibleMediaTypes());
@@ -349,7 +345,7 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 		 * match the "methods", "consumes", and "params" conditions.
 		 */
 		public List<String[]> getParamConditions() {
-			List<String[]> result = new ArrayList<String[]>();
+			List<String[]> result = new ArrayList<>();
 			for (PartialMatch match : this.partialMatches) {
 				if (match.hasProducesMatch()) {
 					Set<NameValueExpression<String>> set = match.getInfo().getParamsCondition().getExpressions();
@@ -383,7 +379,8 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 			private final boolean paramsMatch;
 
 			/**
-			 * @param info RequestMappingInfo that matches the URL path.
+			 * Create a new {@link PartialMatch} instance.
+			 * @param info the RequestMappingInfo that matches the URL path.
 			 * @param request the current request
 			 */
 			public PartialMatch(RequestMappingInfo info, HttpServletRequest request) {
@@ -434,7 +431,7 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 		}
 
 		private static Set<HttpMethod> initAllowedHttpMethods(Set<String> declaredMethods) {
-			Set<HttpMethod> result = new LinkedHashSet<HttpMethod>(declaredMethods.size());
+			Set<HttpMethod> result = new LinkedHashSet<>(declaredMethods.size());
 			if (declaredMethods.isEmpty()) {
 				for (HttpMethod method : HttpMethod.values()) {
 					if (method != HttpMethod.TRACE) {
@@ -450,10 +447,12 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 						result.add(HttpMethod.HEAD);
 					}
 				}
+				result.add(HttpMethod.OPTIONS);
 			}
 			return result;
 		}
 
+		@SuppressWarnings("unused")
 		public HttpHeaders handle() {
 			return this.headers;
 		}

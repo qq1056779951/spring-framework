@@ -5,4 +5,9 @@
  * meta-data provided by the JDBC driver to simplify the application code. Much of the
  * parameter specification becomes unnecessary since it can be looked up in the meta-data.
  */
+@NonNullApi
+@NonNullFields
 package org.springframework.jdbc.core.simple;
+
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

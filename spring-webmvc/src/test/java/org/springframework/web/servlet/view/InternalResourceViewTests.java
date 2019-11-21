@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.web.servlet.view;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Test;
@@ -84,9 +85,8 @@ public class InternalResourceViewTests {
 		view.render(model, request, response);
 		assertEquals(url, response.getForwardedUrl());
 
-		model.keySet().stream().forEach(
-			key -> assertEquals("Values for model key '" + key + "' must match", model.get(key), request.getAttribute(key))
-		);
+		model.forEach((key, value) -> assertEquals("Values for model key '" + key
+				+ "' must match", value, request.getAttribute(key)));
 	}
 
 	@Test
@@ -101,7 +101,7 @@ public class InternalResourceViewTests {
 		view.render(model, request, response);
 		assertEquals(url, response.getIncludedUrl());
 
-		model.keySet().stream().forEach(key -> verify(request).setAttribute(key, model.get(key)));
+		model.forEach((key, value) -> verify(request).setAttribute(key, value));
 	}
 
 	@Test
@@ -116,7 +116,7 @@ public class InternalResourceViewTests {
 		view.render(model, request, response);
 		assertEquals(url, response.getIncludedUrl());
 
-		model.keySet().stream().forEach(key -> verify(request).setAttribute(key, model.get(key)));
+		model.forEach((key, value) -> verify(request).setAttribute(key, value));
 	}
 
 	@Test
@@ -132,7 +132,7 @@ public class InternalResourceViewTests {
 		view.render(model, request, response);
 		assertEquals(url, response.getIncludedUrl());
 
-		model.keySet().stream().forEach(key -> verify(request).setAttribute(key, model.get(key)));
+		model.forEach((k, v) -> verify(request).setAttribute(k, v));
 	}
 
 }

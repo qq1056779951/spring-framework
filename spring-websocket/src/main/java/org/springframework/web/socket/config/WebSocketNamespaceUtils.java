@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,7 @@ import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.support.ManagedList;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.factory.xml.ParserContext;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
@@ -45,7 +46,9 @@ import org.springframework.web.socket.sockjs.transport.handler.WebSocketTranspor
  */
 abstract class WebSocketNamespaceUtils {
 
-	public static RuntimeBeanReference registerHandshakeHandler(Element element, ParserContext context, Object source) {
+	public static RuntimeBeanReference registerHandshakeHandler(
+			Element element, ParserContext context, @Nullable Object source) {
+
 		RuntimeBeanReference handlerRef;
 		Element handlerElem = DomUtils.getChildElementByTagName(element, "handshake-handler");
 		if (handlerElem != null) {
@@ -61,8 +64,9 @@ abstract class WebSocketNamespaceUtils {
 		return handlerRef;
 	}
 
+	@Nullable
 	public static RuntimeBeanReference registerSockJsService(
-			Element element, String schedulerName, ParserContext context, Object source) {
+			Element element, String schedulerName, ParserContext context, @Nullable Object source) {
 
 		Element sockJsElement = DomUtils.getChildElementByTagName(element, "sockjs");
 
@@ -156,7 +160,9 @@ abstract class WebSocketNamespaceUtils {
 		return null;
 	}
 
-	public static RuntimeBeanReference registerScheduler(String schedulerName, ParserContext context, Object source) {
+	public static RuntimeBeanReference registerScheduler(
+			String schedulerName, ParserContext context, @Nullable Object source) {
+
 		if (!context.getRegistry().containsBeanDefinition(schedulerName)) {
 			RootBeanDefinition taskSchedulerDef = new RootBeanDefinition(ThreadPoolTaskScheduler.class);
 			taskSchedulerDef.setSource(source);
@@ -170,8 +176,8 @@ abstract class WebSocketNamespaceUtils {
 		return new RuntimeBeanReference(schedulerName);
 	}
 
-	public static ManagedList<Object> parseBeanSubElements(Element parentElement, ParserContext context) {
-		ManagedList<Object> beans = new ManagedList<Object>();
+	public static ManagedList<Object> parseBeanSubElements(@Nullable Element parentElement, ParserContext context) {
+		ManagedList<Object> beans = new ManagedList<>();
 		if (parentElement != null) {
 			beans.setSource(context.extractSource(parentElement));
 			for (Element beanElement : DomUtils.getChildElementsByTagName(parentElement, "bean", "ref")) {

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+
 import javax.servlet.ServletException;
 
 import org.junit.Before;
@@ -59,7 +60,6 @@ import org.springframework.web.context.support.StaticWebApplicationContext;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.NoHandlerFoundException;
-import org.springframework.web.servlet.mvc.multiaction.NoSuchRequestHandlingMethodException;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
 
 import static org.junit.Assert.*;
@@ -107,12 +107,6 @@ public class ResponseEntityExceptionHandlerTests {
 				assertTrue("@ExceptionHandler is missing " + name, exceptionTypes.contains(paramTypes[0]));
 			}
 		}
-	}
-
-	@Test
-	public void noSuchRequestHandlingMethod() {
-		Exception ex = new NoSuchRequestHandlingMethodException("GET", getClass());
-		testException(ex);
 	}
 
 	@Test
@@ -252,9 +246,6 @@ public class ResponseEntityExceptionHandlerTests {
 		StaticWebApplicationContext ctx = new StaticWebApplicationContext();
 		ctx.registerSingleton("controller", ExceptionThrowingController.class);
 		ctx.registerSingleton("exceptionHandler", ApplicationExceptionHandler.class);
-		ctx.registerSingleton("exceptionResolver", ExceptionHandlerExceptionResolver.class);
-		ctx.registerSingleton("handlerMapping", RequestMappingHandlerMapping.class);
-		ctx.registerSingleton("handlerAdapter", RequestMappingHandlerAdapter.class);
 		ctx.refresh();
 
 		DispatcherServlet servlet = new DispatcherServlet(ctx);
@@ -271,9 +262,6 @@ public class ResponseEntityExceptionHandlerTests {
 		StaticWebApplicationContext ctx = new StaticWebApplicationContext();
 		ctx.registerSingleton("controller", NestedExceptionThrowingController.class);
 		ctx.registerSingleton("exceptionHandler", ApplicationExceptionHandler.class);
-		ctx.registerSingleton("exceptionResolver", ExceptionHandlerExceptionResolver.class);
-		ctx.registerSingleton("handlerMapping", RequestMappingHandlerMapping.class);
-		ctx.registerSingleton("handlerAdapter", RequestMappingHandlerAdapter.class);
 		ctx.refresh();
 
 		DispatcherServlet servlet = new DispatcherServlet(ctx);

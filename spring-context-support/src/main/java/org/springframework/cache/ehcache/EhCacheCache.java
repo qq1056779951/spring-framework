@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import net.sf.ehcache.Status;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.SimpleValueWrapper;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -65,6 +66,7 @@ public class EhCacheCache implements Cache {
 	}
 
 	@Override
+	@Nullable
 	public ValueWrapper get(Object key) {
 		Element element = lookup(key);
 		return toValueWrapper(element);
@@ -72,6 +74,7 @@ public class EhCacheCache implements Cache {
 
 	@SuppressWarnings("unchecked")
 	@Override
+	@Nullable
 	public <T> T get(Object key, Callable<T> valueLoader) {
 		Element element = lookup(key);
 		if (element != null) {
@@ -109,7 +112,8 @@ public class EhCacheCache implements Cache {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T get(Object key, Class<T> type) {
+	@Nullable
+	public <T> T get(Object key, @Nullable Class<T> type) {
 		Element element = this.cache.get(key);
 		Object value = (element != null ? element.getObjectValue() : null);
 		if (value != null && type != null && !type.isInstance(value)) {
@@ -120,12 +124,13 @@ public class EhCacheCache implements Cache {
 	}
 
 	@Override
-	public void put(Object key, Object value) {
+	public void put(Object key, @Nullable Object value) {
 		this.cache.put(new Element(key, value));
 	}
 
 	@Override
-	public ValueWrapper putIfAbsent(Object key, Object value) {
+	@Nullable
+	public ValueWrapper putIfAbsent(Object key, @Nullable Object value) {
 		Element existingElement = this.cache.putIfAbsent(new Element(key, value));
 		return toValueWrapper(existingElement);
 	}
@@ -141,11 +146,13 @@ public class EhCacheCache implements Cache {
 	}
 
 
+	@Nullable
 	private Element lookup(Object key) {
 		return this.cache.get(key);
 	}
 
-	private ValueWrapper toValueWrapper(Element element) {
+	@Nullable
+	private ValueWrapper toValueWrapper(@Nullable Element element) {
 		return (element != null ? new SimpleValueWrapper(element.getObjectValue()) : null);
 	}
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +19,7 @@ package org.springframework.web.client;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -52,13 +52,13 @@ import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.Netty4ClientHttpRequestFactory;
 import org.springframework.http.client.OkHttp3ClientHttpRequestFactory;
-import org.springframework.http.client.OkHttpClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import static org.junit.Assert.*;
+import static org.springframework.http.HttpMethod.POST;
 
 /**
  * @author Arjen Poutsma
@@ -72,21 +72,21 @@ public class RestTemplateIntegrationTests extends AbstractMockWebServerTestCase 
 	@Parameter
 	public ClientHttpRequestFactory clientHttpRequestFactory;
 
+	@SuppressWarnings("deprecation")
 	@Parameters
 	public static Iterable<? extends ClientHttpRequestFactory> data() {
 		return Arrays.asList(
 				new SimpleClientHttpRequestFactory(),
 				new HttpComponentsClientHttpRequestFactory(),
 				new Netty4ClientHttpRequestFactory(),
-				new OkHttp3ClientHttpRequestFactory(),
-				new OkHttpClientHttpRequestFactory()
+				new OkHttp3ClientHttpRequestFactory()
 		);
 	}
 
 
 	@Before
 	public void setupClient() {
-		 this.template = new RestTemplate(this.clientHttpRequestFactory);
+		this.template = new RestTemplate(this.clientHttpRequestFactory);
 	}
 
 
@@ -146,7 +146,7 @@ public class RestTemplateIntegrationTests extends AbstractMockWebServerTestCase 
 	@Test
 	public void postForLocationEntity() throws URISyntaxException {
 		HttpHeaders entityHeaders = new HttpHeaders();
-		entityHeaders.setContentType(new MediaType("text", "plain", Charset.forName("ISO-8859-15")));
+		entityHeaders.setContentType(new MediaType("text", "plain", StandardCharsets.ISO_8859_1));
 		HttpEntity<String> entity = new HttpEntity<>(helloWorld, entityHeaders);
 		URI location = template.postForLocation(baseUrl + "/{method}", entity, "post");
 		assertEquals("Invalid location", new URI(baseUrl + "/post/1"), location);
@@ -177,6 +177,18 @@ public class RestTemplateIntegrationTests extends AbstractMockWebServerTestCase 
 			assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
 			assertNotNull(ex.getStatusText());
 			assertNotNull(ex.getResponseBodyAsString());
+		}
+	}
+
+	@Test
+	public void badRequest() {
+		try {
+			template.execute(baseUrl + "/status/badrequest", HttpMethod.GET, null, null);
+			fail("HttpClientErrorException.BadRequest expected");
+		}
+		catch (HttpClientErrorException.BadRequest ex) {
+			assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+			assertEquals("400 Client Error", ex.getMessage());
 		}
 	}
 
@@ -249,8 +261,8 @@ public class RestTemplateIntegrationTests extends AbstractMockWebServerTestCase 
 		HttpHeaders requestHeaders = new HttpHeaders();
 		requestHeaders.set("MyHeader", "MyValue");
 		requestHeaders.setContentType(MediaType.TEXT_PLAIN);
-		HttpEntity<String> requestEntity = new HttpEntity<>(helloWorld, requestHeaders);
-		HttpEntity<Void> result = template.exchange(baseUrl + "/{method}", HttpMethod.POST, requestEntity, Void.class, "post");
+		HttpEntity<String> entity = new HttpEntity<>(helloWorld, requestHeaders);
+		HttpEntity<Void> result = template.exchange(baseUrl + "/{method}", POST, entity, Void.class, "post");
 		assertEquals("Invalid location", new URI(baseUrl + "/post/1"), result.getHeaders().getLocation());
 		assertFalse(result.hasBody());
 	}
@@ -258,7 +270,7 @@ public class RestTemplateIntegrationTests extends AbstractMockWebServerTestCase 
 	@Test
 	public void jsonPostForObject() throws URISyntaxException {
 		HttpHeaders entityHeaders = new HttpHeaders();
-		entityHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+		entityHeaders.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 		MySampleBean bean = new MySampleBean();
 		bean.setWith1("with");
 		bean.setWith2("with");
@@ -273,7 +285,7 @@ public class RestTemplateIntegrationTests extends AbstractMockWebServerTestCase 
 	@Test
 	public void jsonPostForObjectWithJacksonView() throws URISyntaxException {
 		HttpHeaders entityHeaders = new HttpHeaders();
-		entityHeaders.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+		entityHeaders.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 		MySampleBean bean = new MySampleBean("with", "with", "without");
 		MappingJacksonValue jacksonValue = new MappingJacksonValue(bean);
 		jacksonValue.setSerializationView(MyJacksonView1.class);
@@ -298,7 +310,7 @@ public class RestTemplateIntegrationTests extends AbstractMockWebServerTestCase 
 		ParameterizedTypeReference<?> typeReference = new ParameterizedTypeReference<List<ParentClass>>() {};
 		RequestEntity<List<ParentClass>> entity = RequestEntity
 				.post(new URI(baseUrl + "/jsonpost"))
-				.contentType(new MediaType("application", "json", Charset.forName("UTF-8")))
+				.contentType(new MediaType("application", "json", StandardCharsets.UTF_8))
 				.body(list, typeReference.getType());
 		String content = template.exchange(entity, String.class).getBody();
 		assertTrue(content.contains("\"type\":\"foo\""));

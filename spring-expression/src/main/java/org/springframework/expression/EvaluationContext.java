@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,8 @@
 package org.springframework.expression;
 
 import java.util.List;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Expressions are executed in an evaluation context. It is in this context that
@@ -57,6 +59,7 @@ public interface EvaluationContext {
 	/**
 	 * Return a bean resolver that can look up beans by name.
 	 */
+	@Nullable
 	BeanResolver getBeanResolver();
 
 	/**
@@ -86,13 +89,14 @@ public interface EvaluationContext {
 	 * @param name variable to set
 	 * @param value value to be placed in the variable
 	 */
-	void setVariable(String name, Object value);
+	void setVariable(String name, @Nullable Object value);
 
 	/**
 	 * Look up a named variable within this evaluation context.
 	 * @param name variable to lookup
 	 * @return the value of the variable, or {@code null} if not found
 	 */
+	@Nullable
 	Object lookupVariable(String name);
 
 }

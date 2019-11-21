@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,6 +31,7 @@ import org.springframework.expression.spel.SpelNode;
 import org.springframework.expression.spel.SpelParserConfiguration;
 import org.springframework.expression.spel.ast.SpelNodeImpl;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -59,9 +60,11 @@ public class SpelExpression implements Expression {
 	private final SpelParserConfiguration configuration;
 
 	// The default context is used if no override is supplied by the user
+	@Nullable
 	private EvaluationContext evaluationContext;
 
 	// Holds the compiled form of the expression (if it has been compiled)
+	@Nullable
 	private CompiledExpression compiledAst;
 
 	// Count of many times as the expression been interpreted - can trigger compilation
@@ -111,6 +114,7 @@ public class SpelExpression implements Expression {
 	}
 
 	@Override
+	@Nullable
 	public Object getValue() throws EvaluationException {
 		if (this.compiledAst != null) {
 			try {
@@ -138,7 +142,8 @@ public class SpelExpression implements Expression {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T getValue(Class<T> expectedResultType) throws EvaluationException {
+	@Nullable
+	public <T> T getValue(@Nullable Class<T> expectedResultType) throws EvaluationException {
 		if (this.compiledAst != null) {
 			try {
 				EvaluationContext context = getEvaluationContext();
@@ -172,6 +177,7 @@ public class SpelExpression implements Expression {
 	}
 
 	@Override
+	@Nullable
 	public Object getValue(Object rootObject) throws EvaluationException {
 		if (this.compiledAst != null) {
 			try {
@@ -199,7 +205,8 @@ public class SpelExpression implements Expression {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T getValue(Object rootObject, Class<T> expectedResultType) throws EvaluationException {
+	@Nullable
+	public <T> T getValue(Object rootObject, @Nullable Class<T> expectedResultType) throws EvaluationException {
 		if (this.compiledAst != null) {
 			try {
 				Object result = this.compiledAst.getValue(rootObject, getEvaluationContext());
@@ -233,6 +240,7 @@ public class SpelExpression implements Expression {
 	}
 
 	@Override
+	@Nullable
 	public Object getValue(EvaluationContext context) throws EvaluationException {
 		Assert.notNull(context, "EvaluationContext is required");
 
@@ -261,7 +269,8 @@ public class SpelExpression implements Expression {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T getValue(EvaluationContext context, Class<T> expectedResultType) throws EvaluationException {
+	@Nullable
+	public <T> T getValue(EvaluationContext context, @Nullable Class<T> expectedResultType) throws EvaluationException {
 		Assert.notNull(context, "EvaluationContext is required");
 
 		if (this.compiledAst != null) {
@@ -294,6 +303,7 @@ public class SpelExpression implements Expression {
 	}
 
 	@Override
+	@Nullable
 	public Object getValue(EvaluationContext context, Object rootObject) throws EvaluationException {
 		Assert.notNull(context, "EvaluationContext is required");
 
@@ -322,7 +332,8 @@ public class SpelExpression implements Expression {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T getValue(EvaluationContext context, Object rootObject, Class<T> expectedResultType)
+	@Nullable
+	public <T> T getValue(EvaluationContext context, Object rootObject, @Nullable Class<T> expectedResultType)
 			throws EvaluationException {
 
 		Assert.notNull(context, "EvaluationContext is required");
@@ -357,16 +368,19 @@ public class SpelExpression implements Expression {
 	}
 
 	@Override
+	@Nullable
 	public Class<?> getValueType() throws EvaluationException {
 		return getValueType(getEvaluationContext());
 	}
 
 	@Override
+	@Nullable
 	public Class<?> getValueType(Object rootObject) throws EvaluationException {
 		return getValueType(getEvaluationContext(), rootObject);
 	}
 
 	@Override
+	@Nullable
 	public Class<?> getValueType(EvaluationContext context) throws EvaluationException {
 		Assert.notNull(context, "EvaluationContext is required");
 		ExpressionState expressionState = new ExpressionState(context, this.configuration);
@@ -375,6 +389,7 @@ public class SpelExpression implements Expression {
 	}
 
 	@Override
+	@Nullable
 	public Class<?> getValueType(EvaluationContext context, Object rootObject) throws EvaluationException {
 		ExpressionState expressionState = new ExpressionState(context, toTypedValue(rootObject), this.configuration);
 		TypeDescriptor typeDescriptor = this.ast.getValueInternal(expressionState).getTypeDescriptor();
@@ -382,11 +397,13 @@ public class SpelExpression implements Expression {
 	}
 
 	@Override
+	@Nullable
 	public TypeDescriptor getValueTypeDescriptor() throws EvaluationException {
 		return getValueTypeDescriptor(getEvaluationContext());
 	}
 
 	@Override
+	@Nullable
 	public TypeDescriptor getValueTypeDescriptor(Object rootObject) throws EvaluationException {
 		ExpressionState expressionState =
 				new ExpressionState(getEvaluationContext(), toTypedValue(rootObject), this.configuration);
@@ -394,6 +411,7 @@ public class SpelExpression implements Expression {
 	}
 
 	@Override
+	@Nullable
 	public TypeDescriptor getValueTypeDescriptor(EvaluationContext context) throws EvaluationException {
 		Assert.notNull(context, "EvaluationContext is required");
 		ExpressionState expressionState = new ExpressionState(context, this.configuration);
@@ -401,6 +419,7 @@ public class SpelExpression implements Expression {
 	}
 
 	@Override
+	@Nullable
 	public TypeDescriptor getValueTypeDescriptor(EvaluationContext context, Object rootObject)
 			throws EvaluationException {
 
@@ -428,19 +447,19 @@ public class SpelExpression implements Expression {
 	}
 
 	@Override
-	public void setValue(Object rootObject, Object value) throws EvaluationException {
+	public void setValue(Object rootObject, @Nullable Object value) throws EvaluationException {
 		this.ast.setValue(
 				new ExpressionState(getEvaluationContext(), toTypedValue(rootObject), this.configuration), value);
 	}
 
 	@Override
-	public void setValue(EvaluationContext context, Object value) throws EvaluationException {
+	public void setValue(EvaluationContext context, @Nullable Object value) throws EvaluationException {
 		Assert.notNull(context, "EvaluationContext is required");
 		this.ast.setValue(new ExpressionState(context, this.configuration), value);
 	}
 
 	@Override
-	public void setValue(EvaluationContext context, Object rootObject, Object value)
+	public void setValue(EvaluationContext context, Object rootObject, @Nullable Object value)
 			throws EvaluationException {
 
 		Assert.notNull(context, "EvaluationContext is required");
@@ -526,7 +545,7 @@ public class SpelExpression implements Expression {
 		return this.ast.toStringAST();
 	}
 
-	private TypedValue toTypedValue(Object object) {
+	private TypedValue toTypedValue(@Nullable Object object) {
 		return (object != null ? new TypedValue(object) : TypedValue.NULL);
 	}
 

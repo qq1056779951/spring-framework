@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,7 @@
 package org.springframework.test.web.servlet.htmlunit;
 
 import java.net.URL;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -56,7 +56,7 @@ import com.gargoylesoftware.htmlunit.WebRequest;
  */
 public final class HostRequestMatcher implements WebRequestMatcher {
 
-	private final Set<String> hosts = new HashSet<String>();
+	private final Set<String> hosts = new HashSet<>();
 
 
 	/**
@@ -65,7 +65,7 @@ public final class HostRequestMatcher implements WebRequestMatcher {
 	 * @param hosts the hosts to match on
 	 */
 	public HostRequestMatcher(String... hosts) {
-		this.hosts.addAll(Arrays.asList(hosts));
+		Collections.addAll(this.hosts, hosts);
 	}
 
 

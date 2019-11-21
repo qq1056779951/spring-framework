@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.util.Hashtable;
 import java.util.List;
+
 import javax.management.DynamicMBean;
 import javax.management.JMX;
 import javax.management.MBeanParameterInfo;
@@ -33,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.jmx.MBeanServerNotFoundException;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -87,7 +89,7 @@ public abstract class JmxUtils {
 	 * @throws MBeanServerNotFoundException if no {@code MBeanServer} could be found
 	 * @see javax.management.MBeanServerFactory#findMBeanServer(String)
 	 */
-	public static MBeanServer locateMBeanServer(String agentId) throws MBeanServerNotFoundException {
+	public static MBeanServer locateMBeanServer(@Nullable String agentId) throws MBeanServerNotFoundException {
 		MBeanServer server = null;
 
 		// null means any registered server, but "" specifically means the platform server
@@ -95,8 +97,8 @@ public abstract class JmxUtils {
 			List<MBeanServer> servers = MBeanServerFactory.findMBeanServer(agentId);
 			if (!CollectionUtils.isEmpty(servers)) {
 				// Check to see if an MBeanServer is registered.
-				if (servers.size() > 1 && logger.isWarnEnabled()) {
-					logger.warn("Found more than one MBeanServer instance" +
+				if (servers.size() > 1 && logger.isInfoEnabled()) {
+					logger.info("Found more than one MBeanServer instance" +
 							(agentId != null ? " with agent id [" + agentId + "]" : "") +
 							". Returning first from list.");
 				}
@@ -134,7 +136,10 @@ public abstract class JmxUtils {
 	 * @return the parameter types as classes
 	 * @throws ClassNotFoundException if a parameter type could not be resolved
 	 */
-	public static Class<?>[] parameterInfoToTypes(MBeanParameterInfo[] paramInfo) throws ClassNotFoundException {
+	@Nullable
+	public static Class<?>[] parameterInfoToTypes(@Nullable MBeanParameterInfo[] paramInfo)
+			throws ClassNotFoundException {
+
 		return parameterInfoToTypes(paramInfo, ClassUtils.getDefaultClassLoader());
 	}
 
@@ -146,7 +151,9 @@ public abstract class JmxUtils {
 	 * @return the parameter types as classes
 	 * @throws ClassNotFoundException if a parameter type could not be resolved
 	 */
-	public static Class<?>[] parameterInfoToTypes(MBeanParameterInfo[] paramInfo, ClassLoader classLoader)
+	@Nullable
+	public static Class<?>[] parameterInfoToTypes(
+			@Nullable MBeanParameterInfo[] paramInfo, @Nullable ClassLoader classLoader)
 			throws ClassNotFoundException {
 
 		Class<?>[] types = null;
@@ -253,7 +260,7 @@ public abstract class JmxUtils {
 	 * @return whether the class qualifies as an MBean
 	 * @see org.springframework.jmx.export.MBeanExporter#isMBean(Class)
 	 */
-	public static boolean isMBean(Class<?> clazz) {
+	public static boolean isMBean(@Nullable Class<?> clazz) {
 		return (clazz != null &&
 				(DynamicMBean.class.isAssignableFrom(clazz) ||
 						(getMBeanInterface(clazz) != null || getMXBeanInterface(clazz) != null)));
@@ -266,7 +273,8 @@ public abstract class JmxUtils {
 	 * @param clazz the class to check
 	 * @return the Standard MBean interface for the given class
 	 */
-	public static Class<?> getMBeanInterface(Class<?> clazz) {
+	@Nullable
+	public static Class<?> getMBeanInterface(@Nullable Class<?> clazz) {
 		if (clazz == null || clazz.getSuperclass() == null) {
 			return null;
 		}
@@ -287,7 +295,8 @@ public abstract class JmxUtils {
 	 * @param clazz the class to check
 	 * @return whether there is an MXBean interface for the given class
 	 */
-	public static Class<?> getMXBeanInterface(Class<?> clazz) {
+	@Nullable
+	public static Class<?> getMXBeanInterface(@Nullable Class<?> clazz) {
 		if (clazz == null || clazz.getSuperclass() == null) {
 			return null;
 		}
@@ -298,17 +307,6 @@ public abstract class JmxUtils {
 			}
 		}
 		return getMXBeanInterface(clazz.getSuperclass());
-	}
-
-	/**
-	 * Check whether MXBean support is available, i.e. whether we're running
-	 * on Java 6 or above.
-	 * @return {@code true} if available; {@code false} otherwise
-	 * @deprecated as of Spring 4.0, since Java 6 is required anyway now
-	 */
-	@Deprecated
-	public static boolean isMXBeanSupportAvailable() {
-		return true;
 	}
 
 }

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,7 @@ import static org.junit.Assert.*;
  * @author Rod Johnson
  * @author Chris Beams
  */
-public final class ControlFlowPointcutTests {
+public class ControlFlowPointcutTests {
 
 	@Test
 	public void testMatches() {
@@ -98,6 +98,14 @@ public final class ControlFlowPointcutTests {
 		assertEquals(new ControlFlowPointcut(One.class).hashCode(), new ControlFlowPointcut(One.class).hashCode());
 		assertEquals(new ControlFlowPointcut(One.class, "getAge").hashCode(), new ControlFlowPointcut(One.class, "getAge").hashCode());
 		assertFalse(new ControlFlowPointcut(One.class, "getAge").hashCode() == new ControlFlowPointcut(One.class).hashCode());
+	}
+
+	@Test
+	public void testToString() {
+		assertEquals(ControlFlowPointcut.class.getName() + ": class = " + One.class.getName() + "; methodName = null",
+			new ControlFlowPointcut(One.class).toString());
+		assertEquals(ControlFlowPointcut.class.getName() + ": class = " + One.class.getName() + "; methodName = getAge",
+			new ControlFlowPointcut(One.class, "getAge").toString());
 	}
 
 	public class One {

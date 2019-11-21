@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,8 @@ import org.springframework.expression.EvaluationException;
 import org.springframework.expression.TypedValue;
 import org.springframework.expression.spel.CodeFlow;
 import org.springframework.expression.spel.ExpressionState;
+import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -79,7 +81,9 @@ public class Elvis extends SpelNodeImpl {
 		computeExitTypeDescriptor();
 		cf.enterCompilationScope();
 		this.children[0].generateCode(mv, cf);
-		CodeFlow.insertBoxIfNecessary(mv, cf.lastDescriptor().charAt(0));
+		String lastDesc = cf.lastDescriptor();
+		Assert.state(lastDesc != null, "No last descriptor");
+		CodeFlow.insertBoxIfNecessary(mv, lastDesc.charAt(0));
 		cf.exitCompilationScope();
 		Label elseTarget = new Label();
 		Label endOfIf = new Label();
@@ -96,7 +100,9 @@ public class Elvis extends SpelNodeImpl {
 		cf.enterCompilationScope();
 		this.children[1].generateCode(mv, cf);
 		if (!CodeFlow.isPrimitive(this.exitTypeDescriptor)) {
-			CodeFlow.insertBoxIfNecessary(mv, cf.lastDescriptor().charAt(0));
+			lastDesc = cf.lastDescriptor();
+			Assert.state(lastDesc != null, "No last descriptor");
+			CodeFlow.insertBoxIfNecessary(mv, lastDesc.charAt(0));
 		}
 		cf.exitCompilationScope();
 		mv.visitLabel(endOfIf);
@@ -108,7 +114,7 @@ public class Elvis extends SpelNodeImpl {
 				this.children[1].exitTypeDescriptor != null) {
 			String conditionDescriptor = this.children[0].exitTypeDescriptor;
 			String ifNullValueDescriptor = this.children[1].exitTypeDescriptor;
-			if (conditionDescriptor.equals(ifNullValueDescriptor)) {
+			if (ObjectUtils.nullSafeEquals(conditionDescriptor, ifNullValueDescriptor)) {
 				this.exitTypeDescriptor = conditionDescriptor;
 			}
 			else {

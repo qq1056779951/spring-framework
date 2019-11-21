@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,9 +23,11 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 
 import org.springframework.core.NestedIOException;
-import org.springframework.util.Assert;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ResourceUtils;
 
 /**
@@ -55,8 +57,7 @@ public abstract class AbstractResource implements Resource {
 		catch (IOException ex) {
 			// Fall back to stream existence: can we open the stream?
 			try {
-				InputStream is = getInputStream();
-				is.close();
+				getInputStream().close();
 				return true;
 			}
 			catch (Throwable isEx) {
@@ -66,11 +67,12 @@ public abstract class AbstractResource implements Resource {
 	}
 
 	/**
-	 * This implementation always returns {@code true}.
+	 * This implementation always returns {@code true} for a resource
+	 * that {@link #exists() exists} (revised as of 5.1).
 	 */
 	@Override
 	public boolean isReadable() {
-		return true;
+		return exists();
 	}
 
 	/**
@@ -78,6 +80,14 @@ public abstract class AbstractResource implements Resource {
 	 */
 	@Override
 	public boolean isOpen() {
+		return false;
+	}
+
+	/**
+	 * This implementation always returns {@code false}.
+	 */
+	@Override
+	public boolean isFile() {
 		return false;
 	}
 
@@ -115,6 +125,17 @@ public abstract class AbstractResource implements Resource {
 	}
 
 	/**
+	 * This implementation returns {@link Channels#newChannel(InputStream)}
+	 * with the result of {@link #getInputStream()}.
+	 * <p>This is the same as in {@link Resource}'s corresponding default method
+	 * but mirrored here for efficient JVM-level dispatching in a class hierarchy.
+	 */
+	@Override
+	public ReadableByteChannel readableChannel() throws IOException {
+		return Channels.newChannel(getInputStream());
+	}
+
+	/**
 	 * This implementation reads the entire InputStream to calculate the
 	 * content length. Subclasses will almost always be able to provide
 	 * a more optimal version of this, e.g. checking a File length.
@@ -123,10 +144,9 @@ public abstract class AbstractResource implements Resource {
 	@Override
 	public long contentLength() throws IOException {
 		InputStream is = getInputStream();
-		Assert.state(is != null, "Resource InputStream must not be null");
 		try {
 			long size = 0;
-			byte[] buf = new byte[255];
+			byte[] buf = new byte[256];
 			int read;
 			while ((read = is.read(buf)) != -1) {
 				size += read;
@@ -149,10 +169,11 @@ public abstract class AbstractResource implements Resource {
 	 */
 	@Override
 	public long lastModified() throws IOException {
-		long lastModified = getFileForLastModifiedCheck().lastModified();
-		if (lastModified == 0L) {
+		File fileToCheck = getFileForLastModifiedCheck();
+		long lastModified = fileToCheck.lastModified();
+		if (lastModified == 0L && !fileToCheck.exists()) {
 			throw new FileNotFoundException(getDescription() +
-					" cannot be resolved in the file system for resolving its last-modified timestamp");
+					" cannot be resolved in the file system for checking its last-modified timestamp");
 		}
 		return lastModified;
 	}
@@ -183,28 +204,20 @@ public abstract class AbstractResource implements Resource {
 	 * assuming that this resource type does not have a filename.
 	 */
 	@Override
+	@Nullable
 	public String getFilename() {
 		return null;
 	}
 
 
 	/**
-	 * This implementation returns the description of this resource.
-	 * @see #getDescription()
-	 */
-	@Override
-	public String toString() {
-		return getDescription();
-	}
-
-	/**
 	 * This implementation compares description strings.
 	 * @see #getDescription()
 	 */
 	@Override
-	public boolean equals(Object obj) {
-		return (obj == this ||
-			(obj instanceof Resource && ((Resource) obj).getDescription().equals(getDescription())));
+	public boolean equals(Object other) {
+		return (this == other || (other instanceof Resource &&
+				((Resource) other).getDescription().equals(getDescription())));
 	}
 
 	/**
@@ -214,6 +227,15 @@ public abstract class AbstractResource implements Resource {
 	@Override
 	public int hashCode() {
 		return getDescription().hashCode();
+	}
+
+	/**
+	 * This implementation returns the description of this resource.
+	 * @see #getDescription()
+	 */
+	@Override
+	public String toString() {
+		return getDescription();
 	}
 
 }

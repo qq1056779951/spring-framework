@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
 package org.springframework.core.annotation;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
@@ -28,7 +29,11 @@ import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.Resource;
+import javax.annotation.meta.When;
 
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -36,8 +41,9 @@ import org.junit.Test;
 import org.junit.internal.ArrayComparisonFailure;
 import org.junit.rules.ExpectedException;
 
-import org.springframework.core.annotation.AnnotationUtilsTests.*;
+import org.springframework.lang.NonNullApi;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Indexed;
 import org.springframework.util.Assert;
 import org.springframework.util.MultiValueMap;
 
@@ -69,26 +75,26 @@ public class AnnotatedElementUtilsTests {
 
 	@Test
 	public void getMetaAnnotationTypesOnNonAnnotatedClass() {
-		assertNull(getMetaAnnotationTypes(NonAnnotatedClass.class, TransactionalComponent.class));
-		assertNull(getMetaAnnotationTypes(NonAnnotatedClass.class, TransactionalComponent.class.getName()));
+		assertTrue(getMetaAnnotationTypes(NonAnnotatedClass.class, TransactionalComponent.class).isEmpty());
+		assertTrue(getMetaAnnotationTypes(NonAnnotatedClass.class, TransactionalComponent.class.getName()).isEmpty());
 	}
 
 	@Test
 	public void getMetaAnnotationTypesOnClassWithMetaDepth1() {
 		Set<String> names = getMetaAnnotationTypes(TransactionalComponentClass.class, TransactionalComponent.class);
-		assertEquals(names(Transactional.class, Component.class), names);
+		assertEquals(names(Transactional.class, Component.class, Indexed.class), names);
 
 		names = getMetaAnnotationTypes(TransactionalComponentClass.class, TransactionalComponent.class.getName());
-		assertEquals(names(Transactional.class, Component.class), names);
+		assertEquals(names(Transactional.class, Component.class, Indexed.class), names);
 	}
 
 	@Test
 	public void getMetaAnnotationTypesOnClassWithMetaDepth2() {
 		Set<String> names = getMetaAnnotationTypes(ComposedTransactionalComponentClass.class, ComposedTransactionalComponent.class);
-		assertEquals(names(TransactionalComponent.class, Transactional.class, Component.class), names);
+		assertEquals(names(TransactionalComponent.class, Transactional.class, Component.class, Indexed.class), names);
 
 		names = getMetaAnnotationTypes(ComposedTransactionalComponentClass.class, ComposedTransactionalComponent.class.getName());
-		assertEquals(names(TransactionalComponent.class, Transactional.class, Component.class), names);
+		assertEquals(names(TransactionalComponent.class, Transactional.class, Component.class, Indexed.class), names);
 	}
 
 	private Set<String> names(Class<?>... classes) {
@@ -119,6 +125,14 @@ public class AnnotatedElementUtilsTests {
 	}
 
 	@Test
+	public void isAnnotatedForPlainTypes() {
+		assertTrue(isAnnotated(Order.class, Documented.class));
+		assertTrue(isAnnotated(NonNullApi.class, Documented.class));
+		assertTrue(isAnnotated(NonNullApi.class, Nonnull.class));
+		assertTrue(isAnnotated(ParametersAreNonnullByDefault.class, Nonnull.class));
+	}
+
+	@Test
 	public void isAnnotatedOnNonAnnotatedClass() {
 		assertFalse(isAnnotated(NonAnnotatedClass.class, TX_NAME));
 	}
@@ -145,6 +159,14 @@ public class AnnotatedElementUtilsTests {
 		assertTrue(isAnnotated(ComposedTransactionalComponentClass.class, TX_NAME));
 		assertTrue(isAnnotated(ComposedTransactionalComponentClass.class, Component.class.getName()));
 		assertTrue(isAnnotated(ComposedTransactionalComponentClass.class, ComposedTransactionalComponent.class.getName()));
+	}
+
+	@Test
+	public void hasAnnotationForPlainTypes() {
+		assertTrue(hasAnnotation(Order.class, Documented.class));
+		assertTrue(hasAnnotation(NonNullApi.class, Documented.class));
+		assertTrue(hasAnnotation(NonNullApi.class, Nonnull.class));
+		assertTrue(hasAnnotation(ParametersAreNonnullByDefault.class, Nonnull.class));
 	}
 
 	@Test
@@ -208,6 +230,22 @@ public class AnnotatedElementUtilsTests {
 	}
 
 	@Test
+	public void getAllAnnotationAttributesOnLangType() {
+		MultiValueMap<String, Object> attributes = getAllAnnotationAttributes(
+				NonNullApi.class, Nonnull.class.getName());
+		assertNotNull(attributes);
+		assertEquals(asList(When.ALWAYS), attributes.get("when"));
+	}
+
+	@Test
+	public void getAllAnnotationAttributesOnJavaxType() {
+		MultiValueMap<String, Object> attributes = getAllAnnotationAttributes(
+				ParametersAreNonnullByDefault.class, Nonnull.class.getName());
+		assertNotNull(attributes);
+		assertEquals(asList(When.ALWAYS), attributes.get("when"));
+	}
+
+	@Test
 	public void getMergedAnnotationAttributesOnClassWithLocalAnnotation() {
 		Class<?> element = TxConfig.class;
 		String name = TX_NAME;
@@ -262,7 +300,7 @@ public class AnnotatedElementUtilsTests {
 		Class<?> element = SubSubClassWithInheritedComposedAnnotation.class;
 		String name = TX_NAME;
 		AnnotationAttributes attributes = getMergedAnnotationAttributes(element, name);
-		assertNotNull("AnnotationAttributtes for @Transactional on SubSubClassWithInheritedComposedAnnotation.", attributes);
+		assertNotNull("AnnotationAttributes for @Transactional on SubSubClassWithInheritedComposedAnnotation.", attributes);
 		// Verify contracts between utility methods:
 		assertTrue(isAnnotated(element, name));
 		assertFalse("readOnly flag for SubSubClassWithInheritedComposedAnnotation.", attributes.getBoolean("readOnly"));
@@ -525,19 +563,11 @@ public class AnnotatedElementUtilsTests {
 		assertNotNull("Should find @Transactional on ConcreteClassWithInheritedAnnotation.handle() method", attributes);
 	}
 
-	/**
-	 * <p>{@code AbstractClassWithInheritedAnnotation} declares {@code handleParameterized(T)}; whereas,
-	 * {@code ConcreteClassWithInheritedAnnotation} declares {@code handleParameterized(String)}.
-	 * <p>As of Spring 4.2, {@code AnnotatedElementUtils.processWithFindSemantics()} does not resolve an
-	 * <em>equivalent</em> method in {@code AbstractClassWithInheritedAnnotation} for the <em>bridged</em>
-	 * {@code handleParameterized(String)} method.
-	 * @since 4.2
-	 */
 	@Test
 	public void findMergedAnnotationAttributesInheritedFromBridgedMethod() throws NoSuchMethodException {
 		Method method = ConcreteClassWithInheritedAnnotation.class.getMethod("handleParameterized", String.class);
 		AnnotationAttributes attributes = findMergedAnnotationAttributes(method, Transactional.class);
-		assertNull("Should not find @Transactional on bridged ConcreteClassWithInheritedAnnotation.handleParameterized()", attributes);
+		assertNotNull("Should find @Transactional on bridged ConcreteClassWithInheritedAnnotation.handleParameterized()", attributes);
 	}
 
 	/**
@@ -546,7 +576,7 @@ public class AnnotatedElementUtilsTests {
 	 * @since 4.2
 	 */
 	@Test
-	public void findMergedAnnotationAttributesFromBridgeMethod() throws NoSuchMethodException {
+	public void findMergedAnnotationAttributesFromBridgeMethod() {
 		Method[] methods = StringGenericParameter.class.getMethods();
 		Method bridgeMethod = null;
 		Method bridgedMethod = null;
@@ -709,14 +739,33 @@ public class AnnotatedElementUtilsTests {
 	@Test
 	public void javaLangAnnotationTypeViaFindMergedAnnotation() throws Exception {
 		Constructor<?> deprecatedCtor = Date.class.getConstructor(String.class);
-		assertEquals(deprecatedCtor.getAnnotation(Deprecated.class), findMergedAnnotation(deprecatedCtor, Deprecated.class));
-		assertEquals(Date.class.getAnnotation(Deprecated.class), findMergedAnnotation(Date.class, Deprecated.class));
+		assertEquals(deprecatedCtor.getAnnotation(Deprecated.class),
+				findMergedAnnotation(deprecatedCtor, Deprecated.class));
+		assertEquals(Date.class.getAnnotation(Deprecated.class),
+				findMergedAnnotation(Date.class, Deprecated.class));
 	}
 
 	@Test
 	public void javaxAnnotationTypeViaFindMergedAnnotation() throws Exception {
-		assertEquals(ResourceHolder.class.getAnnotation(Resource.class), findMergedAnnotation(ResourceHolder.class, Resource.class));
-		assertEquals(SpringAppConfigClass.class.getAnnotation(Resource.class), findMergedAnnotation(SpringAppConfigClass.class, Resource.class));
+		assertEquals(ResourceHolder.class.getAnnotation(Resource.class),
+				findMergedAnnotation(ResourceHolder.class, Resource.class));
+		assertEquals(SpringAppConfigClass.class.getAnnotation(Resource.class),
+				findMergedAnnotation(SpringAppConfigClass.class, Resource.class));
+	}
+
+	@Test
+	public void javaxMetaAnnotationTypeViaFindMergedAnnotation() throws Exception {
+		assertEquals(ParametersAreNonnullByDefault.class.getAnnotation(Nonnull.class),
+				findMergedAnnotation(ParametersAreNonnullByDefault.class, Nonnull.class));
+		assertEquals(ParametersAreNonnullByDefault.class.getAnnotation(Nonnull.class),
+				findMergedAnnotation(ResourceHolder.class, Nonnull.class));
+	}
+
+	@Test
+	public void nullableAnnotationTypeViaFindMergedAnnotation() throws Exception {
+		Method method = TransactionalServiceImpl.class.getMethod("doIt");
+		assertEquals(method.getAnnotation(Resource.class), findMergedAnnotation(method, Resource.class));
+		assertEquals(method.getAnnotation(Resource.class), findMergedAnnotation(method, Resource.class));
 	}
 
 	@Test
@@ -731,6 +780,20 @@ public class AnnotatedElementUtilsTests {
 		Method m = TransactionalServiceImpl.class.getMethod("doIt");
 		Set<Transactional> allMergedAnnotations = findAllMergedAnnotations(m, Transactional.class);
 		assertEquals(1, allMergedAnnotations.size());
+	}
+
+	@Test  // SPR-16060
+	public void findMethodAnnotationFromGenericInterface() throws Exception {
+		Method method = ImplementsInterfaceWithGenericAnnotatedMethod.class.getMethod("foo", String.class);
+		Order order = findMergedAnnotation(method, Order.class);
+		assertNotNull(order);
+	}
+
+	@Test  // SPR-17146
+	public void findMethodAnnotationFromGenericSuperclass() throws Exception {
+		Method method = ExtendsBaseClassWithGenericAnnotatedMethod.class.getMethod("foo", String.class);
+		Order order = findMergedAnnotation(method, Order.class);
+		assertNotNull(order);
 	}
 
 
@@ -1282,6 +1345,7 @@ public class AnnotatedElementUtilsTests {
 	}
 
 	@Resource(name = "x")
+	@ParametersAreNonnullByDefault
 	static class ResourceHolder {
 	}
 

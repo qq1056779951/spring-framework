@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.web.filter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -28,7 +29,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 import org.springframework.web.util.WebUtils;
@@ -42,6 +42,9 @@ import org.springframework.web.util.WebUtils;
  * <p>Since the ETag is based on the response content, the response
  * (e.g. a {@link org.springframework.web.servlet.View}) is still rendered.
  * As such, this filter only saves bandwidth, not server performance.
+ *
+ * <p><b>NOTE:</b> As of Spring Framework 5.0, this filter uses request/response
+ * decorators built on the Servlet 3.1 API.
  *
  * @author Arjen Poutsma
  * @author Rossen Stoyanchev
@@ -61,10 +64,6 @@ public class ShallowEtagHeaderFilter extends OncePerRequestFilter {
 
 	private static final String STREAMING_ATTRIBUTE = ShallowEtagHeaderFilter.class.getName() + ".STREAMING";
 
-
-	/** Checking for Servlet 3.0+ HttpServletResponse.getHeader(String) */
-	private static final boolean servlet3Present =
-			ClassUtils.hasMethod(HttpServletResponse.class, "getHeader", String.class);
 
 	private boolean writeWeakETag = false;
 
@@ -128,25 +127,14 @@ public class ShallowEtagHeaderFilter extends OncePerRequestFilter {
 			String responseETag = generateETagHeaderValue(responseWrapper.getContentInputStream(), this.writeWeakETag);
 			rawResponse.setHeader(HEADER_ETAG, responseETag);
 			String requestETag = request.getHeader(HEADER_IF_NONE_MATCH);
-			if (requestETag != null && ("*".equals(requestETag) || responseETag.equals(requestETag) ||
-					responseETag.replaceFirst("^W/", "").equals(requestETag.replaceFirst("^W/", "")))) {
-				if (logger.isTraceEnabled()) {
-					logger.trace("ETag [" + responseETag + "] equal to If-None-Match, sending 304");
-				}
+			if (requestETag != null && ("*".equals(requestETag) || compareETagHeaderValue(requestETag, responseETag))) {
 				rawResponse.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
 			}
 			else {
-				if (logger.isTraceEnabled()) {
-					logger.trace("ETag [" + responseETag + "] not equal to If-None-Match [" + requestETag +
-							"], sending normal response");
-				}
 				responseWrapper.copyBodyToResponse();
 			}
 		}
 		else {
-			if (logger.isTraceEnabled()) {
-				logger.trace("Response with status code [" + statusCode + "] not eligible for ETag");
-			}
 			responseWrapper.copyBodyToResponse();
 		}
 	}
@@ -170,13 +158,8 @@ public class ShallowEtagHeaderFilter extends OncePerRequestFilter {
 
 		String method = request.getMethod();
 		if (responseStatusCode >= 200 && responseStatusCode < 300 && HttpMethod.GET.matches(method)) {
-			String cacheControl = null;
-			if (servlet3Present) {
-				cacheControl = response.getHeader(HEADER_CACHE_CONTROL);
-			}
-			if (cacheControl == null || !cacheControl.contains(DIRECTIVE_NO_STORE)) {
-				return true;
-			}
+			String cacheControl = response.getHeader(HEADER_CACHE_CONTROL);
+			return (cacheControl == null || !cacheControl.contains(DIRECTIVE_NO_STORE));
 		}
 		return false;
 	}
@@ -199,6 +182,16 @@ public class ShallowEtagHeaderFilter extends OncePerRequestFilter {
 		DigestUtils.appendMd5DigestAsHex(inputStream, builder);
 		builder.append('"');
 		return builder.toString();
+	}
+
+	private boolean compareETagHeaderValue(String requestETag, String responseETag) {
+		if (requestETag.startsWith("W/")) {
+			requestETag = requestETag.substring(2);
+		}
+		if (responseETag.startsWith("W/")) {
+			responseETag = responseETag.substring(2);
+		}
+		return requestETag.equals(responseETag);
 	}
 
 

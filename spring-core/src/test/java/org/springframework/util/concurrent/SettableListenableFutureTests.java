@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.util.concurrent;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -53,6 +54,16 @@ public class SettableListenableFutureTests {
 	}
 
 	@Test
+	public void returnsSetValueFromCompletable() throws ExecutionException, InterruptedException {
+		String string = "hello";
+		assertTrue(settableListenableFuture.set(string));
+		Future<String> completable = settableListenableFuture.completable();
+		assertThat(completable.get(), equalTo(string));
+		assertFalse(completable.isCancelled());
+		assertTrue(completable.isDone());
+	}
+
+	@Test
 	public void setValueUpdatesDoneStatus() {
 		settableListenableFuture.set("hello");
 		assertFalse(settableListenableFuture.isCancelled());
@@ -60,7 +71,7 @@ public class SettableListenableFutureTests {
 	}
 
 	@Test
-	public void throwsSetExceptionWrappedInExecutionException() throws ExecutionException, InterruptedException {
+	public void throwsSetExceptionWrappedInExecutionException() throws Exception {
 		Throwable exception = new RuntimeException();
 		assertTrue(settableListenableFuture.setException(exception));
 
@@ -77,7 +88,25 @@ public class SettableListenableFutureTests {
 	}
 
 	@Test
-	public void throwsSetErrorWrappedInExecutionException() throws ExecutionException, InterruptedException {
+	public void throwsSetExceptionWrappedInExecutionExceptionFromCompletable() throws Exception {
+		Throwable exception = new RuntimeException();
+		assertTrue(settableListenableFuture.setException(exception));
+		Future<String> completable = settableListenableFuture.completable();
+
+		try {
+			completable.get();
+			fail("Expected ExecutionException");
+		}
+		catch (ExecutionException ex) {
+			assertThat(ex.getCause(), equalTo(exception));
+		}
+
+		assertFalse(completable.isCancelled());
+		assertTrue(completable.isDone());
+	}
+
+	@Test
+	public void throwsSetErrorWrappedInExecutionException() throws Exception {
 		Throwable exception = new OutOfMemoryError();
 		assertTrue(settableListenableFuture.setException(exception));
 
@@ -91,6 +120,24 @@ public class SettableListenableFutureTests {
 
 		assertFalse(settableListenableFuture.isCancelled());
 		assertTrue(settableListenableFuture.isDone());
+	}
+
+	@Test
+	public void throwsSetErrorWrappedInExecutionExceptionFromCompletable() throws Exception {
+		Throwable exception = new OutOfMemoryError();
+		assertTrue(settableListenableFuture.setException(exception));
+		Future<String> completable = settableListenableFuture.completable();
+
+		try {
+			completable.get();
+			fail("Expected ExecutionException");
+		}
+		catch (ExecutionException ex) {
+			assertThat(ex.getCause(), equalTo(exception));
+		}
+
+		assertFalse(completable.isCancelled());
+		assertTrue(completable.isDone());
 	}
 
 	@Test

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,6 +32,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.support.PropertiesBeanDefinitionReader;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
+import org.springframework.lang.Nullable;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 import org.springframework.web.servlet.View;
 
@@ -62,7 +63,7 @@ import org.springframework.web.servlet.View;
 public class ResourceBundleViewResolver extends AbstractCachingViewResolver
 		implements Ordered, InitializingBean, DisposableBean {
 
-	/** The default basename if no other basename is supplied */
+	/** The default basename if no other basename is supplied. */
 	public static final String DEFAULT_BASENAME = "views";
 
 
@@ -70,19 +71,19 @@ public class ResourceBundleViewResolver extends AbstractCachingViewResolver
 
 	private ClassLoader bundleClassLoader = Thread.currentThread().getContextClassLoader();
 
+	@Nullable
 	private String defaultParentView;
 
+	@Nullable
 	private Locale[] localesToInitialize;
 
 	private int order = Ordered.LOWEST_PRECEDENCE;  // default: same as non-Ordered
 
 	/* Locale -> BeanFactory */
-	private final Map<Locale, BeanFactory> localeCache =
-			new HashMap<Locale, BeanFactory>();
+	private final Map<Locale, BeanFactory> localeCache = new HashMap<>();
 
 	/* List of ResourceBundle -> BeanFactory */
-	private final Map<List<ResourceBundle>, ConfigurableApplicationContext> bundleCache =
-			new HashMap<List<ResourceBundle>, ConfigurableApplicationContext>();
+	private final Map<List<ResourceBundle>, ConfigurableApplicationContext> bundleCache = new HashMap<>();
 
 
 	/**
@@ -226,7 +227,7 @@ public class ResourceBundleViewResolver extends AbstractCachingViewResolver
 		}
 
 		// Build list of ResourceBundle references for Locale.
-		List<ResourceBundle> bundles = new LinkedList<ResourceBundle>();
+		List<ResourceBundle> bundles = new LinkedList<>();
 		for (String basename : this.basenames) {
 			ResourceBundle bundle = getBundle(basename, locale);
 			bundles.add(bundle);

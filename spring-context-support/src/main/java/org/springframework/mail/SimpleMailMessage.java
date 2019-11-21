@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.mail;
 import java.io.Serializable;
 import java.util.Date;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -43,20 +44,28 @@ import org.springframework.util.StringUtils;
 @SuppressWarnings("serial")
 public class SimpleMailMessage implements MailMessage, Serializable {
 
+	@Nullable
 	private String from;
 
+	@Nullable
 	private String replyTo;
 
+	@Nullable
 	private String[] to;
 
+	@Nullable
 	private String[] cc;
 
+	@Nullable
 	private String[] bcc;
 
+	@Nullable
 	private Date sentDate;
 
+	@Nullable
 	private String subject;
 
+	@Nullable
 	private String text;
 
 
@@ -88,6 +97,7 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 		this.from = from;
 	}
 
+	@Nullable
 	public String getFrom() {
 		return this.from;
 	}
@@ -97,6 +107,7 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 		this.replyTo = replyTo;
 	}
 
+	@Nullable
 	public String getReplyTo() {
 		return this.replyTo;
 	}
@@ -107,10 +118,11 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 	}
 
 	@Override
-	public void setTo(String[] to) {
+	public void setTo(String... to) {
 		this.to = to;
 	}
 
+	@Nullable
 	public String[] getTo() {
 		return this.to;
 	}
@@ -121,10 +133,11 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 	}
 
 	@Override
-	public void setCc(String[] cc) {
+	public void setCc(String... cc) {
 		this.cc = cc;
 	}
 
+	@Nullable
 	public String[] getCc() {
 		return this.cc;
 	}
@@ -135,10 +148,11 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 	}
 
 	@Override
-	public void setBcc(String[] bcc) {
+	public void setBcc(String... bcc) {
 		this.bcc = bcc;
 	}
 
+	@Nullable
 	public String[] getBcc() {
 		return this.bcc;
 	}
@@ -148,6 +162,7 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 		this.sentDate = sentDate;
 	}
 
+	@Nullable
 	public Date getSentDate() {
 		return this.sentDate;
 	}
@@ -157,6 +172,7 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 		this.subject = subject;
 	}
 
+	@Nullable
 	public String getSubject() {
 		return this.subject;
 	}
@@ -166,6 +182,7 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 		this.text = text;
 	}
 
+	@Nullable
 	public String getText() {
 		return this.text;
 	}
@@ -250,7 +267,8 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 	}
 
 
-	private static String[] copyOrNull(String[] state) {
+	@Nullable
+	private static String[] copyOrNull(@Nullable String[] state) {
 		if (state == null) {
 			return null;
 		}

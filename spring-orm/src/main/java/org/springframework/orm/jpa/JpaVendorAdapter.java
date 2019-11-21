@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,11 +16,15 @@
 
 package org.springframework.orm.jpa;
 
+import java.util.Collections;
 import java.util.Map;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
+
+import org.springframework.lang.Nullable;
 
 /**
  * SPI interface that allows to plug in vendor-specific behavior
@@ -45,7 +49,10 @@ public interface JpaVendorAdapter {
 	 * excluding provider classes from temporary class overriding.
 	 * @since 2.5.2
 	 */
-	String getPersistenceProviderRootPackage();
+	@Nullable
+	default String getPersistenceProviderRootPackage() {
+		return null;
+	}
 
 	/**
 	 * Return a Map of vendor-specific JPA properties for the given persistence
@@ -70,7 +77,9 @@ public interface JpaVendorAdapter {
 	 * @see PersistenceUnitInfo#getTransactionType()
 	 * @see javax.persistence.spi.PersistenceProvider#createContainerEntityManagerFactory(PersistenceUnitInfo, Map)
 	 */
-	Map<String, ?> getJpaPropertyMap(PersistenceUnitInfo pui);
+	default Map<String, ?> getJpaPropertyMap(PersistenceUnitInfo pui) {
+		return getJpaPropertyMap();
+	}
 
 	/**
 	 * Return a Map of vendor-specific JPA properties,
@@ -82,13 +91,18 @@ public interface JpaVendorAdapter {
 	 * facilities, or an empty Map if there are no properties to expose
 	 * @see javax.persistence.Persistence#createEntityManagerFactory(String, Map)
 	 */
-	Map<String, ?> getJpaPropertyMap();
+	default Map<String, ?> getJpaPropertyMap() {
+		return Collections.emptyMap();
+	}
 
 	/**
 	 * Return the vendor-specific JpaDialect implementation for this
 	 * provider, or {@code null} if there is none.
 	 */
-	JpaDialect getJpaDialect();
+	@Nullable
+	default JpaDialect getJpaDialect() {
+		return null;
+	}
 
 	/**
 	 * Return the vendor-specific EntityManagerFactory interface
@@ -98,7 +112,9 @@ public interface JpaVendorAdapter {
 	 * {@link javax.persistence.EntityManagerFactory} class here.
 	 * @since 2.5.2
 	 */
-	Class<? extends EntityManagerFactory> getEntityManagerFactoryInterface();
+	default Class<? extends EntityManagerFactory> getEntityManagerFactoryInterface() {
+		return EntityManagerFactory.class;
+	}
 
 	/**
 	 * Return the vendor-specific EntityManager interface
@@ -107,7 +123,9 @@ public interface JpaVendorAdapter {
 	 * the adapter should simply return the standard
 	 * {@link javax.persistence.EntityManager} class here.
 	 */
-	Class<? extends EntityManager> getEntityManagerInterface();
+	default Class<? extends EntityManager> getEntityManagerInterface() {
+		return EntityManager.class;
+	}
 
 	/**
 	 * Optional callback for post-processing the native EntityManagerFactory
@@ -116,6 +134,7 @@ public interface JpaVendorAdapter {
 	 * While this is not expected to be used for most providers, it is included
 	 * here as a general extension hook.
 	 */
-	void postProcessEntityManagerFactory(EntityManagerFactory emf);
+	default void postProcessEntityManagerFactory(EntityManagerFactory emf) {
+	}
 
 }

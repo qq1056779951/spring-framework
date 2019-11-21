@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2015 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -205,9 +205,8 @@ public class ActiveProfilesUtilsTests extends AbstractContextConfigurationUtilsT
 	/**
 	 * @since 4.0
 	 */
-	@Test(expected = IllegalStateException.class)
 	public void resolveActiveProfilesWithResolverThatReturnsNull() {
-		resolveActiveProfiles(NullActiveProfilesResolverTestCase.class);
+		assertResolvedProfiles(NullActiveProfilesResolverTestCase.class);
 	}
 
 	/**
@@ -356,7 +355,7 @@ public class ActiveProfilesUtilsTests extends AbstractContextConfigurationUtilsT
 	private static class NoDefaultConstructorActiveProfilesResolver implements ActiveProfilesResolver {
 
 		@SuppressWarnings("unused")
-		NoDefaultConstructorActiveProfilesResolver(Object agument) {
+		NoDefaultConstructorActiveProfilesResolver(Object argument) {
 		}
 
 		@Override
@@ -378,7 +377,7 @@ public class ActiveProfilesUtilsTests extends AbstractContextConfigurationUtilsT
 
 		@Override
 		public String[] resolve(Class<?> testClass) {
-			List<String> profiles = new ArrayList<String>(Arrays.asList(super.resolve(testClass)));
+			List<String> profiles = new ArrayList<>(Arrays.asList(super.resolve(testClass)));
 			profiles.add("foo");
 			return StringUtils.toStringArray(profiles);
 		}

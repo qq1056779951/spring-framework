@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.util.xml;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import javax.xml.namespace.QName;
 import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamException;
@@ -29,6 +30,7 @@ import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.SAXParseException;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -55,9 +57,10 @@ abstract class AbstractStaxXMLReader extends AbstractXMLReader {
 
 	private boolean namespacePrefixesFeature = false;
 
+	@Nullable
 	private Boolean isStandalone;
 
-	private final Map<String, String> namespaces = new LinkedHashMap<String, String>();
+	private final Map<String, String> namespaces = new LinkedHashMap<>();
 
 
 	@Override
@@ -181,7 +184,7 @@ abstract class AbstractStaxXMLReader extends AbstractXMLReader {
 	 * Start the prefix mapping for the given prefix.
 	 * @see org.xml.sax.ContentHandler#startPrefixMapping(String, String)
 	 */
-	protected void startPrefixMapping(String prefix, String namespace) throws SAXException {
+	protected void startPrefixMapping(@Nullable String prefix, String namespace) throws SAXException {
 		if (getContentHandler() != null && StringUtils.hasLength(namespace)) {
 			if (prefix == null) {
 				prefix = "";

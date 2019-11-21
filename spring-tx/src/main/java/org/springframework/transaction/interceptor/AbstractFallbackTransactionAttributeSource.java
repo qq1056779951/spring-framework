@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,8 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.core.BridgeMethodResolver;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.core.MethodClassKey;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -75,8 +76,7 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 	 * <p>As this base class is not marked Serializable, the cache will be recreated
 	 * after serialization - provided that the concrete subclass is Serializable.
 	 */
-	private final Map<Object, TransactionAttribute> attributeCache =
-			new ConcurrentHashMap<Object, TransactionAttribute>(1024);
+	private final Map<Object, TransactionAttribute> attributeCache = new ConcurrentHashMap<>(1024);
 
 
 	/**
@@ -88,7 +88,8 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 	 * is not transactional
 	 */
 	@Override
-	public TransactionAttribute getTransactionAttribute(Method method, Class<?> targetClass) {
+	@Nullable
+	public TransactionAttribute getTransactionAttribute(Method method, @Nullable Class<?> targetClass) {
 		if (method.getDeclaringClass() == Object.class) {
 			return null;
 		}
@@ -118,8 +119,8 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 				if (txAttr instanceof DefaultTransactionAttribute) {
 					((DefaultTransactionAttribute) txAttr).setDescriptor(methodIdentification);
 				}
-				if (logger.isDebugEnabled()) {
-					logger.debug("Adding transactional method '" + methodIdentification + "' with attribute: " + txAttr);
+				if (logger.isTraceEnabled()) {
+					logger.trace("Adding transactional method '" + methodIdentification + "' with attribute: " + txAttr);
 				}
 				this.attributeCache.put(cacheKey, txAttr);
 			}
@@ -135,7 +136,7 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 	 * @param targetClass the target class (may be {@code null})
 	 * @return the cache key (never {@code null})
 	 */
-	protected Object getCacheKey(Method method, Class<?> targetClass) {
+	protected Object getCacheKey(Method method, @Nullable Class<?> targetClass) {
 		return new MethodClassKey(method, targetClass);
 	}
 
@@ -146,19 +147,16 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 	 * @since 4.1.8
 	 * @see #getTransactionAttribute
 	 */
-	protected TransactionAttribute computeTransactionAttribute(Method method, Class<?> targetClass) {
+	@Nullable
+	protected TransactionAttribute computeTransactionAttribute(Method method, @Nullable Class<?> targetClass) {
 		// Don't allow no-public methods as required.
 		if (allowPublicMethodsOnly() && !Modifier.isPublic(method.getModifiers())) {
 			return null;
 		}
 
-		// Ignore CGLIB subclasses - introspect the actual user class.
-		Class<?> userClass = ClassUtils.getUserClass(targetClass);
 		// The method may be on an interface, but we need attributes from the target class.
 		// If the target class is null, the method will be unchanged.
-		Method specificMethod = ClassUtils.getMostSpecificMethod(method, userClass);
-		// If we are dealing with method with generic parameters, find the original method.
-		specificMethod = BridgeMethodResolver.findBridgedMethod(specificMethod);
+		Method specificMethod = AopUtils.getMostSpecificMethod(method, targetClass);
 
 		// First try is the method in the target class.
 		TransactionAttribute txAttr = findTransactionAttribute(specificMethod);
@@ -195,6 +193,7 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 	 * @param clazz the class to retrieve the attribute for
 	 * @return all transaction attribute associated with this class, or {@code null} if none
 	 */
+	@Nullable
 	protected abstract TransactionAttribute findTransactionAttribute(Class<?> clazz);
 
 	/**
@@ -203,6 +202,7 @@ public abstract class AbstractFallbackTransactionAttributeSource implements Tran
 	 * @param method the method to retrieve the attribute for
 	 * @return all transaction attribute associated with this method, or {@code null} if none
 	 */
+	@Nullable
 	protected abstract TransactionAttribute findTransactionAttribute(Method method);
 
 	/**

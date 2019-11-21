@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,6 +40,8 @@ import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.expression.spel.SpelMessage;
 import org.springframework.expression.spel.support.ReflectiveMethodExecutor;
 import org.springframework.expression.spel.support.ReflectiveMethodResolver;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -55,8 +57,10 @@ public class MethodReference extends SpelNodeImpl {
 
 	private final boolean nullSafe;
 
+	@Nullable
 	private String originalPrimitiveExitTypeDescriptor;
 
+	@Nullable
 	private volatile CachedMethodExecutor cachedExecutor;
 
 
@@ -93,7 +97,7 @@ public class MethodReference extends SpelNodeImpl {
 	}
 
 	private TypedValue getValueInternal(EvaluationContext evaluationContext,
-			Object value, TypeDescriptor targetType, Object[] arguments) {
+			@Nullable Object value, @Nullable TypeDescriptor targetType, Object[] arguments) {
 
 		List<TypeDescriptor> argumentTypes = getArgumentTypes(arguments);
 		if (value == null) {
@@ -166,19 +170,19 @@ public class MethodReference extends SpelNodeImpl {
 	}
 
 	private List<TypeDescriptor> getArgumentTypes(Object... arguments) {
-		List<TypeDescriptor> descriptors = new ArrayList<TypeDescriptor>(arguments.length);
+		List<TypeDescriptor> descriptors = new ArrayList<>(arguments.length);
 		for (Object argument : arguments) {
 			descriptors.add(TypeDescriptor.forObject(argument));
 		}
 		return Collections.unmodifiableList(descriptors);
 	}
 
+	@Nullable
 	private MethodExecutor getCachedExecutor(EvaluationContext evaluationContext, Object value,
-			TypeDescriptor target, List<TypeDescriptor> argumentTypes) {
+			@Nullable TypeDescriptor target, List<TypeDescriptor> argumentTypes) {
 
 		List<MethodResolver> methodResolvers = evaluationContext.getMethodResolvers();
-		if (methodResolvers == null || methodResolvers.size() != 1 ||
-				!(methodResolvers.get(0) instanceof ReflectiveMethodResolver)) {
+		if (methodResolvers.size() != 1 || !(methodResolvers.get(0) instanceof ReflectiveMethodResolver)) {
 			// Not a default ReflectiveMethodResolver - don't know whether caching is valid
 			return null;
 		}
@@ -244,7 +248,7 @@ public class MethodReference extends SpelNodeImpl {
 			Method method = ((ReflectiveMethodExecutor) executorToCheck.get()).getMethod();
 			String descriptor = CodeFlow.toDescriptor(method.getReturnType());
 			if (this.nullSafe && CodeFlow.isPrimitive(descriptor)) {
-				originalPrimitiveExitTypeDescriptor = descriptor;
+				this.originalPrimitiveExitTypeDescriptor = descriptor;
 				this.exitTypeDescriptor = CodeFlow.toBoxedDescriptor(descriptor);
 			}
 			else {
@@ -296,7 +300,7 @@ public class MethodReference extends SpelNodeImpl {
 
 		return true;
 	}
-	
+
 	@Override
 	public void generateCode(MethodVisitor mv, CodeFlow cf) {
 		CachedMethodExecutor executorToCheck = this.cachedExecutor;
@@ -327,14 +331,21 @@ public class MethodReference extends SpelNodeImpl {
 			// Something on the stack when nothing is needed
 			mv.visitInsn(POP);
 		}
-		
+
 		if (CodeFlow.isPrimitive(descriptor)) {
 			CodeFlow.insertBoxIfNecessary(mv, descriptor.charAt(0));
 		}
 
-		String classDesc = (Modifier.isPublic(method.getDeclaringClass().getModifiers()) ?
-				method.getDeclaringClass().getName().replace('.', '/') :
-				methodExecutor.getPublicDeclaringClass().getName().replace('.', '/'));
+		String classDesc;
+		if (Modifier.isPublic(method.getDeclaringClass().getModifiers())) {
+			classDesc = method.getDeclaringClass().getName().replace('.', '/');
+		}
+		else {
+			Class<?> publicDeclaringClass = methodExecutor.getPublicDeclaringClass();
+			Assert.state(publicDeclaringClass != null, "No public declaring class");
+			classDesc = publicDeclaringClass.getName().replace('.', '/');
+		}
+
 		if (!isStaticMethod && (descriptor == null || !descriptor.substring(1).equals(classDesc))) {
 			CodeFlow.insertCheckCast(mv, "L" + classDesc);
 		}
@@ -359,8 +370,10 @@ public class MethodReference extends SpelNodeImpl {
 
 		private final EvaluationContext evaluationContext;
 
+		@Nullable
 		private final Object value;
 
+		@Nullable
 		private final TypeDescriptor targetType;
 
 		private final Object[] arguments;
@@ -381,8 +394,8 @@ public class MethodReference extends SpelNodeImpl {
 		}
 
 		@Override
-		public void setValue(Object newValue) {
-			throw new IllegalAccessError();
+		public void setValue(@Nullable Object newValue) {
+			throw new SpelEvaluationException(0, SpelMessage.NOT_ASSIGNABLE, MethodReference.this.name);
 		}
 
 		@Override
@@ -396,14 +409,16 @@ public class MethodReference extends SpelNodeImpl {
 
 		private final MethodExecutor methodExecutor;
 
+		@Nullable
 		private final Class<?> staticClass;
 
+		@Nullable
 		private final TypeDescriptor target;
 
 		private final List<TypeDescriptor> argumentTypes;
 
-		public CachedMethodExecutor(MethodExecutor methodExecutor, Class<?> staticClass,
-				TypeDescriptor target, List<TypeDescriptor> argumentTypes) {
+		public CachedMethodExecutor(MethodExecutor methodExecutor, @Nullable Class<?> staticClass,
+				@Nullable TypeDescriptor target, List<TypeDescriptor> argumentTypes) {
 
 			this.methodExecutor = methodExecutor;
 			this.staticClass = staticClass;
@@ -411,7 +426,7 @@ public class MethodReference extends SpelNodeImpl {
 			this.argumentTypes = argumentTypes;
 		}
 
-		public boolean isSuitable(Object value, TypeDescriptor target, List<TypeDescriptor> argumentTypes) {
+		public boolean isSuitable(Object value, @Nullable TypeDescriptor target, List<TypeDescriptor> argumentTypes) {
 			return ((this.staticClass == null || this.staticClass == value) &&
 					ObjectUtils.nullSafeEquals(this.target, target) && this.argumentTypes.equals(argumentTypes));
 		}

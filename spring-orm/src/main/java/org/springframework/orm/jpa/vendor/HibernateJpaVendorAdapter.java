@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,27 +18,32 @@ package org.springframework.orm.jpa.vendor;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InformixDialect;
 import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SQLServer2008Dialect;
+import org.hibernate.dialect.Oracle12cDialect;
+import org.hibernate.dialect.PostgreSQL95Dialect;
+import org.hibernate.dialect.SQLServer2012Dialect;
+import org.hibernate.dialect.SybaseDialect;
+
+import org.springframework.lang.Nullable;
 
 /**
  * {@link org.springframework.orm.jpa.JpaVendorAdapter} implementation for Hibernate
- * EntityManager. Developed and tested against Hibernate 3.6, 4.2/4.3 as well as 5.x.
- * <b>Hibernate 4.2+ is strongly recommended for use with Spring 4.0+.</b>
+ * EntityManager. Developed and tested against Hibernate 5.0, 5.1, 5.2 and 5.3;
+ * backwards-compatible with Hibernate 4.3 at runtime on a best-effort basis.
  *
  * <p>Exposes Hibernate's persistence provider and EntityManager extension interface,
  * and adapts {@link AbstractJpaVendorAdapter}'s common configuration settings.
@@ -47,12 +52,6 @@ import org.hibernate.dialect.SQLServer2008Dialect;
  * e.g. containing Hibernate {@link org.hibernate.annotations.FilterDef} annotations,
  * along with Spring-driven entity scanning which requires no {@code persistence.xml}
  * ({@link org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean#setPackagesToScan}).
- *
- * <p>Note that the package location of Hibernate's JPA support changed from 4.2 to 4.3:
- * from {@code org.hibernate.ejb.HibernateEntityManager(Factory)} to
- * {@code org.hibernate.jpa.HibernateEntityManager(Factory)}. As of Spring 4.0,
- * we're exposing the correct, non-deprecated variant depending on the Hibernate
- * version encountered at runtime, in order to avoid deprecation log entries.
  *
  * <p><b>A note about {@code HibernateJpaVendorAdapter} vs native Hibernate settings:</b>
  * Some settings on this adapter may conflict with native Hibernate configuration rules
@@ -66,8 +65,6 @@ import org.hibernate.dialect.SQLServer2008Dialect;
  * @author Rod Johnson
  * @since 2.0
  * @see HibernateJpaDialect
- * @see org.hibernate.ejb.HibernatePersistence
- * @see org.hibernate.ejb.HibernateEntityManager
  */
 public class HibernateJpaVendorAdapter extends AbstractJpaVendorAdapter {
 
@@ -80,34 +77,11 @@ public class HibernateJpaVendorAdapter extends AbstractJpaVendorAdapter {
 	private final Class<? extends EntityManager> entityManagerInterface;
 
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("deprecation")
 	public HibernateJpaVendorAdapter() {
-		ClassLoader cl = HibernateJpaVendorAdapter.class.getClassLoader();
-		Class<? extends EntityManagerFactory> emfIfcToUse;
-		Class<? extends EntityManager> emIfcToUse;
-		Class<?> providerClass;
-		PersistenceProvider providerToUse;
-		try {
-			try {
-				// Try Hibernate 4.3/5.0's org.hibernate.jpa package in order to avoid deprecation warnings
-				emfIfcToUse = (Class<? extends EntityManagerFactory>) cl.loadClass("org.hibernate.jpa.HibernateEntityManagerFactory");
-				emIfcToUse = (Class<? extends EntityManager>) cl.loadClass("org.hibernate.jpa.HibernateEntityManager");
-				providerClass = cl.loadClass("org.springframework.orm.jpa.vendor.SpringHibernateJpaPersistenceProvider");
-			}
-			catch (ClassNotFoundException ex) {
-				// Fall back to Hibernate 3.6-4.2 org.hibernate.ejb package
-				emfIfcToUse = (Class<? extends EntityManagerFactory>) cl.loadClass("org.hibernate.ejb.HibernateEntityManagerFactory");
-				emIfcToUse = (Class<? extends EntityManager>) cl.loadClass("org.hibernate.ejb.HibernateEntityManager");
-				providerClass = cl.loadClass("org.springframework.orm.jpa.vendor.SpringHibernateEjbPersistenceProvider");
-			}
-			providerToUse = (PersistenceProvider) providerClass.newInstance();
-		}
-		catch (Exception ex) {
-			throw new IllegalStateException("Failed to determine Hibernate PersistenceProvider", ex);
-		}
-		this.persistenceProvider = providerToUse;
-		this.entityManagerFactoryInterface = emfIfcToUse;
-		this.entityManagerInterface = emIfcToUse;
+		this.persistenceProvider = new SpringHibernateJpaPersistenceProvider();
+		this.entityManagerFactoryInterface = org.hibernate.jpa.HibernateEntityManagerFactory.class;
+		this.entityManagerInterface = org.hibernate.jpa.HibernateEntityManager.class;
 	}
 
 
@@ -161,36 +135,36 @@ public class HibernateJpaVendorAdapter extends AbstractJpaVendorAdapter {
 	}
 
 	private Map<String, Object> buildJpaPropertyMap(boolean connectionReleaseOnClose) {
-		Map<String, Object> jpaProperties = new HashMap<String, Object>();
+		Map<String, Object> jpaProperties = new HashMap<>();
 
 		if (getDatabasePlatform() != null) {
-			jpaProperties.put(Environment.DIALECT, getDatabasePlatform());
+			jpaProperties.put(AvailableSettings.DIALECT, getDatabasePlatform());
 		}
-		else if (getDatabase() != null) {
+		else {
 			Class<?> databaseDialectClass = determineDatabaseDialectClass(getDatabase());
 			if (databaseDialectClass != null) {
-				jpaProperties.put(Environment.DIALECT, databaseDialectClass.getName());
+				jpaProperties.put(AvailableSettings.DIALECT, databaseDialectClass.getName());
 			}
 		}
 
 		if (isGenerateDdl()) {
-			jpaProperties.put(Environment.HBM2DDL_AUTO, "update");
+			jpaProperties.put(AvailableSettings.HBM2DDL_AUTO, "update");
 		}
 		if (isShowSql()) {
-			jpaProperties.put(Environment.SHOW_SQL, "true");
+			jpaProperties.put(AvailableSettings.SHOW_SQL, "true");
 		}
 
 		if (connectionReleaseOnClose) {
 			// Hibernate 5.1/5.2: manually enforce connection release mode ON_CLOSE (the former default)
 			try {
 				// Try Hibernate 5.2
-				Environment.class.getField("CONNECTION_HANDLING");
+				AvailableSettings.class.getField("CONNECTION_HANDLING");
 				jpaProperties.put("hibernate.connection.handling_mode", "DELAYED_ACQUISITION_AND_HOLD");
 			}
 			catch (NoSuchFieldException ex) {
 				// Try Hibernate 5.1
 				try {
-					Environment.class.getField("ACQUIRE_CONNECTIONS");
+					AvailableSettings.class.getField("ACQUIRE_CONNECTIONS");
 					jpaProperties.put("hibernate.connection.release_mode", "ON_CLOSE");
 				}
 				catch (NoSuchFieldException ex2) {
@@ -207,19 +181,20 @@ public class HibernateJpaVendorAdapter extends AbstractJpaVendorAdapter {
 	 * @param database the target database
 	 * @return the Hibernate database dialect class, or {@code null} if none found
 	 */
-	@SuppressWarnings("deprecation")
+	@Nullable
 	protected Class<?> determineDatabaseDialectClass(Database database) {
 		switch (database) {
 			case DB2: return DB2Dialect.class;
-			case DERBY: return DerbyDialect.class;  // DerbyDialect deprecated in 4.x
+			case DERBY: return DerbyTenSevenDialect.class;
 			case H2: return H2Dialect.class;
+			case HANA: return HANAColumnStoreDialect.class;
 			case HSQL: return HSQLDialect.class;
 			case INFORMIX: return InformixDialect.class;
 			case MYSQL: return MySQL5Dialect.class;
-			case ORACLE: return Oracle9iDialect.class;
-			case POSTGRESQL: return PostgreSQLDialect.class;  // PostgreSQLDialect deprecated in 4.x
-			case SQL_SERVER: return SQLServer2008Dialect.class;
-			case SYBASE: return org.hibernate.dialect.SybaseDialect.class;  // SybaseDialect deprecated in 3.6 but not 4.x
+			case ORACLE: return Oracle12cDialect.class;
+			case POSTGRESQL: return PostgreSQL95Dialect.class;
+			case SQL_SERVER: return SQLServer2012Dialect.class;
+			case SYBASE: return SybaseDialect.class;
 			default: return null;
 		}
 	}

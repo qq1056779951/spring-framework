@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ import java.io.Reader;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
 import javax.servlet.ServletContext;
 
 import groovy.text.Template;
@@ -67,7 +68,7 @@ public class GroovyMarkupViewTests {
 	public void missingGroovyMarkupConfig() throws Exception {
 		GroovyMarkupView view = new GroovyMarkupView();
 		given(this.webAppContext.getBeansOfType(GroovyMarkupConfig.class, true, false))
-				.willReturn(new HashMap<String, GroovyMarkupConfig>());
+				.willReturn(new HashMap<>());
 
 		view.setUrl("sampleView");
 		try {
@@ -158,7 +159,9 @@ public class GroovyMarkupViewTests {
 	}
 
 
-	private MockHttpServletResponse renderViewWithModel(String viewUrl, Map<String, Object> model, Locale locale) throws Exception {
+	private MockHttpServletResponse renderViewWithModel(String viewUrl, Map<String,
+			Object> model, Locale locale) throws Exception {
+
 		GroovyMarkupView view = createViewWithUrl(viewUrl);
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		MockHttpServletRequest request = new MockHttpServletRequest();

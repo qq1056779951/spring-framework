@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
 package org.springframework.cache.support;
 
 import org.springframework.cache.Cache;
+import org.springframework.lang.Nullable;
 
 /**
  * Common base class for {@link Cache} implementations that need to adapt
@@ -52,6 +53,7 @@ public abstract class AbstractValueAdaptingCache implements Cache {
 	}
 
 	@Override
+	@Nullable
 	public ValueWrapper get(Object key) {
 		Object value = lookup(key);
 		return toValueWrapper(value);
@@ -59,7 +61,8 @@ public abstract class AbstractValueAdaptingCache implements Cache {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T get(Object key, Class<T> type) {
+	@Nullable
+	public <T> T get(Object key, @Nullable Class<T> type) {
 		Object value = fromStoreValue(lookup(key));
 		if (value != null && type != null && !type.isInstance(value)) {
 			throw new IllegalStateException(
@@ -73,6 +76,7 @@ public abstract class AbstractValueAdaptingCache implements Cache {
 	 * @param key the key whose associated value is to be returned
 	 * @return the raw store value for the key, or {@code null} if none
 	 */
+	@Nullable
 	protected abstract Object lookup(Object key);
 
 
@@ -82,7 +86,8 @@ public abstract class AbstractValueAdaptingCache implements Cache {
 	 * @param storeValue the store value
 	 * @return the value to return to the user
 	 */
-	protected Object fromStoreValue(Object storeValue) {
+	@Nullable
+	protected Object fromStoreValue(@Nullable Object storeValue) {
 		if (this.allowNullValues && storeValue == NullValue.INSTANCE) {
 			return null;
 		}
@@ -95,9 +100,13 @@ public abstract class AbstractValueAdaptingCache implements Cache {
 	 * @param userValue the given user value
 	 * @return the value to store
 	 */
-	protected Object toStoreValue(Object userValue) {
-		if (this.allowNullValues && userValue == null) {
-			return NullValue.INSTANCE;
+	protected Object toStoreValue(@Nullable Object userValue) {
+		if (userValue == null) {
+			if (this.allowNullValues) {
+				return NullValue.INSTANCE;
+			}
+			throw new IllegalArgumentException(
+					"Cache '" + getName() + "' is configured to not allow null values but null was provided");
 		}
 		return userValue;
 	}
@@ -109,7 +118,8 @@ public abstract class AbstractValueAdaptingCache implements Cache {
 	 * @param storeValue the original value
 	 * @return the wrapped value
 	 */
-	protected Cache.ValueWrapper toValueWrapper(Object storeValue) {
+	@Nullable
+	protected Cache.ValueWrapper toValueWrapper(@Nullable Object storeValue) {
 		return (storeValue != null ? new SimpleValueWrapper(fromStoreValue(storeValue)) : null);
 	}
 

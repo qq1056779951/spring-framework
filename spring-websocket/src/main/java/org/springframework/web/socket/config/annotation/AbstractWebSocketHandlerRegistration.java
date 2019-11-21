@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.scheduling.TaskScheduler;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -35,32 +35,27 @@ import org.springframework.web.socket.sockjs.SockJsService;
 import org.springframework.web.socket.sockjs.transport.handler.WebSocketTransportHandler;
 
 /**
- * Base class for {@link WebSocketHandlerRegistration}s that gathers all the configuration
+ * Base class for {@link WebSocketHandlerRegistration WebSocketHandlerRegistrations} that gathers all the configuration
  * options but allows sub-classes to put together the actual HTTP request mappings.
  *
  * @author Rossen Stoyanchev
  * @author Sebastien Deleuze
  * @since 4.0
+ * @param <M> the mappings type
  */
 public abstract class AbstractWebSocketHandlerRegistration<M> implements WebSocketHandlerRegistration {
 
-	private final TaskScheduler sockJsTaskScheduler;
+	private final MultiValueMap<WebSocketHandler, String> handlerMap = new LinkedMultiValueMap<>();
 
-	private final MultiValueMap<WebSocketHandler, String> handlerMap =
-			new LinkedMultiValueMap<WebSocketHandler, String>();
-
+	@Nullable
 	private HandshakeHandler handshakeHandler;
 
-	private final List<HandshakeInterceptor> interceptors = new ArrayList<HandshakeInterceptor>();
+	private final List<HandshakeInterceptor> interceptors = new ArrayList<>();
 
-	private final List<String> allowedOrigins = new ArrayList<String>();
+	private final List<String> allowedOrigins = new ArrayList<>();
 
+	@Nullable
 	private SockJsServiceRegistration sockJsServiceRegistration;
-
-
-	public AbstractWebSocketHandlerRegistration(TaskScheduler defaultTaskScheduler) {
-		this.sockJsTaskScheduler = defaultTaskScheduler;
-	}
 
 
 	@Override
@@ -72,11 +67,12 @@ public abstract class AbstractWebSocketHandlerRegistration<M> implements WebSock
 	}
 
 	@Override
-	public WebSocketHandlerRegistration setHandshakeHandler(HandshakeHandler handshakeHandler) {
+	public WebSocketHandlerRegistration setHandshakeHandler(@Nullable HandshakeHandler handshakeHandler) {
 		this.handshakeHandler = handshakeHandler;
 		return this;
 	}
 
+	@Nullable
 	protected HandshakeHandler getHandshakeHandler() {
 		return this.handshakeHandler;
 	}
@@ -100,7 +96,7 @@ public abstract class AbstractWebSocketHandlerRegistration<M> implements WebSock
 
 	@Override
 	public SockJsServiceRegistration withSockJS() {
-		this.sockJsServiceRegistration = new SockJsServiceRegistration(this.sockJsTaskScheduler);
+		this.sockJsServiceRegistration = new SockJsServiceRegistration();
 		HandshakeInterceptor[] interceptors = getInterceptors();
 		if (interceptors.length > 0) {
 			this.sockJsServiceRegistration.setInterceptors(interceptors);
@@ -116,32 +112,42 @@ public abstract class AbstractWebSocketHandlerRegistration<M> implements WebSock
 	}
 
 	protected HandshakeInterceptor[] getInterceptors() {
-		List<HandshakeInterceptor> interceptors =
-				new ArrayList<HandshakeInterceptor>(this.interceptors.size() + 1);
+		List<HandshakeInterceptor> interceptors = new ArrayList<>(this.interceptors.size() + 1);
 		interceptors.addAll(this.interceptors);
 		interceptors.add(new OriginHandshakeInterceptor(this.allowedOrigins));
-		return interceptors.toArray(new HandshakeInterceptor[interceptors.size()]);
+		return interceptors.toArray(new HandshakeInterceptor[0]);
+	}
+
+	/**
+	 * Expose the {@code SockJsServiceRegistration} -- if SockJS is enabled or
+	 * {@code null} otherwise -- so that it can be configured with a TaskScheduler
+	 * if the application did not provide one. This should be done prior to
+	 * calling {@link #getMappings()}.
+	 */
+	@Nullable
+	protected SockJsServiceRegistration getSockJsServiceRegistration() {
+		return this.sockJsServiceRegistration;
 	}
 
 	protected final M getMappings() {
 		M mappings = createMappings();
 		if (this.sockJsServiceRegistration != null) {
 			SockJsService sockJsService = this.sockJsServiceRegistration.getSockJsService();
-			for (WebSocketHandler wsHandler : this.handlerMap.keySet()) {
-				for (String path : this.handlerMap.get(wsHandler)) {
+			this.handlerMap.forEach((wsHandler, paths) -> {
+				for (String path : paths) {
 					String pathPattern = (path.endsWith("/") ? path + "**" : path + "/**");
 					addSockJsServiceMapping(mappings, sockJsService, wsHandler, pathPattern);
 				}
-			}
+			});
 		}
 		else {
 			HandshakeHandler handshakeHandler = getOrCreateHandshakeHandler();
 			HandshakeInterceptor[] interceptors = getInterceptors();
-			for (WebSocketHandler wsHandler : this.handlerMap.keySet()) {
-				for (String path : this.handlerMap.get(wsHandler)) {
+			this.handlerMap.forEach((wsHandler, paths) -> {
+				for (String path : paths) {
 					addWebSocketHandlerMapping(mappings, wsHandler, handshakeHandler, interceptors, path);
 				}
-			}
+			});
 		}
 
 		return mappings;

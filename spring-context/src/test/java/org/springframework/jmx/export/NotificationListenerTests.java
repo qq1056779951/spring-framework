@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2012 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.jmx.export;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.management.Attribute;
 import javax.management.AttributeChangeNotification;
 import javax.management.MalformedObjectNameException;
@@ -50,7 +51,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		ObjectName objectName = ObjectName.getInstance("spring:name=Test");
 		JmxTestBean bean = new JmxTestBean();
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(objectName.getCanonicalName(), bean);
 
 		CountingAttributeChangeNotificationListener listener = new CountingAttributeChangeNotificationListener();
@@ -76,7 +77,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		ObjectName objectName = ObjectName.getInstance("spring:name=Test");
 		JmxTestBean bean = new JmxTestBean();
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(objectName.getCanonicalName(), bean);
 
 		CountingAttributeChangeNotificationListener listener = new CountingAttributeChangeNotificationListener();
@@ -101,7 +102,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		String objectName = "spring:name=Test";
 		JmxTestBean bean = new JmxTestBean();
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(objectName, bean);
 
 		CountingAttributeChangeNotificationListener listener = new CountingAttributeChangeNotificationListener();
@@ -132,7 +133,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		ObjectName objectName = ObjectName.getInstance("spring:name=Test");
 		JmxTestBean bean = new JmxTestBean();
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(objectName.getCanonicalName(), bean);
 
 		CountingAttributeChangeNotificationListener listener = new CountingAttributeChangeNotificationListener();
@@ -159,7 +160,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		ObjectName objectName = ObjectName.getInstance("spring:name=Test");
 		JmxTestBean bean = new JmxTestBean();
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(objectName.getCanonicalName(), bean);
 
 		CountingAttributeChangeNotificationListener listener = new CountingAttributeChangeNotificationListener();
@@ -218,7 +219,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
 		factory.registerSingleton(beanName, testBean);
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(beanName, beanName);
 
 		Map listenerMappings = new HashMap();
@@ -249,7 +250,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
 		factory.registerSingleton(beanName, testBean);
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(beanName, testBean);
 
 		Map listenerMappings = new HashMap();
@@ -280,7 +281,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
 		factory.registerSingleton(beanName, testBean);
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(beanName, testBean);
 
 		Map listenerMappings = new HashMap();
@@ -312,7 +313,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
 		factory.registerSingleton(beanName, testBean);
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(beanName, testBean);
 
 		Map listenerMappings = new HashMap();
@@ -351,7 +352,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		factory.registerSingleton(beanName1, testBean1);
 		factory.registerSingleton(beanName2, testBean2);
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(beanName1, testBean1);
 		beans.put(beanName2, testBean2);
 
@@ -381,7 +382,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		ObjectName objectName = ObjectName.getInstance("spring:name=Test");
 		JmxTestBean bean = new JmxTestBean();
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(objectName.getCanonicalName(), bean);
 
 		MBeanExporter exporter = new MBeanExporter();
@@ -416,7 +417,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		JmxTestBean bean = new JmxTestBean();
 		JmxTestBean bean2 = new JmxTestBean();
 
-		Map<String, Object> beans = new HashMap<String, Object>();
+		Map<String, Object> beans = new HashMap<>();
 		beans.put(objectName.getCanonicalName(), bean);
 		beans.put(objectName2.getCanonicalName(), bean2);
 
@@ -431,7 +432,7 @@ public class NotificationListenerTests extends AbstractMBeanServerTests {
 		registrar.setServer(server);
 		registrar.setNotificationListener(listener);
 		//registrar.setMappedObjectNames(new Object[] {objectName, objectName2});
-		registrar.setMappedObjectNames(new String[] { "spring:name=Test", "spring:name=Test2" });
+		registrar.setMappedObjectNames("spring:name=Test", "spring:name=Test2");
 		registrar.afterPropertiesSet();
 
 		// update the attribute

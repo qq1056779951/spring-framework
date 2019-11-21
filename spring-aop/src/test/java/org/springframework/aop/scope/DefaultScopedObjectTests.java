@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,27 +28,27 @@ import static org.mockito.BDDMockito.*;
  * @author Rick Evans
  * @author Chris Beams
  */
-public final class DefaultScopedObjectTests {
+public class DefaultScopedObjectTests {
 
 	private static final String GOOD_BEAN_NAME = "foo";
 
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testCtorWithNullBeanFactory() throws Exception {
 		new DefaultScopedObject(null, GOOD_BEAN_NAME);
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testCtorWithNullTargetBeanName() throws Exception {
 		testBadTargetBeanName(null);
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testCtorWithEmptyTargetBeanName() throws Exception {
 		testBadTargetBeanName("");
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testCtorWithJustWhitespacedTargetBeanName() throws Exception {
 		testBadTargetBeanName("   ");
 	}

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import java.util.Collections;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -36,6 +37,7 @@ import org.springframework.util.Assert;
  */
 public abstract class AbstractCacheResolver implements CacheResolver, InitializingBean {
 
+	@Nullable
 	private CacheManager cacheManager;
 
 
@@ -66,6 +68,7 @@ public abstract class AbstractCacheResolver implements CacheResolver, Initializi
 	 * Return the {@link CacheManager} that this instance uses.
 	 */
 	public CacheManager getCacheManager() {
+		Assert.state(this.cacheManager != null, "No CacheManager set");
 		return this.cacheManager;
 	}
 
@@ -81,7 +84,7 @@ public abstract class AbstractCacheResolver implements CacheResolver, Initializi
 		if (cacheNames == null) {
 			return Collections.emptyList();
 		}
-		Collection<Cache> result = new ArrayList<Cache>(cacheNames.size());
+		Collection<Cache> result = new ArrayList<>(cacheNames.size());
 		for (String cacheName : cacheNames) {
 			Cache cache = getCacheManager().getCache(cacheName);
 			if (cache == null) {
@@ -100,6 +103,7 @@ public abstract class AbstractCacheResolver implements CacheResolver, Initializi
 	 * @param context the context of the particular invocation
 	 * @return the cache name(s) to resolve, or {@code null} if no cache should be resolved
 	 */
+	@Nullable
 	protected abstract Collection<String> getCacheNames(CacheOperationInvocationContext<?> context);
 
 }

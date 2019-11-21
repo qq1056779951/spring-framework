@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,7 +36,9 @@ import org.springframework.util.concurrent.ListenableFuture;
  * @author Arjen Poutsma
  * @since 3.0
  * @see org.springframework.http.client.SimpleClientHttpRequestFactory#createRequest
+ * @deprecated as of Spring 5.0, with no direct replacement
  */
+@Deprecated
 final class SimpleBufferingAsyncClientHttpRequest extends AbstractBufferingAsyncClientHttpRequest {
 
 	private final HttpURLConnection connection;
@@ -56,8 +58,8 @@ final class SimpleBufferingAsyncClientHttpRequest extends AbstractBufferingAsync
 
 
 	@Override
-	public HttpMethod getMethod() {
-		return HttpMethod.resolve(this.connection.getRequestMethod());
+	public String getMethodValue() {
+		return this.connection.getRequestMethod();
 	}
 
 	@Override

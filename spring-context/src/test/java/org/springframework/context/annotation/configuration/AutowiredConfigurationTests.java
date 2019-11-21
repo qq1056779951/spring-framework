@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 import java.util.Optional;
+
 import javax.inject.Provider;
 
 import org.junit.Test;
@@ -53,6 +54,7 @@ import static org.junit.Assert.*;
  *
  * @author Chris Beams
  * @author Juergen Hoeller
+ * @author Sam Brannen
  */
 public class AutowiredConfigurationTests {
 
@@ -203,20 +205,23 @@ public class AutowiredConfigurationTests {
 
 		TestBean testBean = context.getBean("testBean", TestBean.class);
 		assertThat(testBean.getName(), equalTo("localhost"));
-		assertThat(testBean.getAge(), equalTo((int) new ClassPathResource("log4j.properties").contentLength()));
+		assertThat(testBean.getAge(), equalTo(contentLength()));
 	}
 
 	@Test
 	public void testCustomPropertiesWithGenericContext() throws IOException {
 		GenericApplicationContext context = new GenericApplicationContext();
-		// context.setResourceLoader(new FileSystemResourceLoader());
 		new XmlBeanDefinitionReader(context).loadBeanDefinitions(
 				new ClassPathResource("AutowiredConfigurationTests-custom.xml", AutowiredConfigurationTests.class));
 		context.refresh();
 
 		TestBean testBean = context.getBean("testBean", TestBean.class);
 		assertThat(testBean.getName(), equalTo("localhost"));
-		assertThat(testBean.getAge(), equalTo((int) new ClassPathResource("log4j.properties").contentLength()));
+		assertThat(testBean.getAge(), equalTo(contentLength()));
+	}
+
+	private int contentLength() throws IOException {
+		return (int) new ClassPathResource("do_not_delete_me.txt").contentLength();
 	}
 
 
@@ -477,7 +482,7 @@ public class AutowiredConfigurationTests {
 			this.hostname = hostname;
 		}
 
-		@Value("log4j.properties")
+		@Value("do_not_delete_me.txt")
 		public void setResource(Resource resource) {
 			this.resource = resource;
 		}

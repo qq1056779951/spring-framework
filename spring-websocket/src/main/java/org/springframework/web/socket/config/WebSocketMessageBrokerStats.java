@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.simp.stomp.StompBrokerRelayMessageHandler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -38,7 +39,7 @@ import org.springframework.web.socket.messaging.SubProtocolWebSocketHandler;
  * {@code @EnableWebSocketMessageBroker} for Java config and
  * {@code <websocket:message-broker>} for XML.
  *
- * <p>By default aggregated information is logged every 15 minutes at INFO level.
+ * <p>By default aggregated information is logged every 30 minutes at INFO level.
  * The frequency of logging can be changed via {@link #setLoggingPeriod(long)}.
  *
  * <p>This class is declared as a Spring bean by the above configuration with the
@@ -53,21 +54,28 @@ public class WebSocketMessageBrokerStats {
 	private static final Log logger = LogFactory.getLog(WebSocketMessageBrokerStats.class);
 
 
+	@Nullable
 	private SubProtocolWebSocketHandler webSocketHandler;
 
+	@Nullable
 	private StompSubProtocolHandler stompSubProtocolHandler;
 
+	@Nullable
 	private StompBrokerRelayMessageHandler stompBrokerRelay;
 
+	@Nullable
 	private ThreadPoolExecutor inboundChannelExecutor;
 
+	@Nullable
 	private ThreadPoolExecutor outboundChannelExecutor;
 
+	@Nullable
 	private ScheduledThreadPoolExecutor sockJsTaskScheduler;
 
+	@Nullable
 	private ScheduledFuture<?> loggingTask;
 
-	private long loggingPeriod = 30 * 60 * 1000;
+	private long loggingPeriod = TimeUnit.MINUTES.toMillis(30);
 
 
 	public void setSubProtocolWebSocketHandler(SubProtocolWebSocketHandler webSocketHandler) {
@@ -75,7 +83,11 @@ public class WebSocketMessageBrokerStats {
 		this.stompSubProtocolHandler = initStompSubProtocolHandler();
 	}
 
+	@Nullable
 	private StompSubProtocolHandler initStompSubProtocolHandler() {
+		if (this.webSocketHandler == null) {
+			return null;
+		}
 		for (SubProtocolHandler handler : this.webSocketHandler.getProtocolHandlers()) {
 			if (handler instanceof StompSubProtocolHandler) {
 				return (StompSubProtocolHandler) handler;
@@ -102,17 +114,15 @@ public class WebSocketMessageBrokerStats {
 
 	public void setSockJsTaskScheduler(ThreadPoolTaskScheduler sockJsTaskScheduler) {
 		this.sockJsTaskScheduler = sockJsTaskScheduler.getScheduledThreadPoolExecutor();
-		this.loggingTask = initLoggingTask(1 * 60 * 1000);
+		this.loggingTask = initLoggingTask(TimeUnit.MINUTES.toMillis(1));
 	}
 
+	@Nullable
 	private ScheduledFuture<?> initLoggingTask(long initialDelay) {
-		if (this.loggingPeriod > 0 && logger.isInfoEnabled()) {
-			return this.sockJsTaskScheduler.scheduleAtFixedRate(new Runnable() {
-				@Override
-				public void run() {
-					logger.info(WebSocketMessageBrokerStats.this);
-				}
-			}, initialDelay, this.loggingPeriod, TimeUnit.MILLISECONDS);
+		if (this.sockJsTaskScheduler != null && this.loggingPeriod > 0 && logger.isInfoEnabled()) {
+			return this.sockJsTaskScheduler.scheduleAtFixedRate(() ->
+							logger.info(WebSocketMessageBrokerStats.this.toString()),
+					initialDelay, this.loggingPeriod, TimeUnit.MILLISECONDS);
 		}
 		return null;
 	}
@@ -189,7 +199,7 @@ public class WebSocketMessageBrokerStats {
 				", stompSubProtocol[" + getStompSubProtocolStatsInfo() + "]" +
 				", stompBrokerRelay[" + getStompBrokerRelayStatsInfo() + "]" +
 				", inboundChannel[" + getClientInboundExecutorStatsInfo() + "]" +
-				", outboundChannel" + getClientOutboundExecutorStatsInfo() + "]" +
+				", outboundChannel[" + getClientOutboundExecutorStatsInfo() + "]" +
 				", sockJsScheduler[" + getSockJsTaskSchedulerStatsInfo() + "]";
 	}
 

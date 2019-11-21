@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,8 @@ import java.util.Map;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -52,17 +54,14 @@ public class MatrixVariableMapMethodArgumentResolver implements HandlerMethodArg
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
 		MatrixVariable matrixVariable = parameter.getParameterAnnotation(MatrixVariable.class);
-		if (matrixVariable != null) {
-			if (Map.class.isAssignableFrom(parameter.getParameterType())) {
-				return !StringUtils.hasText(matrixVariable.name());
-			}
-		}
-		return false;
+		return (matrixVariable != null && Map.class.isAssignableFrom(parameter.getParameterType()) &&
+				!StringUtils.hasText(matrixVariable.name()));
 	}
 
 	@Override
-	public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
-			NativeWebRequest request, WebDataBinderFactory binderFactory) throws Exception {
+	@Nullable
+	public Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
+			NativeWebRequest request, @Nullable WebDataBinderFactory binderFactory) throws Exception {
 
 		@SuppressWarnings("unchecked")
 		Map<String, MultiValueMap<String, String>> matrixVariables =
@@ -73,8 +72,10 @@ public class MatrixVariableMapMethodArgumentResolver implements HandlerMethodArg
 			return Collections.emptyMap();
 		}
 
-		MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
-		String pathVariable = parameter.getParameterAnnotation(MatrixVariable.class).pathVar();
+		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+		MatrixVariable ann = parameter.getParameterAnnotation(MatrixVariable.class);
+		Assert.state(ann != null, "No MatrixVariable annotation");
+		String pathVariable = ann.pathVar();
 
 		if (!pathVariable.equals(ValueConstants.DEFAULT_NONE)) {
 			MultiValueMap<String, String> mapForPathVariable = matrixVariables.get(pathVariable);
@@ -85,11 +86,11 @@ public class MatrixVariableMapMethodArgumentResolver implements HandlerMethodArg
 		}
 		else {
 			for (MultiValueMap<String, String> vars : matrixVariables.values()) {
-				for (String name : vars.keySet()) {
-					for (String value : vars.get(name)) {
+				vars.forEach((name, values) -> {
+					for (String value : values) {
 						map.add(name, value);
 					}
-				}
+				});
 			}
 		}
 
@@ -100,7 +101,7 @@ public class MatrixVariableMapMethodArgumentResolver implements HandlerMethodArg
 		if (!MultiValueMap.class.isAssignableFrom(parameter.getParameterType())) {
 			ResolvableType[] genericTypes = ResolvableType.forMethodParameter(parameter).getGenerics();
 			if (genericTypes.length == 2) {
-				return !List.class.isAssignableFrom(genericTypes[1].getRawClass());
+				return !List.class.isAssignableFrom(genericTypes[1].toClass());
 			}
 		}
 		return false;

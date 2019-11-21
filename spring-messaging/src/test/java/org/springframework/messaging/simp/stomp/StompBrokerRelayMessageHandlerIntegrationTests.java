@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 
 package org.springframework.messaging.simp.stomp;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -58,9 +58,6 @@ import static org.junit.Assert.*;
  */
 public class StompBrokerRelayMessageHandlerIntegrationTests {
 
-	private static final Charset UTF_8 = Charset.forName("UTF-8");
-
-
 	@Rule
 	public final TestName testName = new TestName();
 
@@ -80,7 +77,7 @@ public class StompBrokerRelayMessageHandlerIntegrationTests {
 
 
 	@Before
-	public void setUp() throws Exception {
+	public void setup() throws Exception {
 		logger.debug("Setting up before '" + this.testName.getMethodName() + "'");
 		this.port = SocketUtils.findAvailableTcpPort(61613);
 		this.responseChannel = new ExecutorSubscribableChannel();
@@ -103,19 +100,21 @@ public class StompBrokerRelayMessageHandlerIntegrationTests {
 	}
 
 	private void createAndStartRelay() throws InterruptedException {
-		this.relay = new StompBrokerRelayMessageHandler(new StubMessageChannel(),
-				this.responseChannel, new StubMessageChannel(), Arrays.asList("/queue/", "/topic/"));
+		StubMessageChannel channel = new StubMessageChannel();
+		List<String> prefixes = Arrays.asList("/queue/", "/topic/");
+		this.relay = new StompBrokerRelayMessageHandler(channel, this.responseChannel, channel, prefixes);
 		this.relay.setRelayPort(this.port);
 		this.relay.setApplicationEventPublisher(this.eventPublisher);
 		this.relay.setSystemHeartbeatReceiveInterval(0);
 		this.relay.setSystemHeartbeatSendInterval(0);
+		this.relay.setPreservePublishOrder(true);
 
 		this.relay.start();
 		this.eventPublisher.expectBrokerAvailabilityEvent(true);
 	}
 
 	@After
-	public void tearDown() throws Exception {
+	public void stop() throws Exception {
 		try {
 			logger.debug("STOMP broker relay stats: " + this.relay.getStatsInfo());
 			this.relay.stop();
@@ -169,7 +168,6 @@ public class StompBrokerRelayMessageHandlerIntegrationTests {
 
 	@Test(expected = MessageDeliveryException.class)
 	public void messageDeliveryExceptionIfSystemSessionForwardFails() throws Exception {
-
 		logger.debug("Starting test messageDeliveryExceptionIfSystemSessionForwardFails()");
 
 		stopActiveMqBrokerAndAwait();
@@ -180,8 +178,8 @@ public class StompBrokerRelayMessageHandlerIntegrationTests {
 	}
 
 	@Test
-	public void brokerBecomingUnvailableTriggersErrorFrame() throws Exception {
-		logger.debug("Starting test brokerBecomingUnvailableTriggersErrorFrame()");
+	public void brokerBecomingUnavailableTriggersErrorFrame() throws Exception {
+		logger.debug("Starting test brokerBecomingUnavailableTriggersErrorFrame()");
 
 		String sess1 = "sess1";
 		MessageExchange connect = MessageExchangeBuilder.connect(sess1).build();
@@ -281,7 +279,7 @@ public class StompBrokerRelayMessageHandlerIntegrationTests {
 
 		public void expectMessages(MessageExchange... messageExchanges) throws InterruptedException {
 			List<MessageExchange> expectedMessages =
-					new ArrayList<MessageExchange>(Arrays.<MessageExchange>asList(messageExchanges));
+					new ArrayList<>(Arrays.<MessageExchange>asList(messageExchanges));
 			while (expectedMessages.size() > 0) {
 				Message<?> message = this.queue.poll(10000, TimeUnit.MILLISECONDS);
 				assertNotNull("Timed out waiting for messages, expected [" + expectedMessages + "]", message);
@@ -396,7 +394,8 @@ public class StompBrokerRelayMessageHandlerIntegrationTests {
 		public static MessageExchangeBuilder send(String destination, String payload) {
 			SimpMessageHeaderAccessor headers = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
 			headers.setDestination(destination);
-			Message<?> message = MessageBuilder.createMessage(payload.getBytes(UTF_8), headers.getMessageHeaders());
+			Message<?> message = MessageBuilder.createMessage(payload.getBytes(StandardCharsets.UTF_8),
+					headers.getMessageHeaders());
 			return new MessageExchangeBuilder(message);
 		}
 
@@ -511,7 +510,9 @@ public class StompBrokerRelayMessageHandlerIntegrationTests {
 
 		@Override
 		protected boolean matchInternal(StompHeaderAccessor headers, Object payload) {
-			if (!this.subscriptionId.equals(headers.getSubscriptionId()) ||  !this.destination.equals(headers.getDestination())) {
+			if (!this.subscriptionId.equals(headers.getSubscriptionId()) ||
+					!this.destination.equals(headers.getDestination())) {
+
 				return false;
 			}
 			if (payload instanceof byte[] && this.payload instanceof byte[]) {
@@ -530,7 +531,7 @@ public class StompBrokerRelayMessageHandlerIntegrationTests {
 
 		protected String getPayloadAsText() {
 			return (this.payload instanceof byte[]) ?
-					new String((byte[]) this.payload, UTF_8) : this.payload.toString();
+					new String((byte[]) this.payload, StandardCharsets.UTF_8) : this.payload.toString();
 		}
 	}
 

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,12 +19,11 @@ package org.springframework.beans.factory.config;
 import java.util.Map;
 import java.util.Properties;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.parser.ParserException;
+import org.yaml.snakeyaml.constructor.DuplicateKeyException;
 import org.yaml.snakeyaml.scanner.ScannerException;
 
 import org.springframework.core.io.ByteArrayResource;
@@ -77,23 +76,20 @@ public class YamlPropertiesFactoryBeanTests {
 		assertThat(properties.getProperty("foo.bar"), equalTo("spam"));
 	}
 
-	@Test
+	@Test(expected = DuplicateKeyException.class)
 	public void testLoadResourcesWithInternalOverride() {
 		YamlPropertiesFactoryBean factory = new YamlPropertiesFactoryBean();
 		factory.setResources(new ByteArrayResource(
 				"foo: bar\nspam:\n  foo: baz\nfoo: bucket".getBytes()));
-		exception.expect(ParserException.class);
 		factory.getObject();
 	}
 
-	@Test
-	@Ignore("We can't fail on duplicate keys because the Map is created by the YAML library")
+	@Test(expected = DuplicateKeyException.class)
 	public void testLoadResourcesWithNestedInternalOverride() {
 		YamlPropertiesFactoryBean factory = new YamlPropertiesFactoryBean();
 		factory.setResources(new ByteArrayResource(
 				"foo:\n  bar: spam\n  foo: baz\nbreak: it\nfoo: bucket".getBytes()));
-		Properties properties = factory.getObject();
-		assertThat(properties.getProperty("foo.bar"), equalTo("spam"));
+		factory.getObject();
 	}
 
 	@Test
@@ -194,6 +190,15 @@ public class YamlPropertiesFactoryBeanTests {
 		Properties properties = factory.getObject();
 		assertThat(properties.getProperty("foo"), equalTo("bar"));
 		assertThat(properties.getProperty("spam"), equalTo(""));
+	}
+
+	@Test
+	public void testLoadEmptyArrayValue() {
+		YamlPropertiesFactoryBean factory = new YamlPropertiesFactoryBean();
+		factory.setResources(new ByteArrayResource("a: alpha\ntest: []".getBytes()));
+		Properties properties = factory.getObject();
+		assertThat(properties.getProperty("a"), equalTo("alpha"));
+		assertThat(properties.getProperty("test"), equalTo(""));
 	}
 
 	@Test

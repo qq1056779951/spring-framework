@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,6 +29,7 @@ import org.aspectj.runtime.internal.AroundClosure;
 import org.springframework.aop.ProxyMethodInvocation;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -54,12 +55,15 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
 	private final ProxyMethodInvocation methodInvocation;
 
+	@Nullable
 	private Object[] args;
 
-	/** Lazily initialized signature object */
+	/** Lazily initialized signature object. */
+	@Nullable
 	private Signature signature;
 
-	/** Lazily initialized source location object */
+	/** Lazily initialized source location object. */
+	@Nullable
 	private SourceLocation sourceLocation;
 
 
@@ -108,6 +112,7 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 	 * Returns the Spring AOP target. May be {@code null} if there is no target.
 	 */
 	@Override
+	@Nullable
 	public Object getTarget() {
 		return this.methodInvocation.getThis();
 	}
@@ -173,6 +178,7 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 	 */
 	private class MethodSignatureImpl implements MethodSignature {
 
+		@Nullable
 		private volatile String[] parameterNames;
 
 		@Override
@@ -211,6 +217,7 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 		}
 
 		@Override
+		@Nullable
 		public String[] getParameterNames() {
 			if (this.parameterNames == null) {
 				this.parameterNames = parameterNameDiscoverer.getParameterNames(getMethod());

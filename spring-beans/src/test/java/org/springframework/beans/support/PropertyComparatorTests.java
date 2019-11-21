@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,9 @@
 
 package org.springframework.beans.support;
 
-import org.junit.Test;
+import java.util.Comparator;
 
-import org.springframework.util.comparator.CompoundComparator;
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 
@@ -53,9 +53,8 @@ public class PropertyComparatorTests {
 	}
 
 	@Test
-	public void testCompoundComparator() {
-		CompoundComparator<Dog> c = new CompoundComparator<>();
-		c.addComparator(new PropertyComparator<>("lastName", false, true));
+	public void testChainedComparators() {
+		Comparator<Dog> c = new PropertyComparator<>("lastName", false, true);
 
 		Dog dog1 = new Dog();
 		dog1.setFirstName("macy");
@@ -67,7 +66,7 @@ public class PropertyComparatorTests {
 
 		assertTrue(c.compare(dog1, dog2) == 0);
 
-		c.addComparator(new PropertyComparator<>("firstName", false, true));
+		c = c.thenComparing(new PropertyComparator<>("firstName", false, true));
 		assertTrue(c.compare(dog1, dog2) > 0);
 
 		dog2.setLastName("konikk dog");
@@ -75,10 +74,9 @@ public class PropertyComparatorTests {
 	}
 
 	@Test
-	public void testCompoundComparatorInvert() {
-		CompoundComparator<Dog> c = new CompoundComparator<>();
-		c.addComparator(new PropertyComparator<>("lastName", false, true));
-		c.addComparator(new PropertyComparator<>("firstName", false, true));
+	public void testChainedComparatorsReversed() {
+		Comparator<Dog> c = (new PropertyComparator<Dog>("lastName", false, true)).
+				thenComparing(new PropertyComparator<>("firstName", false, true));
 
 		Dog dog1 = new Dog();
 		dog1.setFirstName("macy");
@@ -89,7 +87,7 @@ public class PropertyComparatorTests {
 		dog2.setLastName("grayspots");
 
 		assertTrue(c.compare(dog1, dog2) > 0);
-		c.invertOrder();
+		c = c.reversed();
 		assertTrue(c.compare(dog1, dog2) < 0);
 	}
 

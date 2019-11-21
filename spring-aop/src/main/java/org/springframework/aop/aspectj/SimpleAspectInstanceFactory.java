@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,13 @@
 
 package org.springframework.aop.aspectj;
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.springframework.aop.framework.AopConfigException;
 import org.springframework.core.Ordered;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * Implementation of {@link AspectInstanceFactory} that creates a new instance
@@ -52,7 +56,11 @@ public class SimpleAspectInstanceFactory implements AspectInstanceFactory {
 	@Override
 	public final Object getAspectInstance() {
 		try {
-			return this.aspectClass.newInstance();
+			return ReflectionUtils.accessibleConstructor(this.aspectClass).newInstance();
+		}
+		catch (NoSuchMethodException ex) {
+			throw new AopConfigException(
+					"No default constructor on aspect class: " + this.aspectClass.getName(), ex);
 		}
 		catch (InstantiationException ex) {
 			throw new AopConfigException(
@@ -62,9 +70,14 @@ public class SimpleAspectInstanceFactory implements AspectInstanceFactory {
 			throw new AopConfigException(
 					"Could not access aspect constructor: " + this.aspectClass.getName(), ex);
 		}
+		catch (InvocationTargetException ex) {
+			throw new AopConfigException(
+					"Failed to invoke aspect constructor: " + this.aspectClass.getName(), ex.getTargetException());
+		}
 	}
 
 	@Override
+	@Nullable
 	public ClassLoader getAspectClassLoader() {
 		return this.aspectClass.getClassLoader();
 	}

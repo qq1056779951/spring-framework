@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -55,7 +55,8 @@ import org.springframework.validation.Validator;
  * @see #setValidator
  * @see #setCustomArgumentResolvers
  */
-public class DefaultMessageHandlerMethodFactory implements MessageHandlerMethodFactory, BeanFactoryAware, InitializingBean {
+public class DefaultMessageHandlerMethodFactory
+		implements MessageHandlerMethodFactory, BeanFactoryAware, InitializingBean {
 
 	private ConversionService conversionService = new DefaultFormattingConversionService();
 
@@ -91,7 +92,7 @@ public class DefaultMessageHandlerMethodFactory implements MessageHandlerMethodF
 	}
 
 	/**
-	 * Set the Validator instance used for validating @Payload arguments
+	 * Set the Validator instance used for validating {@code @Payload} arguments.
 	 * @see org.springframework.validation.annotation.Validated
 	 * @see org.springframework.messaging.handler.annotation.support.PayloadArgumentResolver
 	 */
@@ -149,7 +150,7 @@ public class DefaultMessageHandlerMethodFactory implements MessageHandlerMethodF
 	}
 
 	protected List<HandlerMethodArgumentResolver> initArgumentResolvers() {
-		List<HandlerMethodArgumentResolver> resolvers = new ArrayList<HandlerMethodArgumentResolver>();
+		List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>();
 		ConfigurableBeanFactory cbf = (this.beanFactory instanceof ConfigurableBeanFactory ?
 				(ConfigurableBeanFactory) this.beanFactory : null);
 

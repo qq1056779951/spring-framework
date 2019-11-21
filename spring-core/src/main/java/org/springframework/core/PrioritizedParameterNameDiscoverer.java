@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,8 @@ import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.springframework.lang.Nullable;
+
 /**
  * {@link ParameterNameDiscoverer} implementation that tries several discoverer
  * delegates in succession. Those added first in the {@code addDiscoverer} method
@@ -34,8 +36,7 @@ import java.util.List;
  */
 public class PrioritizedParameterNameDiscoverer implements ParameterNameDiscoverer {
 
-	private final List<ParameterNameDiscoverer> parameterNameDiscoverers =
-			new LinkedList<ParameterNameDiscoverer>();
+	private final List<ParameterNameDiscoverer> parameterNameDiscoverers = new LinkedList<>();
 
 
 	/**
@@ -48,6 +49,7 @@ public class PrioritizedParameterNameDiscoverer implements ParameterNameDiscover
 
 
 	@Override
+	@Nullable
 	public String[] getParameterNames(Method method) {
 		for (ParameterNameDiscoverer pnd : this.parameterNameDiscoverers) {
 			String[] result = pnd.getParameterNames(method);
@@ -59,6 +61,7 @@ public class PrioritizedParameterNameDiscoverer implements ParameterNameDiscover
 	}
 
 	@Override
+	@Nullable
 	public String[] getParameterNames(Constructor<?> ctor) {
 		for (ParameterNameDiscoverer pnd : this.parameterNameDiscoverers) {
 			String[] result = pnd.getParameterNames(ctor);

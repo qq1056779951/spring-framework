@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 
 import org.springframework.cache.interceptor.CacheOperation;
+import org.springframework.lang.Nullable;
 
 /**
  * Strategy interface for parsing known caching annotation types.
@@ -44,6 +45,7 @@ public interface CacheAnnotationParser {
 	 * @return the configured caching operation, or {@code null} if none found
 	 * @see AnnotationCacheOperationSource#findCacheOperations(Class)
 	 */
+	@Nullable
 	Collection<CacheOperation> parseCacheAnnotations(Class<?> type);
 
 	/**
@@ -55,6 +57,7 @@ public interface CacheAnnotationParser {
 	 * @return the configured caching operation, or {@code null} if none found
 	 * @see AnnotationCacheOperationSource#findCacheOperations(Method)
 	 */
+	@Nullable
 	Collection<CacheOperation> parseCacheAnnotations(Method method);
 
 }

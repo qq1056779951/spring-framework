@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,6 +26,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.TestContext;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.TransactionManagementConfigurer;
@@ -76,6 +77,7 @@ public abstract class TestContextTransactionUtils {
 	 * <li>Attempt to look up the <em>primary</em> {@code DataSource} by type.
 	 * <li>Attempt to look up the {@code DataSource} by type and the
 	 * {@linkplain #DEFAULT_DATA_SOURCE_NAME default data source name}.
+	 * </ol>
 	 * @param testContext the test context for which the {@code DataSource}
 	 * should be retrieved; never {@code null}
 	 * @param name the name of the {@code DataSource} to retrieve
@@ -84,7 +86,8 @@ public abstract class TestContextTransactionUtils {
 	 * @throws BeansException if an error occurs while retrieving an explicitly
 	 * named {@code DataSource}
 	 */
-	public static DataSource retrieveDataSource(TestContext testContext, String name) {
+	@Nullable
+	public static DataSource retrieveDataSource(TestContext testContext, @Nullable String name) {
 		Assert.notNull(testContext, "TestContext must not be null");
 		BeanFactory bf = testContext.getApplicationContext().getAutowireCapableBeanFactory();
 
@@ -146,6 +149,7 @@ public abstract class TestContextTransactionUtils {
 	 * <li>Attempt to look up the transaction manager by type and the
 	 * {@linkplain #DEFAULT_TRANSACTION_MANAGER_NAME default transaction manager
 	 * name}.
+	 * </ol>
 	 * @param testContext the test context for which the transaction manager
 	 * should be retrieved; never {@code null}
 	 * @param name the name of the transaction manager to retrieve
@@ -156,7 +160,8 @@ public abstract class TestContextTransactionUtils {
 	 * @throws IllegalStateException if more than one TransactionManagementConfigurer
 	 * exists in the ApplicationContext
 	 */
-	public static PlatformTransactionManager retrieveTransactionManager(TestContext testContext, String name) {
+	@Nullable
+	public static PlatformTransactionManager retrieveTransactionManager(TestContext testContext, @Nullable String name) {
 		Assert.notNull(testContext, "TestContext must not be null");
 		BeanFactory bf = testContext.getApplicationContext().getAutowireCapableBeanFactory();
 
@@ -245,6 +250,7 @@ public abstract class TestContextTransactionUtils {
 		}
 
 		@Override
+		@Nullable
 		public String getName() {
 			return this.name;
 		}

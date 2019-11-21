@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,9 @@
 package org.springframework.test.web.servlet.htmlunit;
 
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+
 import javax.servlet.http.Cookie;
 
 import com.gargoylesoftware.htmlunit.WebRequest;
@@ -81,7 +83,7 @@ public class MockWebResponseBuilderTests {
 		this.response.addHeader("Content-Type", "text/html; charset=UTF-8");
 		WebResponse webResponse = this.responseBuilder.build();
 
-		assertThat(webResponse.getContentCharset(), equalTo("UTF-8"));
+		assertThat(webResponse.getContentCharset(), equalTo(StandardCharsets.UTF_8));
 	}
 
 	@Test
@@ -115,8 +117,8 @@ public class MockWebResponseBuilderTests {
 		assertThat(header.getValue(), equalTo("value"));
 		header = responseHeaders.get(2);
 		assertThat(header.getName(), equalTo("Set-Cookie"));
-		assertThat(header.getValue(), startsWith("cookieA=valueA;domain=domain;path=/path;expires="));
-		assertThat(header.getValue(), endsWith(";secure;httpOnly"));
+		assertThat(header.getValue(), startsWith("cookieA=valueA; Path=/path; Domain=domain; Max-Age=1800; Expires="));
+		assertThat(header.getValue(), endsWith("; Secure; HttpOnly"));
 	}
 
 	// SPR-14169

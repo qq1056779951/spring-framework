@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -52,18 +53,20 @@ class MapAnnotationAttributeExtractor extends AbstractAliasAwareAnnotationAttrib
 	 * of the supplied type; may be {@code null} if unknown
 	 */
 	MapAnnotationAttributeExtractor(Map<String, Object> attributes, Class<? extends Annotation> annotationType,
-			AnnotatedElement annotatedElement) {
+			@Nullable AnnotatedElement annotatedElement) {
 
 		super(annotationType, annotatedElement, enrichAndValidateAttributes(attributes, annotationType));
 	}
 
 
 	@Override
+	@Nullable
 	protected Object getRawAttributeValue(Method attributeMethod) {
 		return getRawAttributeValue(attributeMethod.getName());
 	}
 
 	@Override
+	@Nullable
 	protected Object getRawAttributeValue(String attributeName) {
 		return getSource().get(attributeName);
 	}
@@ -87,7 +90,7 @@ class MapAnnotationAttributeExtractor extends AbstractAliasAwareAnnotationAttrib
 	private static Map<String, Object> enrichAndValidateAttributes(
 			Map<String, Object> originalAttributes, Class<? extends Annotation> annotationType) {
 
-		Map<String, Object> attributes = new LinkedHashMap<String, Object>(originalAttributes);
+		Map<String, Object> attributes = new LinkedHashMap<>(originalAttributes);
 		Map<String, List<String>> attributeAliasMap = AnnotationUtils.getAttributeAliasMap(annotationType);
 
 		for (Method attributeMethod : AnnotationUtils.getAttributeMethods(annotationType)) {
@@ -119,15 +122,13 @@ class MapAnnotationAttributeExtractor extends AbstractAliasAwareAnnotationAttrib
 			}
 
 			// if still null
-			if (attributeValue == null) {
-				throw new IllegalArgumentException(String.format(
-						"Attributes map %s returned null for required attribute '%s' defined by annotation type [%s].",
-						attributes, attributeName, annotationType.getName()));
-			}
+			Assert.notNull(attributeValue, () -> String.format(
+					"Attributes map %s returned null for required attribute '%s' defined by annotation type [%s].",
+					attributes, attributeName, annotationType.getName()));
 
 			// finally, ensure correct type
 			Class<?> requiredReturnType = attributeMethod.getReturnType();
-			Class<? extends Object> actualReturnType = attributeValue.getClass();
+			Class<?> actualReturnType = attributeValue.getClass();
 
 			if (!ClassUtils.isAssignable(requiredReturnType, actualReturnType)) {
 				boolean converted = false;
@@ -161,13 +162,11 @@ class MapAnnotationAttributeExtractor extends AbstractAliasAwareAnnotationAttrib
 					converted = true;
 				}
 
-				if (!converted) {
-					throw new IllegalArgumentException(String.format(
-							"Attributes map %s returned a value of type [%s] for attribute '%s', " +
-							"but a value of type [%s] is required as defined by annotation type [%s].",
-							attributes, actualReturnType.getName(), attributeName, requiredReturnType.getName(),
-							annotationType.getName()));
-				}
+				Assert.isTrue(converted, () -> String.format(
+						"Attributes map %s returned a value of type [%s] for attribute '%s', " +
+						"but a value of type [%s] is required as defined by annotation type [%s].",
+						attributes, actualReturnType.getName(), attributeName, requiredReturnType.getName(),
+						annotationType.getName()));
 			}
 		}
 

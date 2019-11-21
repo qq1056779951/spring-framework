@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -150,8 +151,8 @@ public class VersionResourceResolverTests {
 		Resource actual = this.resolver.resolveResourceInternal(request, versionFile, this.locations, this.chain);
 		assertEquals(expected.getFilename(), actual.getFilename());
 		verify(this.versionStrategy, times(1)).getResourceVersion(expected);
-		assertThat(actual, instanceOf(VersionedResource.class));
-		assertEquals(version, ((VersionedResource)actual).getVersion());
+		assertThat(actual, instanceOf(HttpResource.class));
+		assertEquals("\"" + version + "\"", ((HttpResource)actual).getResponseHeaders().getETag());
 	}
 
 	@Test
@@ -175,11 +176,19 @@ public class VersionResourceResolverTests {
 
 		this.resolver.addFixedVersionStrategy("fixedversion", "/js/**", "/css/**", "/fixedversion/css/**");
 
+		Matcher<VersionStrategy> matcher = Matchers.instanceOf(FixedVersionStrategy.class);
 		assertThat(this.resolver.getStrategyMap().size(), is(4));
-		assertThat(this.resolver.getStrategyForPath("js/something.js"), Matchers.instanceOf(FixedVersionStrategy.class));
-		assertThat(this.resolver.getStrategyForPath("fixedversion/js/something.js"), Matchers.instanceOf(FixedVersionStrategy.class));
-		assertThat(this.resolver.getStrategyForPath("css/something.css"), Matchers.instanceOf(FixedVersionStrategy.class));
-		assertThat(this.resolver.getStrategyForPath("fixedversion/css/something.css"), Matchers.instanceOf(FixedVersionStrategy.class));
+		assertThat(this.resolver.getStrategyForPath("js/something.js"), matcher);
+		assertThat(this.resolver.getStrategyForPath("fixedversion/js/something.js"), matcher);
+		assertThat(this.resolver.getStrategyForPath("css/something.css"), matcher);
+		assertThat(this.resolver.getStrategyForPath("fixedversion/css/something.css"), matcher);
+	}
+
+	@Test // SPR-15372
+	public void resolveUrlPathNoVersionStrategy() throws Exception {
+		given(this.chain.resolveUrlPath("/foo.css", this.locations)).willReturn("/foo.css");
+		String resolved = this.resolver.resolveUrlPathInternal("/foo.css", this.locations, this.chain);
+		assertThat(resolved, is("/foo.css"));
 	}
 
 	@Test // SPR-15372

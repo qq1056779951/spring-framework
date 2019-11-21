@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,7 +53,7 @@ public class MessageReceivingTemplateTests {
 
 	@Test
 	public void receive() {
-		Message<?> expected = new GenericMessage<Object>("payload");
+		Message<?> expected = new GenericMessage<>("payload");
 		this.template.setDefaultDestination("home");
 		this.template.setReceiveMessage(expected);
 		Message<?> actual = this.template.receive();
@@ -69,7 +69,7 @@ public class MessageReceivingTemplateTests {
 
 	@Test
 	public void receiveFromDestination() {
-		Message<?> expected = new GenericMessage<Object>("payload");
+		Message<?> expected = new GenericMessage<>("payload");
 		this.template.setReceiveMessage(expected);
 		Message<?> actual = this.template.receive("somewhere");
 
@@ -79,7 +79,7 @@ public class MessageReceivingTemplateTests {
 
 	@Test
 	public void receiveAndConvert() {
-		Message<?> expected = new GenericMessage<Object>("payload");
+		Message<?> expected = new GenericMessage<>("payload");
 		this.template.setDefaultDestination("home");
 		this.template.setReceiveMessage(expected);
 		String payload = this.template.receiveAndConvert(String.class);
@@ -90,7 +90,7 @@ public class MessageReceivingTemplateTests {
 
 	@Test
 	public void receiveAndConvertFromDestination() {
-		Message<?> expected = new GenericMessage<Object>("payload");
+		Message<?> expected = new GenericMessage<>("payload");
 		this.template.setReceiveMessage(expected);
 		String payload = this.template.receiveAndConvert("somewhere", String.class);
 
@@ -100,7 +100,7 @@ public class MessageReceivingTemplateTests {
 
 	@Test
 	public void receiveAndConvertFailed() {
-		Message<?> expected = new GenericMessage<Object>("not a number test");
+		Message<?> expected = new GenericMessage<>("not a number test");
 		this.template.setReceiveMessage(expected);
 		this.template.setMessageConverter(new GenericMessageConverter());
 
@@ -111,7 +111,7 @@ public class MessageReceivingTemplateTests {
 
 	@Test
 	public void receiveAndConvertNoConverter() {
-		Message<?> expected = new GenericMessage<Object>("payload");
+		Message<?> expected = new GenericMessage<>("payload");
 		this.template.setDefaultDestination("home");
 		this.template.setReceiveMessage(expected);
 		this.template.setMessageConverter(new GenericMessageConverter());

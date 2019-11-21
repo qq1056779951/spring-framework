@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.web.context.request.async;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+
 import javax.servlet.AsyncEvent;
 
 import org.junit.Before;
@@ -31,12 +32,12 @@ import org.springframework.web.context.request.NativeWebRequest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.BDDMockito.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.mock;
 import static org.mockito.BDDMockito.verify;
-import static org.mockito.BDDMockito.verifyNoMoreInteractions;
-import static org.mockito.BDDMockito.when;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.web.context.request.async.CallableProcessingInterceptor.RESULT_NONE;
 
 /**
@@ -238,7 +239,7 @@ public class WebAsyncManagerTimeoutTests {
 
 		DeferredResult<Integer> deferredResult = new DeferredResult<>();
 
-		DeferredResultProcessingInterceptor interceptor = new DeferredResultProcessingInterceptorAdapter() {
+		DeferredResultProcessingInterceptor interceptor = new DeferredResultProcessingInterceptor() {
 			@Override
 			public <T> boolean handleTimeout(NativeWebRequest request, DeferredResult<T> result) throws Exception {
 				result.setErrorResult(23);
@@ -263,7 +264,7 @@ public class WebAsyncManagerTimeoutTests {
 		DeferredResult<Integer> deferredResult = new DeferredResult<>();
 		final Exception exception = new Exception();
 
-		DeferredResultProcessingInterceptor interceptor = new DeferredResultProcessingInterceptorAdapter() {
+		DeferredResultProcessingInterceptor interceptor = new DeferredResultProcessingInterceptor() {
 			@Override
 			public <T> boolean handleTimeout(NativeWebRequest request, DeferredResult<T> result) throws Exception {
 				throw exception;

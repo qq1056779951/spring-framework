@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,8 @@ package org.springframework.web.method.annotation;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -44,9 +46,11 @@ public class InitBinderDataBinderFactory extends DefaultDataBinderFactory {
 	 * @param binderMethods {@code @InitBinder} methods
 	 * @param initializer for global data binder initialization
 	 */
-	public InitBinderDataBinderFactory(List<InvocableHandlerMethod> binderMethods, WebBindingInitializer initializer) {
+	public InitBinderDataBinderFactory(@Nullable List<InvocableHandlerMethod> binderMethods,
+			@Nullable WebBindingInitializer initializer) {
+
 		super(initializer);
-		this.binderMethods = (binderMethods != null ? binderMethods : Collections.<InvocableHandlerMethod>emptyList());
+		this.binderMethods = (binderMethods != null ? binderMethods : Collections.emptyList());
 	}
 
 
@@ -77,6 +81,7 @@ public class InitBinderDataBinderFactory extends DefaultDataBinderFactory {
 	 */
 	protected boolean isBinderMethodApplicable(HandlerMethod initBinderMethod, WebDataBinder dataBinder) {
 		InitBinder ann = initBinderMethod.getMethodAnnotation(InitBinder.class);
+		Assert.state(ann != null, "No InitBinder annotation");
 		String[] names = ann.value();
 		return (ObjectUtils.isEmpty(names) || ObjectUtils.containsElement(names, dataBinder.getObjectName()));
 	}
