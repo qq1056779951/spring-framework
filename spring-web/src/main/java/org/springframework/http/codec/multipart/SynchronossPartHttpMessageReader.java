@@ -245,19 +245,16 @@ public class SynchronossPartHttpMessageReader extends LoggingCodecSupport implem
 
 		@Override
 		protected void hookOnError(Throwable ex) {
-			try {
-				if (this.parser != null) {
-					this.parser.close();
-				}
+			if (this.listener != null) {
+				int index = this.storageFactory.getCurrentPartIndex();
+				this.listener.onError("Failure while parsing part[" + index + "]", ex);
 			}
-			catch (IOException ex2) {
-				// ignore
-			}
-			finally {
-				if (this.listener != null) {
-					int index = this.storageFactory.getCurrentPartIndex();
-					this.listener.onError("Failure while parsing part[" + index + "]", ex);
-				}
+		}
+
+		@Override
+		protected void hookOnComplete() {
+			if (this.listener != null) {
+				this.listener.onAllPartsFinished();
 			}
 		}
 
@@ -269,9 +266,7 @@ public class SynchronossPartHttpMessageReader extends LoggingCodecSupport implem
 				}
 			}
 			catch (IOException ex) {
-				if (this.listener != null) {
-					this.listener.onError("Error while closing parser", ex);
-				}
+				// ignore
 			}
 		}
 
