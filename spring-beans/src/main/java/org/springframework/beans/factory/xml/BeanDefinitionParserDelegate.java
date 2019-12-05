@@ -426,7 +426,6 @@ public class BeanDefinitionParserDelegate {
 					} else {
                         // 生成唯一的 beanName
 						beanName = this.readerContext.generateBeanName(beanDefinition);
-                        // TODO 芋艿，需要进一步确认
 						// Register an alias for the plain bean class name, if still possible,
 						// if the generator returned the class name plus a suffix.
 						// This is expected for Spring 1.2/2.0 backwards compatibility.
