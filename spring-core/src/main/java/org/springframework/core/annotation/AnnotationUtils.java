@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -35,6 +34,7 @@ import org.springframework.core.annotation.AnnotationTypeMapping.MirrorSets.Mirr
 import org.springframework.core.annotation.MergedAnnotation.Adapt;
 import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
 import org.springframework.lang.Nullable;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -905,7 +905,7 @@ public abstract class AnnotationUtils {
 		if (!methods.hasDefaultValueMethod()) {
 			return Collections.emptyMap();
 		}
-		Map<String, DefaultValueHolder> result = new LinkedHashMap<>(methods.size());
+		Map<String, DefaultValueHolder> result = CollectionUtils.newLinkedHashMap(methods.size());
 		if (!methods.hasNestedAnnotation()) {
 			// Use simpler method if there are no nested annotations
 			for (int i = 0; i < methods.size(); i++) {
@@ -1076,7 +1076,7 @@ public abstract class AnnotationUtils {
 	 * <p>Otherwise, this method does nothing.
 	 * @param ex the throwable to inspect
 	 */
-	private static void rethrowAnnotationConfigurationException(Throwable ex) {
+	static void rethrowAnnotationConfigurationException(Throwable ex) {
 		if (ex instanceof AnnotationConfigurationException) {
 			throw (AnnotationConfigurationException) ex;
 		}
@@ -1087,16 +1087,17 @@ public abstract class AnnotationUtils {
 	 * <p>If the supplied exception is an {@link AnnotationConfigurationException},
 	 * it will simply be thrown, allowing it to propagate to the caller, and
 	 * nothing will be logged.
-	 * <p>Otherwise, this method logs an introspection failure (in particular
-	 * {@code TypeNotPresentExceptions}) before moving on, assuming nested
-	 * Class values were not resolvable within annotation attributes and
+	 * <p>Otherwise, this method logs an introspection failure (in particular for
+	 * a {@link TypeNotPresentException}) before moving on, assuming nested
+	 * {@code Class} values were not resolvable within annotation attributes and
 	 * thereby effectively pretending there were no annotations on the specified
 	 * element.
 	 * @param element the element that we tried to introspect annotations on
 	 * @param ex the exception that we encountered
 	 * @see #rethrowAnnotationConfigurationException
+	 * @see IntrospectionFailureLogger
 	 */
-	private static void handleIntrospectionFailure(@Nullable AnnotatedElement element, Throwable ex) {
+	static void handleIntrospectionFailure(@Nullable AnnotatedElement element, Throwable ex) {
 		rethrowAnnotationConfigurationException(ex);
 		IntrospectionFailureLogger logger = IntrospectionFailureLogger.INFO;
 		boolean meta = false;
